@@ -110,6 +110,13 @@ export class WatchView {
       new URLSearchParams(location.search).get("room") ?? rooms[0]?.id;
     if (initialRoomId !== undefined) {
       roomSelect.value = initialRoomId;
+      if (new URLSearchParams(location.search).get("room") === null) {
+        history.replaceState(
+          null,
+          "",
+          `/?room=${encodeURIComponent(initialRoomId)}`,
+        );
+      }
       await switchRoom(initialRoomId);
     }
 
