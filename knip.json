@@ -15,6 +15,7 @@
     "go",
     "gofmt",
     "scripts/local-backend.sh",
+    "scripts/local-dev.sh",
     "scripts/local-frontend.sh",
     "scripts/setup-local-sample-stream.sh",
     "scripts/start-local-dummy-stream.sh"

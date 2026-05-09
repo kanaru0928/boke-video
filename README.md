@@ -29,7 +29,27 @@ pnpm install
 pnpm check
 ```
 
-## ローカル映像デモ
+## ローカル開発
+
+バックエンド、フロントエンド、ダミーライブ配信をまとめて起動します。
+
+```sh
+pnpm dev
+```
+
+起動すると`WATCH_URL`が表示されます。そのURLをブラウザで開くと、ライブDASH再生とリアルタイムコメントを確認できます。終了するときは`Ctrl+C`で止めます。
+
+`pnpm dev`は次の3つをまとめて実行します。
+
+```sh
+pnpm demo:backend
+pnpm demo:frontend
+pnpm demo:stream:dummy
+```
+
+ダミー配信は`ffmpeg`の`testsrc2`映像と`sine`音声からライブDASHを生成し続けます。DASH出力先はデフォルトで`/tmp/boke-video-streams`です。
+
+## サンプル映像デモ
 
 別々のshellでバックエンドとフロントエンドを起動します。
 
@@ -46,18 +66,24 @@ pnpm demo:setup
 
 出力された`WATCH_URL`をブラウザで開くと、生成済みDASHとコメント機能を同時に確認できます。サンプル動画はBlenderのPeachプロジェクト配布ファイルを`.local-demo/`へ保存します。DASH出力先はデフォルトで`/tmp/boke-video-streams`です。
 
-継続的に更新されるダミー配信を確認する場合は、さらに別shellで次を実行します。
+## ローカル検証
 
 ```sh
-pnpm demo:stream:dummy
+pnpm check
 ```
 
-このコマンドは`ffmpeg`の`testsrc2`映像と`sine`音声からライブDASHを生成し続けます。出力された`WATCH_URL`を開くと、ダミー配信を再生できます。
+`pnpm check`はBiome、Knip、TypeScript、Vitest、Viteビルド、`go vet`、Goテストを実行します。
 
 APIとWebSocketの最低限の疎通は次で確認できます。
 
 ```sh
 pnpm demo:smoke
+```
+
+PC幅とスマホ幅のブラウザ表示、DASH再生、コメント送信、ショートカット、コメント位置は次で確認できます。実行前に`WATCH_URL`を指定します。
+
+```sh
+WATCH_URL="http://127.0.0.1:5173/?room=..." pnpm demo:browser-smoke
 ```
 
 Lefthookはgitリポジトリ内で次のコマンドを実行すると有効化されます。
