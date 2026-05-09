@@ -11,11 +11,9 @@ import {
   commentDirections,
 } from "../comments/types";
 import { DashPlayer } from "../player/dash_player";
-import {
-  fetchComments,
-  fetchRoomStreamStatus,
-  fetchRooms,
-} from "../rooms/room_api";
+import { fetchRoomStreamStatus, fetchRooms } from "../rooms/room_api";
+import { isCommentSubmitShortcut } from "./comment_shortcuts";
+import { canPlayStream, streamStatusMessage } from "./watch_stream";
 
 export class WatchView {
   constructor(
@@ -89,7 +87,7 @@ export class WatchView {
     const switchRoom = async (roomId: string): Promise<void> => {
       renderer.clear();
       const status = await fetchRoomStreamStatus(this.config, roomId);
-      if (status?.stream === "ready" || status?.stream === "stale") {
+      if (canPlayStream(status)) {
         streamStatus.hidden = true;
         const manifestUrl = `${this.config.streamBaseUrl}/live/${encodeURIComponent(roomId)}/manifest.mpd`;
         player.attach(video, manifestUrl);
@@ -99,14 +97,10 @@ export class WatchView {
         video.load();
         streamStatus.hidden = false;
         streamStatus.textContent = streamStatusMessage(
-          status?.stream ?? "missing",
+          status?.stream ?? "unknown",
         );
       }
       client.connect(roomId);
-      const history = await fetchComments(this.config, roomId);
-      for (const message of history) {
-        renderer.render(message);
-      }
     };
 
     const initialRoomId =
@@ -130,6 +124,14 @@ export class WatchView {
       };
       client.send(request);
       body.value = "";
+    });
+
+    body.addEventListener("keydown", (event) => {
+      if (!isCommentSubmitShortcut(event)) {
+        return;
+      }
+      event.preventDefault();
+      form.requestSubmit();
     });
   }
 
@@ -157,17 +159,6 @@ export class WatchView {
     }
     colors.firstElementChild?.classList.add("is-selected");
     return selectedColor;
-  }
-}
-
-function streamStatusMessage(status: "ready" | "stale" | "missing"): string {
-  switch (status) {
-    case "ready":
-      return "";
-    case "stale":
-      return "配信が停止しています";
-    case "missing":
-      return "配信はまだ開始されていません";
   }
 }
 

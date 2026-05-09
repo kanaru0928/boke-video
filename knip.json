@@ -16,6 +16,7 @@
     "gofmt",
     "scripts/local-backend.sh",
     "scripts/local-frontend.sh",
-    "scripts/setup-local-sample-stream.sh"
+    "scripts/setup-local-sample-stream.sh",
+    "scripts/start-local-dummy-stream.sh"
   ]
 }

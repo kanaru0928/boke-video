@@ -46,6 +46,14 @@ pnpm demo:setup
 
 出力された`WATCH_URL`をブラウザで開くと、生成済みDASHとコメント機能を同時に確認できます。サンプル動画はBlenderのPeachプロジェクト配布ファイルを`.local-demo/`へ保存します。DASH出力先はデフォルトで`/tmp/boke-video-streams`です。
 
+継続的に更新されるダミー配信を確認する場合は、さらに別shellで次を実行します。
+
+```sh
+pnpm demo:stream:dummy
+```
+
+このコマンドは`ffmpeg`の`testsrc2`映像と`sine`音声からライブDASHを生成し続けます。出力された`WATCH_URL`を開くと、ダミー配信を再生できます。
+
 APIとWebSocketの最低限の疎通は次で確認できます。
 
 ```sh

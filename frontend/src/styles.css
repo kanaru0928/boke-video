@@ -76,7 +76,7 @@ video {
 
 .comments-layer {
   position: absolute;
-  inset: 0 0 44px;
+  inset: 0;
   overflow: hidden;
   pointer-events: none;
 }
@@ -121,23 +121,23 @@ video {
 }
 
 .comment-rightToLeft {
-  right: -80%;
+  left: 100%;
   animation: right-to-left 6s linear forwards;
 }
 
 .comment-leftToRight {
-  left: -80%;
+  right: 100%;
   animation: left-to-right 6s linear forwards;
 }
 
 .comment-topToBottom {
-  top: -20%;
+  top: 0;
   writing-mode: vertical-rl;
   animation: top-to-bottom 6s linear forwards;
 }
 
 .comment-bottomToTop {
-  bottom: -20%;
+  bottom: 0;
   writing-mode: vertical-rl;
   animation: bottom-to-top 6s linear forwards;
 }
@@ -184,6 +184,7 @@ input {
 
 textarea {
   min-height: 96px;
+  max-height: 180px;
   resize: vertical;
 }
 
@@ -191,6 +192,19 @@ textarea {
 .color-row {
   display: flex;
   gap: 8px;
+}
+
+.form-row {
+  flex-wrap: wrap;
+}
+
+.form-row select {
+  min-width: 120px;
+  flex: 1;
+}
+
+.color-row {
+  flex-wrap: wrap;
 }
 
 .color-button {
@@ -258,7 +272,7 @@ textarea {
     transform: translateX(0);
   }
   to {
-    transform: translateX(calc(-100vw - 100%));
+    transform: translateX(calc((var(--comment-travel-x) + 100%) * -1));
   }
 }
 
@@ -267,7 +281,7 @@ textarea {
     transform: translateX(0);
   }
   to {
-    transform: translateX(calc(100vw + 100%));
+    transform: translateX(calc(var(--comment-travel-x) + 100%));
   }
 }
 
@@ -276,7 +290,7 @@ textarea {
     transform: translateY(0);
   }
   to {
-    transform: translateY(calc(100vh + 100%));
+    transform: translateY(calc(var(--comment-travel-y) + 100%));
   }
 }
 
@@ -285,7 +299,7 @@ textarea {
     transform: translateY(0);
   }
   to {
-    transform: translateY(calc(-100vh - 100%));
+    transform: translateY(calc((var(--comment-travel-y) + 100%) * -1));
   }
 }
 
@@ -313,6 +327,8 @@ textarea {
   .side-panel {
     position: sticky;
     bottom: 0;
+    max-height: min(56vh, 420px);
+    overflow: auto;
   }
 
   .admin-form,
@@ -330,5 +346,37 @@ textarea {
 
   .comment-size-large {
     font-size: 24px;
+  }
+
+  textarea {
+    min-height: 72px;
+  }
+}
+
+@media (max-width: 480px) {
+  .watch-shell,
+  .admin-shell {
+    padding: 8px;
+  }
+
+  .topbar {
+    margin-bottom: 12px;
+  }
+
+  .side-panel {
+    padding: 12px;
+  }
+
+  button,
+  .link-button,
+  select,
+  textarea,
+  input {
+    padding: 9px 10px;
+  }
+
+  .color-button {
+    width: 30px;
+    height: 30px;
   }
 }

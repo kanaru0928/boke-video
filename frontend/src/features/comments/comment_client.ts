@@ -5,6 +5,7 @@ type MessageHandler = (message: CommentMessage) => void;
 
 export class CommentClient {
   private socket: WebSocket | null = null;
+  private pendingRequests: CommentCreateRequest[] = [];
 
   constructor(
     private readonly config: AppConfig,
@@ -15,6 +16,9 @@ export class CommentClient {
     this.disconnect();
     const url = `${this.config.commentWsUrl}/ws/rooms/${encodeURIComponent(roomId)}/comments`;
     this.socket = new WebSocket(url);
+    this.socket.addEventListener("open", () => {
+      this.flushPendingRequests();
+    });
     this.socket.addEventListener("message", (event: MessageEvent<string>) => {
       const parsed = parseCommentMessage(event.data);
       if (parsed !== null) {
@@ -24,13 +28,31 @@ export class CommentClient {
   }
 
   send(request: CommentCreateRequest): void {
-    if (this.socket === null || this.socket.readyState !== WebSocket.OPEN) {
+    if (this.socket === null) {
+      return;
+    }
+    if (this.socket.readyState === WebSocket.CONNECTING) {
+      this.pendingRequests.push(request);
+      return;
+    }
+    if (this.socket.readyState !== WebSocket.OPEN) {
       return;
     }
     this.socket.send(JSON.stringify(request));
   }
 
+  private flushPendingRequests(): void {
+    if (this.socket === null || this.socket.readyState !== WebSocket.OPEN) {
+      return;
+    }
+    for (const request of this.pendingRequests) {
+      this.socket.send(JSON.stringify(request));
+    }
+    this.pendingRequests = [];
+  }
+
   disconnect(): void {
+    this.pendingRequests = [];
     if (this.socket !== null) {
       this.socket.close();
       this.socket = null;

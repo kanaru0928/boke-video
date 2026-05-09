@@ -13,7 +13,7 @@ export type Room = {
   createdAt: string;
 };
 
-type RoomStreamStatus = {
+export type RoomStreamStatus = {
   roomId: string;
   stream: "ready" | "stale" | "missing";
   manifestPath: string;

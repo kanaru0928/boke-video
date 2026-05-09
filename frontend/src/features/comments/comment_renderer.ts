@@ -1,8 +1,10 @@
+import {
+  type CommentPosition,
+  commentLimit,
+  horizontalLaneTop,
+  verticalLaneLeft,
+} from "./comment_layout";
 import type { CommentMessage } from "./types";
-
-const pcLimit = 120;
-const tabletLimit = 80;
-const mobileLimit = 45;
 
 export class CommentRenderer {
   private readonly active = new Set<HTMLElement>();
@@ -26,6 +28,14 @@ export class CommentRenderer {
     element.className = `comment comment-${message.direction} comment-size-${message.fontSize}`;
     element.textContent = message.body;
     element.style.color = message.color;
+    element.style.setProperty(
+      "--comment-travel-x",
+      `${this.root.clientWidth}px`,
+    );
+    element.style.setProperty(
+      "--comment-travel-y",
+      `${this.root.clientHeight}px`,
+    );
     this.position(element, message.direction);
 
     element.addEventListener("animationend", () => {
@@ -45,39 +55,32 @@ export class CommentRenderer {
   }
 
   private limit(): number {
-    const width = window.innerWidth;
-    if (width < 640) {
-      return mobileLimit;
-    }
-    if (width < 1024) {
-      return tabletLimit;
-    }
-    return pcLimit;
+    return commentLimit(window.innerWidth);
   }
 
   private position(
     element: HTMLElement,
     direction: CommentMessage["direction"],
   ): void {
-    const laneHeight = 34;
-    const laneWidth = 40;
     switch (direction) {
       case "rightToLeft":
       case "leftToRight": {
-        const lane =
-          this.horizontalLane %
-          Math.max(1, Math.floor(this.root.clientHeight / laneHeight));
+        const position = horizontalLaneTop(
+          this.horizontalLane,
+          this.root.clientHeight,
+        );
         this.horizontalLane += 1;
-        element.style.top = `${lane * laneHeight}px`;
+        applyPosition(element, position);
         break;
       }
       case "topToBottom":
       case "bottomToTop": {
-        const lane =
-          this.verticalLane %
-          Math.max(1, Math.floor(this.root.clientWidth / laneWidth));
+        const position = verticalLaneLeft(
+          this.verticalLane,
+          this.root.clientWidth,
+        );
         this.verticalLane += 1;
-        element.style.left = `${lane * laneWidth}px`;
+        applyPosition(element, position);
         break;
       }
       case "fixedTop":
@@ -88,4 +91,8 @@ export class CommentRenderer {
         break;
     }
   }
+}
+
+function applyPosition(element: HTMLElement, position: CommentPosition): void {
+  element.style[position.property] = position.value;
 }
