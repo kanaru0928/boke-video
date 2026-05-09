@@ -11,7 +11,11 @@ import {
   commentDirections,
 } from "../comments/types";
 import { DashPlayer } from "../player/dash_player";
-import { fetchComments, fetchRooms } from "../rooms/room_api";
+import {
+  fetchComments,
+  fetchRoomStreamStatus,
+  fetchRooms,
+} from "../rooms/room_api";
 
 export class WatchView {
   constructor(
@@ -30,6 +34,7 @@ export class WatchView {
           <section class="stage">
             <video id="video" playsinline controls></video>
             <div id="comments" class="comments-layer"></div>
+            <div id="stream-status" class="stream-status"></div>
           </section>
           <aside class="side-panel">
             <label class="field">
@@ -60,6 +65,7 @@ export class WatchView {
   private async connectElements(): Promise<void> {
     const video = elementById("video", HTMLVideoElement);
     const commentsLayer = elementById("comments", HTMLElement);
+    const streamStatus = elementById("stream-status", HTMLElement);
     const roomSelect = elementById("room-select", HTMLSelectElement);
     const form = elementById("comment-form", HTMLFormElement);
     const body = elementById("comment-body", HTMLTextAreaElement);
@@ -82,8 +88,20 @@ export class WatchView {
 
     const switchRoom = async (roomId: string): Promise<void> => {
       renderer.clear();
-      const manifestUrl = `${this.config.streamBaseUrl}/live/${encodeURIComponent(roomId)}/manifest.mpd`;
-      player.attach(video, manifestUrl);
+      const status = await fetchRoomStreamStatus(this.config, roomId);
+      if (status?.stream === "ready") {
+        streamStatus.hidden = true;
+        const manifestUrl = `${this.config.streamBaseUrl}/live/${encodeURIComponent(roomId)}/manifest.mpd`;
+        player.attach(video, manifestUrl);
+      } else {
+        player.destroy();
+        video.removeAttribute("src");
+        video.load();
+        streamStatus.hidden = false;
+        streamStatus.textContent = streamStatusMessage(
+          status?.stream ?? "missing",
+        );
+      }
       client.connect(roomId);
       const history = await fetchComments(this.config, roomId);
       for (const message of history) {
@@ -139,6 +157,17 @@ export class WatchView {
     }
     colors.firstElementChild?.classList.add("is-selected");
     return selectedColor;
+  }
+}
+
+function streamStatusMessage(status: "ready" | "stale" | "missing"): string {
+  switch (status) {
+    case "ready":
+      return "";
+    case "stale":
+      return "配信が停止しています";
+    case "missing":
+      return "配信はまだ開始されていません";
   }
 }
 

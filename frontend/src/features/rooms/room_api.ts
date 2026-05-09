@@ -107,7 +107,7 @@ export async function fetchRoomStreamStatus(
   roomId: string,
 ): Promise<RoomStreamStatus | null> {
   const response = await fetch(
-    `${config.apiBaseUrl}/api/admin/rooms/${encodeURIComponent(roomId)}/status`,
+    `${config.apiBaseUrl}/api/rooms/${encodeURIComponent(roomId)}/status`,
     {
       credentials: "include",
     },

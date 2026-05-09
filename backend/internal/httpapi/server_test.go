@@ -54,7 +54,7 @@ func TestServerReturnsMissingStreamStatus(t *testing.T) {
 	server := newTestServer(t)
 
 	roomID := createTestRoom(t, server, "配信")
-	response := performRequest(server, http.MethodGet, "/api/admin/rooms/"+roomID+"/status", "")
+	response := performRequest(server, http.MethodGet, "/api/rooms/"+roomID+"/status", "")
 	if response.Code != http.StatusOK {
 		t.Fatalf("room status code = %d, body = %s", response.Code, response.Body.String())
 	}

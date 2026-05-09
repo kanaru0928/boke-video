@@ -76,9 +76,24 @@ video {
 
 .comments-layer {
   position: absolute;
-  inset: 0;
+  inset: 0 0 44px;
   overflow: hidden;
   pointer-events: none;
+}
+
+.stream-status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  color: #d7dce4;
+  text-align: center;
+  pointer-events: none;
+}
+
+.stream-status[hidden] {
+  display: none;
 }
 
 .comment {

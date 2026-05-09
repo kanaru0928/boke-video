@@ -74,6 +74,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.handleCreateRoom(w, r)
 	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/comments"):
 		s.handleListComments(w, r)
+	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/status"):
+		s.handleRoomStatus(w, r)
 	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/"):
 		s.handleGetRoom(w, r)
 	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/comments"):
@@ -203,7 +205,7 @@ func (s *Server) handleRoomStatus(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.requirePrincipal(w, r); !ok {
 		return
 	}
-	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/admin/rooms/"), "/status")
+	roomID := roomStatusPathValue(r.URL.Path)
 	_, err := s.repository.GetRoom(r.Context(), roomID)
 	if err != nil {
 		writeRepositoryError(w, err)
@@ -216,6 +218,15 @@ func (s *Server) handleRoomStatus(w http.ResponseWriter, r *http.Request) {
 		"manifestPath":   status.ManifestPath,
 		"manifestAgeSec": status.ManifestAgeSec,
 	})
+}
+
+func roomStatusPathValue(urlPath string) string {
+	switch {
+	case strings.HasPrefix(urlPath, "/api/admin/rooms/"):
+		return strings.TrimSuffix(strings.TrimPrefix(urlPath, "/api/admin/rooms/"), "/status")
+	default:
+		return strings.TrimSuffix(strings.TrimPrefix(urlPath, "/api/rooms/"), "/status")
+	}
 }
 
 func (s *Server) handleListComments(w http.ResponseWriter, r *http.Request) {
