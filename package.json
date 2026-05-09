@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "packageManager": "pnpm@10.11.0",
+  "scripts": {
+    "backend:check": "cd backend && gofmt -w ./cmd ./internal && go test ./...",
+    "backend:lint": "cd backend && go vet ./...",
+    "check": "biome check . && knip && pnpm --dir frontend run typecheck && pnpm --dir frontend run test && pnpm --dir frontend run build && pnpm backend:lint && pnpm backend:check",
+    "format": "biome format --write . && gofmt -w backend/cmd backend/internal",
+    "hooks:install": "lefthook install",
+    "lint": "biome lint . && knip && pnpm backend:lint"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.14",
+    "knip": "^5.88.1",
+    "lefthook": "^2.1.6"
+  }
+}

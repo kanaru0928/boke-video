@@ -1,0 +1,15 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    "frontend": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts", "src/**/*.d.ts"]
+    },
+    ".": {
+      "entry": ["package.json", "lefthook.yml"],
+      "project": ["*.json", "*.yaml", "*.yml"]
+    }
+  },
+  "ignoreDependencies": ["wrangler"],
+  "ignoreBinaries": ["go", "gofmt"]
+}

@@ -1,0 +1,15 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      run: pnpm biome check .
+    knip:
+      run: pnpm knip
+    frontend-typecheck:
+      run: pnpm --dir frontend run typecheck
+    frontend-test:
+      run: pnpm --dir frontend run test
+    backend-test:
+      run: cd backend && go test ./...
+    backend-vet:
+      run: cd backend && go vet ./...

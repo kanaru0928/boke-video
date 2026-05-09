@@ -1,0 +1,21 @@
+[Unit]
+Description=Boke Video backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=boke-video
+Group=boke-video
+EnvironmentFile=/etc/boke-video/backend.env
+ExecStart=/usr/local/bin/boke-video-server
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/boke-video
+
+[Install]
+WantedBy=multi-user.target
