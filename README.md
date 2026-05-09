@@ -29,6 +29,29 @@ pnpm install
 pnpm check
 ```
 
+## ローカル映像デモ
+
+別々のshellでバックエンドとフロントエンドを起動します。
+
+```sh
+pnpm demo:backend
+pnpm demo:frontend
+```
+
+その後、BigBuckBunnyのサンプル動画からMPEG-DASHを生成します。
+
+```sh
+pnpm demo:setup
+```
+
+出力された`WATCH_URL`をブラウザで開くと、生成済みDASHとコメント機能を同時に確認できます。サンプル動画はBlenderのPeachプロジェクト配布ファイルを`.local-demo/`へ保存します。DASH出力先はデフォルトで`/tmp/boke-video-streams`です。
+
+APIとWebSocketの最低限の疎通は次で確認できます。
+
+```sh
+pnpm demo:smoke
+```
+
 Lefthookはgitリポジトリ内で次のコマンドを実行すると有効化されます。
 
 ```sh

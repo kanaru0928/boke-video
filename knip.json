@@ -11,5 +11,11 @@
     }
   },
   "ignoreDependencies": ["wrangler"],
-  "ignoreBinaries": ["go", "gofmt"]
+  "ignoreBinaries": [
+    "go",
+    "gofmt",
+    "scripts/local-backend.sh",
+    "scripts/local-frontend.sh",
+    "scripts/setup-local-sample-stream.sh"
+  ]
 }

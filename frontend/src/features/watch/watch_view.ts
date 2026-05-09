@@ -89,7 +89,7 @@ export class WatchView {
     const switchRoom = async (roomId: string): Promise<void> => {
       renderer.clear();
       const status = await fetchRoomStreamStatus(this.config, roomId);
-      if (status?.stream === "ready") {
+      if (status?.stream === "ready" || status?.stream === "stale") {
         streamStatus.hidden = true;
         const manifestUrl = `${this.config.streamBaseUrl}/live/${encodeURIComponent(roomId)}/manifest.mpd`;
         player.attach(video, manifestUrl);
