@@ -171,6 +171,17 @@ video {
   margin-top: 18px;
 }
 
+.comment-compose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px;
+  gap: 8px;
+}
+
+.comment-compose button {
+  min-height: 96px;
+  padding-inline: 10px;
+}
+
 select,
 textarea,
 input {
@@ -188,23 +199,80 @@ textarea {
   resize: vertical;
 }
 
-.form-row,
 .color-row {
   display: flex;
   gap: 8px;
 }
 
-.form-row {
-  flex-wrap: wrap;
-}
-
-.form-row select {
-  min-width: 120px;
-  flex: 1;
-}
-
 .color-row {
   flex-wrap: wrap;
+}
+
+.choice-field {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.choice-field legend {
+  padding: 0;
+  margin-bottom: 8px;
+  color: #b9c1cc;
+  font-size: 13px;
+}
+
+.choice-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.choice-grid-direction {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.choice-grid-size {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.choice-chip {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.choice-chip input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.choice-chip span {
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  border: 1px solid #3d4653;
+  border-radius: 8px;
+  background: #0f1217;
+  color: #f6f7f9;
+  padding: 9px 10px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.choice-chip input:checked + span {
+  border-color: #8bd3ff;
+  background: #d7f1ff;
+  color: #07121a;
+}
+
+.choice-chip input:focus-visible + span {
+  outline: 3px solid #8bd3ff;
+  outline-offset: 2px;
 }
 
 .color-button {
@@ -287,7 +355,7 @@ textarea {
 
 @keyframes top-to-bottom {
   from {
-    transform: translateY(0);
+    transform: translateY(-100%);
   }
   to {
     transform: translateY(calc(var(--comment-travel-y) + 100%));
@@ -296,7 +364,7 @@ textarea {
 
 @keyframes bottom-to-top {
   from {
-    transform: translateY(0);
+    transform: translateY(100%);
   }
   to {
     transform: translateY(calc((var(--comment-travel-y) + 100%) * -1));
@@ -327,8 +395,6 @@ textarea {
   .side-panel {
     position: sticky;
     bottom: 0;
-    max-height: min(56vh, 420px);
-    overflow: auto;
   }
 
   .admin-form,
@@ -349,6 +415,14 @@ textarea {
   }
 
   textarea {
+    min-height: 72px;
+  }
+
+  .comment-compose {
+    grid-template-columns: minmax(0, 1fr) 76px;
+  }
+
+  .comment-compose button {
     min-height: 72px;
   }
 }
@@ -378,5 +452,10 @@ textarea {
   .color-button {
     width: 30px;
     height: 30px;
+  }
+
+  .choice-chip span {
+    min-height: 38px;
+    padding: 8px 10px;
   }
 }

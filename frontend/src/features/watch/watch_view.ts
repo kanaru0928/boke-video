@@ -40,17 +40,19 @@ export class WatchView {
               <select id="room-select"></select>
             </label>
             <form id="comment-form" class="comment-form">
-              <textarea id="comment-body" maxlength="100" placeholder="コメント" required></textarea>
-              <div class="form-row">
-                <select id="comment-direction"></select>
-                <select id="comment-size">
-                  <option value="small">小</option>
-                  <option value="medium" selected>中</option>
-                  <option value="large">大</option>
-                </select>
+              <div class="comment-compose">
+                <textarea id="comment-body" maxlength="100" placeholder="コメント" required></textarea>
+                <button type="submit">送信</button>
               </div>
+              <fieldset class="choice-field">
+                <legend>方向</legend>
+                <div id="comment-direction" class="choice-grid choice-grid-direction"></div>
+              </fieldset>
+              <fieldset class="choice-field">
+                <legend>大きさ</legend>
+                <div id="comment-size" class="choice-grid choice-grid-size"></div>
+              </fieldset>
               <div id="comment-colors" class="color-row"></div>
-              <button type="submit">送信</button>
             </form>
           </aside>
         </section>
@@ -67,11 +69,12 @@ export class WatchView {
     const roomSelect = elementById("room-select", HTMLSelectElement);
     const form = elementById("comment-form", HTMLFormElement);
     const body = elementById("comment-body", HTMLTextAreaElement);
-    const direction = elementById("comment-direction", HTMLSelectElement);
-    const size = elementById("comment-size", HTMLSelectElement);
+    const direction = elementById("comment-direction", HTMLElement);
+    const size = elementById("comment-size", HTMLElement);
     const colors = elementById("comment-colors", HTMLElement);
 
-    this.renderDirectionOptions(direction);
+    const selectedDirection = this.renderDirectionChoices(direction);
+    const selectedSize = this.renderSizeChoices(size);
     const selectedColor = this.renderColorButtons(colors);
     const rooms = await fetchRooms(this.config);
     for (const room of rooms) {
@@ -118,9 +121,9 @@ export class WatchView {
       event.preventDefault();
       const request: CommentCreateRequest = {
         body: body.value,
-        direction: direction.value as CommentDirection,
+        direction: selectedDirection.current,
         color: selectedColor.current,
-        fontSize: size.value as CommentFontSize,
+        fontSize: selectedSize.current,
       };
       client.send(request);
       body.value = "";
@@ -135,10 +138,49 @@ export class WatchView {
     });
   }
 
-  private renderDirectionOptions(direction: HTMLSelectElement): void {
+  private renderDirectionChoices(direction: HTMLElement): {
+    current: CommentDirection;
+  } {
+    const selectedDirection = {
+      current: "rightToLeft" as CommentDirection,
+    };
     for (const item of commentDirections) {
-      direction.append(new Option(directionLabel(item), item));
+      direction.append(
+        choiceLabel({
+          checked: item === selectedDirection.current,
+          name: "comment-direction",
+          text: directionLabel(item),
+          value: item,
+          onChange: () => {
+            selectedDirection.current = item;
+          },
+        }),
+      );
     }
+    return selectedDirection;
+  }
+
+  private renderSizeChoices(size: HTMLElement): { current: CommentFontSize } {
+    const choices: { label: string; value: CommentFontSize }[] = [
+      { label: "小", value: "small" },
+      { label: "中", value: "medium" },
+      { label: "大", value: "large" },
+    ];
+    const selectedSize = { current: "medium" as CommentFontSize };
+    for (const choice of choices) {
+      size.append(
+        choiceLabel({
+          checked: choice.value === selectedSize.current,
+          name: "comment-size",
+          text: choice.label,
+          value: choice.value,
+          onChange: () => {
+            selectedSize.current = choice.value;
+          },
+        }),
+      );
+    }
+    return selectedSize;
   }
 
   private renderColorButtons(colors: HTMLElement): { current: string } {
@@ -160,6 +202,34 @@ export class WatchView {
     colors.firstElementChild?.classList.add("is-selected");
     return selectedColor;
   }
+}
+
+function choiceLabel<T extends string>(choice: {
+  checked: boolean;
+  name: string;
+  onChange: () => void;
+  text: string;
+  value: T;
+}): HTMLLabelElement {
+  const label = document.createElement("label");
+  label.className = "choice-chip";
+
+  const input = document.createElement("input");
+  input.type = "radio";
+  input.name = choice.name;
+  input.value = choice.value;
+  input.checked = choice.checked;
+  input.addEventListener("change", () => {
+    if (input.checked) {
+      choice.onChange();
+    }
+  });
+
+  const text = document.createElement("span");
+  text.textContent = choice.text;
+
+  label.append(input, text);
+  return label;
 }
 
 function elementById<T extends HTMLElement>(

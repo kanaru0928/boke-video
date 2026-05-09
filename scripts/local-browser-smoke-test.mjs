@@ -11,6 +11,10 @@ try {
   await new Promise((resolve) => setTimeout(resolve, 1100));
   await runCommentSmoke({
     browser,
+    directionLabel: "上固定",
+    expectedClass: "comment-fixedTop",
+    sizeLabel: "大",
+    sizeClass: "comment-size-large",
     viewport: { width: 1280, height: 800 },
     text: "desktop shortcut comment",
     shortcut: "Meta+Enter",
@@ -18,15 +22,30 @@ try {
   await new Promise((resolve) => setTimeout(resolve, 1100));
   await runCommentSmoke({
     browser,
+    directionLabel: "下固定",
+    expectedClass: "comment-fixedBottom",
+    sizeLabel: "小",
+    sizeClass: "comment-size-small",
     viewport: { width: 390, height: 844 },
     text: "mobile shortcut comment",
     shortcut: "Control+Enter",
   });
+  await new Promise((resolve) => setTimeout(resolve, 1100));
+  await assertVerticalCommentsStartOutside(browser);
 } finally {
   await browser.close();
 }
 
-async function runCommentSmoke({ browser, viewport, text, shortcut }) {
+async function runCommentSmoke({
+  browser,
+  directionLabel,
+  expectedClass,
+  sizeLabel,
+  sizeClass,
+  viewport,
+  text,
+  shortcut,
+}) {
   const page = await browser.newPage({ viewport });
   const liveResponses = [];
   page.on("response", (response) => {
@@ -41,6 +60,9 @@ async function runCommentSmoke({ browser, viewport, text, shortcut }) {
 
   await assertCommentLayerMatchesStage(page);
   await assertVideoCanPlay(page);
+  await assertCommentControlsFit(page);
+  await clickChoice(page, directionLabel);
+  await clickChoice(page, sizeLabel);
 
   await page.locator("#comment-body").fill(text);
   await page.locator("#comment-body").press(shortcut);
@@ -60,6 +82,7 @@ async function runCommentSmoke({ browser, viewport, text, shortcut }) {
     };
   });
   const travel = await commentLocator.evaluate((element) => ({
+    className: element.className,
     x: getComputedStyle(element).getPropertyValue("--comment-travel-x").trim(),
     y: getComputedStyle(element).getPropertyValue("--comment-travel-y").trim(),
   }));
@@ -86,6 +109,14 @@ async function runCommentSmoke({ browser, viewport, text, shortcut }) {
   assert(
     travel.y !== "" && travel.y !== "0px",
     `comment vertical travel is invalid: ${JSON.stringify(travel)}`,
+  );
+  assert(
+    travel.className.includes(expectedClass),
+    `comment direction class mismatch: ${JSON.stringify(travel)}`,
+  );
+  assert(
+    travel.className.includes(sizeClass),
+    `comment size class mismatch: ${JSON.stringify(travel)}`,
   );
   assert(
     liveResponses.some(
@@ -115,6 +146,119 @@ async function runCommentSmoke({ browser, viewport, text, shortcut }) {
     fullPage: true,
   });
   await page.close();
+}
+
+async function clickChoice(page, label) {
+  const choice = page.locator(".choice-chip", { hasText: label });
+  const count = await choice.count();
+  assert(count === 1, `choice count mismatch: ${label} ${count}`);
+  await choice.click();
+}
+
+async function assertVerticalCommentsStartOutside(browser) {
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 800 },
+  });
+  await page.goto(watchUrl, { waitUntil: "networkidle" });
+  await page.addStyleTag({
+    content: ".comment { animation-play-state: paused !important; }",
+  });
+  await assertVideoCanPlay(page);
+
+  await clickChoice(page, "上から下");
+  await page.locator("#comment-body").fill("vertical top start");
+  await page.locator("#comment-body").press("Meta+Enter");
+  const topComment = page.locator(".comment", {
+    hasText: "vertical top start",
+  });
+  await topComment.waitFor({ state: "attached", timeout: 5000 });
+  await assertVerticalPosition(page, topComment, "topToBottom");
+
+  await new Promise((resolve) => setTimeout(resolve, 1100));
+  await clickChoice(page, "下から上");
+  await page.locator("#comment-body").fill("vertical bottom start");
+  await page.locator("#comment-body").press("Meta+Enter");
+  const bottomComment = page.locator(".comment", {
+    hasText: "vertical bottom start",
+  });
+  await bottomComment.waitFor({ state: "attached", timeout: 5000 });
+  await assertVerticalPosition(page, bottomComment, "bottomToTop");
+
+  await page.close();
+}
+
+async function assertVerticalPosition(page, comment, direction) {
+  const videoBox = await page.locator("video").evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { bottom: rect.bottom, top: rect.top };
+  });
+  const commentBox = await comment.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      bottom: rect.bottom,
+      className: element.className,
+      top: rect.top,
+    };
+  });
+  if (direction === "topToBottom") {
+    assert(
+      commentBox.bottom <= videoBox.top + 1,
+      `top-to-bottom comment starts inside video: ${JSON.stringify({ commentBox, videoBox })}`,
+    );
+    return;
+  }
+  assert(
+    commentBox.top >= videoBox.bottom - 1,
+    `bottom-to-top comment starts inside video: ${JSON.stringify({ commentBox, videoBox })}`,
+  );
+}
+
+async function assertCommentControlsFit(page) {
+  const result = await page.locator(".side-panel").evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    clientHeight: element.clientHeight,
+    scrollWidth: element.scrollWidth,
+    scrollHeight: element.scrollHeight,
+  }));
+  assert(
+    result.scrollWidth <= result.clientWidth,
+    `comment controls overflow: ${JSON.stringify(result)}`,
+  );
+  assert(
+    result.scrollHeight <= result.clientHeight,
+    `comment controls require internal scroll: ${JSON.stringify(result)}`,
+  );
+  const compose = await page.locator(".comment-compose").evaluate((element) => {
+    const textarea = element.querySelector("textarea");
+    const button = element.querySelector("button");
+    if (!(textarea instanceof HTMLTextAreaElement)) {
+      throw new Error("comment textarea is missing");
+    }
+    if (!(button instanceof HTMLButtonElement)) {
+      throw new Error("comment submit button is missing");
+    }
+    const textareaRect = textarea.getBoundingClientRect();
+    const buttonRect = button.getBoundingClientRect();
+    return {
+      buttonLeft: buttonRect.left,
+      textareaRight: textareaRect.right,
+      topDiff: Math.abs(textareaRect.top - buttonRect.top),
+    };
+  });
+  assert(
+    compose.buttonLeft >= compose.textareaRight,
+    `submit button is not beside textarea: ${JSON.stringify(compose)}`,
+  );
+  assert(
+    compose.topDiff < 1,
+    `submit button is not aligned with textarea: ${JSON.stringify(compose)}`,
+  );
+  const directionSelectCount = await page
+    .locator("select#comment-direction")
+    .count();
+  const sizeSelectCount = await page.locator("select#comment-size").count();
+  assert(directionSelectCount === 0, "direction still uses select");
+  assert(sizeSelectCount === 0, "size still uses select");
 }
 
 async function assertCommentLayerMatchesStage(page) {
