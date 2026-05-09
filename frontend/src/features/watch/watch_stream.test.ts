@@ -35,7 +35,7 @@ describe("streamStatusMessage", () => {
   it("配信状態を視聴画面の表示文言に変換する", () => {
     expect(streamStatusMessage("ready")).toBe("");
     expect(streamStatusMessage("stale")).toBe("配信が停止しています");
-    expect(streamStatusMessage("missing")).toBe("配信はまだ開始されていません");
-    expect(streamStatusMessage("unknown")).toBe("配信はまだ開始されていません");
+    expect(streamStatusMessage("missing")).toBe("配信を準備しています");
+    expect(streamStatusMessage("unknown")).toBe("配信を準備しています");
   });
 });

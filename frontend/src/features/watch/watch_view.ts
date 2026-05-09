@@ -29,10 +29,16 @@ export class WatchView {
           <a class="link-button" href="/admin">管理</a>
         </header>
         <section class="watch-grid">
-          <section class="stage">
-            <video id="video" playsinline controls></video>
+          <section id="stage" class="stage">
+            <video id="video" playsinline muted></video>
             <div id="comments" class="comments-layer"></div>
             <div id="stream-status" class="stream-status"></div>
+            <div class="player-controls">
+              <button id="play-toggle" type="button">再生</button>
+              <span class="live-badge">LIVE</span>
+              <button id="mute-toggle" type="button">消音中</button>
+              <button id="fullscreen-toggle" type="button">全画面</button>
+            </div>
           </section>
           <aside class="side-panel">
             <label class="field">
@@ -66,6 +72,13 @@ export class WatchView {
     const video = elementById("video", HTMLVideoElement);
     const commentsLayer = elementById("comments", HTMLElement);
     const streamStatus = elementById("stream-status", HTMLElement);
+    const playToggle = elementById("play-toggle", HTMLButtonElement);
+    const muteToggle = elementById("mute-toggle", HTMLButtonElement);
+    const fullscreenToggle = elementById(
+      "fullscreen-toggle",
+      HTMLButtonElement,
+    );
+    const stage = elementById("stage", HTMLElement);
     const roomSelect = elementById("room-select", HTMLSelectElement);
     const form = elementById("comment-form", HTMLFormElement);
     const body = elementById("comment-body", HTMLTextAreaElement);
@@ -86,23 +99,46 @@ export class WatchView {
       renderer.render(message),
     );
     const player = new DashPlayer();
+    let activeRoomId = "";
+    let attachedRoomId = "";
 
-    const switchRoom = async (roomId: string): Promise<void> => {
-      renderer.clear();
+    const updatePlayerControls = (): void => {
+      playToggle.textContent = video.paused ? "再生" : "一時停止";
+      muteToggle.textContent = video.muted ? "消音中" : "音声";
+    };
+
+    const attachStreamWhenReady = async (roomId: string): Promise<void> => {
       const status = await fetchRoomStreamStatus(this.config, roomId);
+      if (roomId !== activeRoomId) {
+        return;
+      }
       if (canPlayStream(status)) {
         streamStatus.hidden = true;
-        const manifestUrl = `${this.config.streamBaseUrl}/live/${encodeURIComponent(roomId)}/manifest.mpd`;
-        player.attach(video, manifestUrl);
-      } else {
-        player.destroy();
-        video.removeAttribute("src");
-        video.load();
-        streamStatus.hidden = false;
-        streamStatus.textContent = streamStatusMessage(
-          status?.stream ?? "unknown",
-        );
+        if (attachedRoomId !== roomId) {
+          const manifestUrl = `${this.config.streamBaseUrl}/live/${encodeURIComponent(roomId)}/manifest.mpd`;
+          player.attach(video, manifestUrl);
+          attachedRoomId = roomId;
+        }
+        return;
       }
+
+      player.destroy();
+      attachedRoomId = "";
+      video.removeAttribute("src");
+      video.load();
+      streamStatus.hidden = false;
+      streamStatus.textContent = streamStatusMessage(
+        status?.stream ?? "unknown",
+      );
+      window.setTimeout(() => {
+        void attachStreamWhenReady(roomId);
+      }, 1000);
+    };
+
+    const switchRoom = async (roomId: string): Promise<void> => {
+      activeRoomId = roomId;
+      renderer.clear();
+      await attachStreamWhenReady(roomId);
       client.connect(roomId);
     };
 
@@ -123,6 +159,33 @@ export class WatchView {
     roomSelect.addEventListener("change", () => {
       void switchRoom(roomSelect.value);
     });
+
+    playToggle.addEventListener("click", () => {
+      if (video.paused) {
+        void video.play();
+      } else {
+        video.pause();
+      }
+      updatePlayerControls();
+    });
+
+    muteToggle.addEventListener("click", () => {
+      video.muted = !video.muted;
+      updatePlayerControls();
+    });
+
+    fullscreenToggle.addEventListener("click", () => {
+      if (document.fullscreenElement === null) {
+        void stage.requestFullscreen();
+      } else {
+        void document.exitFullscreen();
+      }
+    });
+
+    video.addEventListener("play", updatePlayerControls);
+    video.addEventListener("pause", updatePlayerControls);
+    video.addEventListener("volumechange", updatePlayerControls);
+    updatePlayerControls();
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();

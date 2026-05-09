@@ -49,6 +49,23 @@ pnpm demo:stream:dummy
 
 ダミー配信は`ffmpeg`の`testsrc2`映像と`sine`音声からライブDASHを生成し続けます。DASH出力先はデフォルトで`/tmp/boke-video-streams`です。
 
+`pnpm dev`はOBS入力を使いません。ローカルで画面、DASH再生、コメントを確認するためのダミー配信です。
+
+## OBS入力
+
+現状のGoバックエンドはRTSPサーバーを内蔵していません。そのため、OBSから直接Goバックエンドへ配信を開始することはまだできません。
+
+OBSを使う場合は、別途RTSPまたはRTMPを受けるサーバーを用意し、`deploy/ffmpeg-dash.example.sh`でその入力をDASHへ変換します。
+
+```sh
+ROOM_ID="main" \
+RTSP_INPUT="rtsp://127.0.0.1:8554/live/main" \
+OUTPUT_DIR="/tmp/boke-video-streams/main" \
+deploy/ffmpeg-dash.example.sh
+```
+
+OBS側では、MediaMTXなどの受信サーバーへ配信します。MediaMTXのOBS Studio手順では、RTMP配信を推奨し、RTSPへ出す場合はOBSのカスタムFFmpeg出力を使います。
+
 ## サンプル映像デモ
 
 別々のshellでバックエンドとフロントエンドを起動します。

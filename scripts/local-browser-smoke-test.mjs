@@ -60,6 +60,7 @@ async function runCommentSmoke({
 
   await assertCommentLayerMatchesStage(page);
   await assertVideoCanPlay(page);
+  await assertPlayerControls(page);
   await assertCommentControlsFit(page);
   await clickChoice(page, directionLabel);
   await clickChoice(page, sizeLabel);
@@ -259,6 +260,37 @@ async function assertCommentControlsFit(page) {
   const sizeSelectCount = await page.locator("select#comment-size").count();
   assert(directionSelectCount === 0, "direction still uses select");
   assert(sizeSelectCount === 0, "size still uses select");
+}
+
+async function assertPlayerControls(page) {
+  const controls = await page
+    .locator(".player-controls")
+    .evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        height: rect.height,
+        width: rect.width,
+      };
+    });
+  const nativeControls = await page.locator("video").evaluate((video) => {
+    if (!(video instanceof HTMLVideoElement)) {
+      throw new Error("video element is missing");
+    }
+    return video.controls;
+  });
+  const playButtonCount = await page
+    .locator("#play-toggle", { hasText: "一時停止" })
+    .count();
+  const muteButtonCount = await page
+    .locator("#mute-toggle", { hasText: "消音中" })
+    .count();
+  assert(!nativeControls, "native video controls are enabled");
+  assert(
+    controls.width > 0 && controls.height > 0,
+    "player controls are hidden",
+  );
+  assert(playButtonCount === 1, "play toggle is not showing playing state");
+  assert(muteButtonCount === 1, "mute toggle is not showing muted state");
 }
 
 async function assertCommentLayerMatchesStage(page) {

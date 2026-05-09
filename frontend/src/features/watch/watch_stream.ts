@@ -14,6 +14,6 @@ export function streamStatusMessage(
       return "配信が停止しています";
     case "missing":
     case "unknown":
-      return "配信はまだ開始されていません";
+      return "配信を準備しています";
   }
 }
