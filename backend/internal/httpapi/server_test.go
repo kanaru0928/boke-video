@@ -70,6 +70,32 @@ func TestServerReturnsMissingStreamStatus(t *testing.T) {
 	}
 }
 
+func TestServerCreatesRoomWithRequestedID(t *testing.T) {
+	server := newTestServer(t)
+
+	response := performRequest(server, http.MethodPost, "/api/admin/rooms", `{"id":"obs-local","title":"OBS"}`)
+	if response.Code != http.StatusCreated {
+		t.Fatalf("create room status = %d, body = %s", response.Code, response.Body.String())
+	}
+
+	var room repository.Room
+	if err := json.NewDecoder(response.Body).Decode(&room); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if room.ID != "obs-local" {
+		t.Fatalf("room.ID = %q", room.ID)
+	}
+}
+
+func TestServerRejectsUnsafeRoomID(t *testing.T) {
+	server := newTestServer(t)
+
+	response := performRequest(server, http.MethodPost, "/api/admin/rooms", `{"id":"../main","title":"OBS"}`)
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("create room status = %d, body = %s", response.Code, response.Body.String())
+	}
+}
+
 func newTestServer(t *testing.T) *Server {
 	t.Helper()
 

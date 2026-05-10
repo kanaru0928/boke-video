@@ -34,12 +34,12 @@ pnpm check
 バックエンド、フロントエンド、ダミーライブ配信をまとめて起動します。
 
 ```sh
-pnpm dev
+pnpm dev:mock
 ```
 
 起動すると`WATCH_URL`が表示されます。そのURLをブラウザで開くと、ライブDASH再生とリアルタイムコメントを確認できます。終了するときは`Ctrl+C`で止めます。
 
-`pnpm dev`は次の3つをまとめて実行します。
+`pnpm dev:mock`は次の3つをまとめて実行します。
 
 ```sh
 pnpm demo:backend
@@ -49,22 +49,31 @@ pnpm demo:stream:dummy
 
 ダミー配信は`ffmpeg`の`testsrc2`映像と`sine`音声からライブDASHを生成し続けます。DASH出力先はデフォルトで`/tmp/boke-video-streams`です。
 
-`pnpm dev`はOBS入力を使いません。ローカルで画面、DASH再生、コメントを確認するためのダミー配信です。
+`pnpm dev:mock`はOBS入力を使いません。ローカルで画面、DASH再生、コメントを確認するためのダミー配信です。
 
 ## OBS入力
 
-現状のGoバックエンドはRTSPサーバーを内蔵していません。そのため、OBSから直接Goバックエンドへ配信を開始することはまだできません。
-
-OBSを使う場合は、別途RTSPまたはRTMPを受けるサーバーを用意し、`deploy/ffmpeg-dash.example.sh`でその入力をDASHへ変換します。
+OBS入力を使うローカル開発は次で起動します。
 
 ```sh
-ROOM_ID="main" \
-RTSP_INPUT="rtsp://127.0.0.1:8554/live/main" \
-OUTPUT_DIR="/tmp/boke-video-streams/main" \
-deploy/ffmpeg-dash.example.sh
+pnpm dev:obs
 ```
 
-OBS側では、MediaMTXなどの受信サーバーへ配信します。MediaMTXのOBS Studio手順では、RTMP配信を推奨し、RTSPへ出す場合はOBSのカスタムFFmpeg出力を使います。
+`pnpm dev:obs`はMediaMTX、Goバックエンド、フロントエンド、ffmpeg変換を起動します。MediaMTXが入っていない場合は先にインストールします。
+
+```sh
+brew install mediamtx
+```
+
+OBS側は次のように設定します。
+
+| 項目 | 値 |
+| --- | --- |
+| サービス | カスタム |
+| サーバー | `rtmp://127.0.0.1:1935/live/obs-local` |
+| ストリームキー | 空欄 |
+
+`pnpm dev:obs`はOBS入力が来るまで待機します。先に`pnpm dev:obs`を起動してからOBSで配信開始しても動作します。OBSで配信開始すると、`pnpm dev:obs`が`rtsp://127.0.0.1:8554/live/obs-local`を読み、`/tmp/boke-video-streams/obs-local`へDASHを生成します。表示された`WATCH_URL`を開くとOBS映像を確認できます。
 
 ## サンプル映像デモ
 

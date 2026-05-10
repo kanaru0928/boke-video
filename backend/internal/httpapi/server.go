@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -136,10 +137,16 @@ func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req struct {
+		ID    string `json:"id"`
 		Title string `json:"title"`
 	}
 	if err := decodeJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	req.ID = strings.TrimSpace(req.ID)
+	if req.ID != "" && !validRoomID(req.ID) {
+		writeError(w, http.StatusBadRequest, "room id must be 1 to 80 URL-safe characters")
 		return
 	}
 	req.Title = strings.TrimSpace(req.Title)
@@ -147,9 +154,13 @@ func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "title must be 1 to 80 characters")
 		return
 	}
+	roomID := req.ID
+	if roomID == "" {
+		roomID = newID()
+	}
 
 	room := repository.Room{
-		ID:        newID(),
+		ID:        roomID,
 		Title:     req.Title,
 		CreatedAt: time.Now().UTC(),
 	}
@@ -158,6 +169,12 @@ func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusCreated, room)
+}
+
+var roomIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,80}$`)
+
+func validRoomID(roomID string) bool {
+	return roomIDPattern.MatchString(roomID)
 }
 
 func (s *Server) handleUpdateRoom(w http.ResponseWriter, r *http.Request) {
