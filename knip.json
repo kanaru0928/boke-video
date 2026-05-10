@@ -3,7 +3,7 @@
   "workspaces": {
     "frontend": {
       "entry": ["src/**/*.test.ts"],
-      "project": ["src/**/*.ts", "src/**/*.d.ts"]
+      "project": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"]
     },
     ".": {
       "entry": ["package.json", "lefthook.yml"],
