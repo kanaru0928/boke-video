@@ -71,6 +71,8 @@ ALLOWED_ORIGINS=https://video.example.com
 
 Goバックエンド、Cloudflare Tunnel、MediaMTX、ffmpeg変換をsystemdで管理する例を`deploy/systemd/`に置いています。
 
+デプロイ手順は`deploy/README.md`にまとめています。
+
 ```text
 deploy/systemd/boke-video.service
 deploy/systemd/cloudflared-boke-video.service

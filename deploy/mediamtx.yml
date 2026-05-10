@@ -1,3 +1,10 @@
+rtspAddress: 127.0.0.1:8554
+rtspTransports: [tcp]
+rtmpAddress: 127.0.0.1:1935
+hls: no
+webrtc: no
+srt: no
+
 paths:
   all_others:
     source: publisher
