@@ -23,9 +23,9 @@ OBS
   |
   | RTMP
   v
-Cloudflare Spectrum
+Cloudflare DNS only
   |
-  | tcp://127.0.0.1:1935
+  | obs.example.com
   v
 MediaMTX
   |
@@ -80,6 +80,14 @@ GoバックエンドはCloudflare Accessがオリジンへ付与する`Cf-Access
 
 OBSのRTMP入力はHTTPではないため、Cloudflare AccessのHTTPアプリケーションとして保護できません。AccessのService TokenもHTTPヘッダーで送る仕組みなので、OBSのRTMP接続には使えません。
 
+OBS入力はCloudflare DNSのDNS onlyレコードで別経路にします。
+
+| 対象 | ホスト | Cloudflare設定 | 保護 |
+| --- | --- | --- | --- |
+| 視聴画面 | `video.example.com` | Workers | Cloudflare Access |
+| バックエンド | `stream.example.com` | Tunnel | Cloudflare Access |
+| OBS入力 | `obs.example.com` | DNS only | MediaMTX認証とファイアウォール |
+
 ## 3. バックエンド環境変数を配置する
 
 `backend/.env.example`をもとに、オンプレサーバーへ`/etc/boke-video/backend.env`を作ります。
@@ -121,7 +129,9 @@ DNSの公開ホスト名`stream.example.com`をこのTunnelへ向けます。
 sudo install -m 0644 deploy/mediamtx.yml /etc/boke-video/mediamtx.yml
 ```
 
-この設定例では、ffmpegが読むRTSPは`127.0.0.1`だけで待ち受け、OBS入力用RTMPは`:1935`で待ち受けます。Cloudflare Spectrumを使う場合は、オリジンのファイアウォールでCloudflareからのTCP/1935だけを許可します。
+この設定例では、ffmpegが読むRTSPは`127.0.0.1`だけで待ち受け、OBS入力用RTMPは`:1935`で待ち受けます。RTMPはDNS onlyの`obs.example.com`から直接到達します。
+
+Cloudflare DNSで`obs.example.com`のA/AAAAレコードを作り、プロキシ状態をDNS onlyにします。Cloudflare proxy、Cloudflare Access、Cloudflare TunnelはこのRTMP入力には使いません。
 
 この設定例では、MediaMTXのHLS、WebRTC、SRTリスナーは無効化しています。ブラウザ配信はGoバックエンドのMPEG-DASHで行います。
 
@@ -131,21 +141,24 @@ ffmpeg変換スクリプトを配置します。
 sudo install -m 0755 deploy/ffmpeg-dash.example.sh /usr/local/bin/ffmpeg-dash-boke-video
 ```
 
-外部のOBS利用者のPCに`cloudflared`を入れない場合、Cloudflare Tunnelの任意TCP接続は使えません。Cloudflare公式ドキュメントでは、任意TCP接続にホスト側とクライアント側の両方の`cloudflared`が必要です。
-
-その条件でCloudflareドメイン越しにOBSから直接接続する場合は、Cloudflare SpectrumでTCP/1935を公開します。SpectrumのTCPアプリケーションはCloudflare Tunnel originを使えないため、MediaMTXのRTMP待ち受けはCloudflare Spectrumから到達できるオリジンへ置きます。
-
 OBSの配信設定は次です。
 
 | 項目 | 値 |
 | --- | --- |
 | サービス | カスタム |
-| サーバー | `rtmp://obs-rtmp.example.com/live/main` |
+| サーバー | `rtmp://obs.example.com/live/main?user=publisher&pass=strong-password` |
 | ストリームキー | 空欄 |
 
-Cloudflare Streamを使う構成もあります。その場合、OBSはCloudflare StreamのRTMPS URLとStream Keyへ配信できます。ただし、映像の取り込み、エンコード、配信はCloudflare Stream側に移り、このリポジトリのMediaMTX、ffmpeg、MPEG-DASH配信経路とは別構成になります。
+OBSの環境によってサーバーURLとストリームキーを分ける必要がある場合は、次の形にします。
 
-MediaMTXには別途、配信用の認証設定を入れます。Cloudflare AccessのService TokenをOBSから送ることはできないため、RTMPのパス、ユーザー名、パスワード、またはMediaMTXの認証機能で制御します。
+| 項目 | 値 |
+| --- | --- |
+| サーバー | `rtmp://obs.example.com/live` |
+| ストリームキー | `main?user=publisher&pass=strong-password` |
+
+`deploy/mediamtx.yml`の`replace-with-strong-password`は本番値へ変更します。MediaMTX公式ドキュメントでは、RTMPの認証情報はクエリパラメータとして渡せます。
+
+OBS入力はDNS onlyでオリジンへ直接到達するため、Cloudflare proxyによるIP秘匿やCloudflare Accessの認証はありません。可能ならオリジンのファイアウォールで配信者の接続元IPだけにTCP/1935を制限します。
 
 ## 6. systemdサービスを配置する
 
