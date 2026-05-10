@@ -47,11 +47,12 @@ exec ffmpeg -hide_banner -loglevel warning -re \
   -bufsize:v:1 1400k \
   -c:a aac \
   -b:a 96k \
-  -use_timeline 1 \
+  -use_timeline 0 \
   -use_template 1 \
+  -index_correction 1 \
   -seg_duration 0.5 \
-  -window_size 3 \
-  -extra_window_size 1 \
+  -window_size 12 \
+  -extra_window_size 6 \
   -remove_at_exit 0 \
   -adaptation_sets "id=0,streams=v id=1,streams=a" \
   -f dash \

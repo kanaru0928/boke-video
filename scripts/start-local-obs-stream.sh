@@ -32,6 +32,7 @@ MANIFEST_URL=${BACKEND_URL}/live/${ROOM_ID}/manifest.mpd
 RTSP_INPUT=${RTSP_INPUT}
 RTMP_INPUT=${RTMP_INPUT}
 OBS_STREAM_KEY=
+OBS_RTMP_SERVER_LEGACY=rtmp://127.0.0.1:1935/live
 OBS_RECOMMENDED_OUTPUT_RESOLUTION=1280x720
 OBS_RECOMMENDED_FPS=30
 OBS_RECOMMENDED_KEYFRAME_INTERVAL=0.5s
@@ -41,6 +42,7 @@ EOF
 
 if [ "${LOCAL_OBS_AUTH}" = "true" ]; then
   echo "OBS_RTMP_SERVER=rtmp://127.0.0.1:1935/live/${ROOM_ID}?user=${LOCAL_OBS_USER}&pass=${LOCAL_OBS_PASSWORD}"
+  echo "OBS_RTMP_SERVER_LEGACY=rtmp://127.0.0.1:1935/live?user=${LOCAL_OBS_USER}&pass=${LOCAL_OBS_PASSWORD}"
 else
   echo "OBS_RTMP_SERVER=rtmp://127.0.0.1:1935/live/${ROOM_ID}"
 fi
@@ -65,11 +67,12 @@ while true; do
     -c:a aac \
     -b:a 96k \
     -avoid_negative_ts make_zero \
-    -use_timeline 1 \
+    -use_timeline 0 \
     -use_template 1 \
+    -index_correction 1 \
     -seg_duration 0.5 \
-    -window_size 3 \
-    -extra_window_size 1 \
+    -window_size 12 \
+    -extra_window_size 6 \
     -remove_at_exit 0 \
     -adaptation_sets "id=0,streams=v id=1,streams=a" \
     -f dash \
@@ -78,5 +81,7 @@ while true; do
   else
     echo "OBS input is not available. Retrying in 1 second." >&2
   fi
+  rm -rf "${OUTPUT_DIR}"
+  mkdir -p "${OUTPUT_DIR}"
   sleep 1
 done
