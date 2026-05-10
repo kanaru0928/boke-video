@@ -25,6 +25,10 @@ textarea {
 
 button,
 .link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: 1px solid #3d4653;
   border-radius: 8px;
   background: #f6f7f9;
@@ -32,6 +36,12 @@ button,
   padding: 10px 14px;
   text-decoration: none;
   cursor: pointer;
+}
+
+button svg,
+.link-button svg,
+.admin-room a svg {
+  flex: 0 0 auto;
 }
 
 .watch-shell,
@@ -352,6 +362,9 @@ textarea {
 }
 
 .admin-room a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: #8bd3ff;
 }
 
