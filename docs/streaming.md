@@ -1,72 +1,73 @@
 # 映像配信
 
+## 方針
+
+低遅延を優先するため、ブラウザ再生はMPEG-DASHではなくMediaMTXのWebRTC/WHEPを使います。Goバックエンドは映像を中継しません。
+
+```text
+OBS
+  -> MediaMTX
+  -> WebRTC/WHEP
+  -> ブラウザ
+```
+
+コメントとAPIはGoバックエンド、映像はMediaMTXに分けます。
+
 ## OBS入力
 
-OBSはMediaMTXへRTMPで配信します。OBS設定はこの形に固定します。
+OBSはMediaMTXへWHIPで配信します。
 
 | 項目 | 値 |
 | --- | --- |
-| サービス | カスタム |
-| サーバー | `rtmp://obs.example.com/live/main?user=publisher&pass=strong-password` |
-| ストリームキー | 空欄 |
+| サービス | `WHIP` |
+| サーバー | `https://media.example.com/live/main/whip` |
 
-MediaMTX公式ドキュメントでは、OBSのRTMP publishはServerに`rtmp://host/path`を入れ、Stream keyを空欄にします。MediaMTXのRTMP認証は`user`と`pass`のクエリパラメータで渡します。
+OBS側はBフレームを0にし、キーフレーム間隔を0.5秒から1秒にします。音声はOpusを使います。RTMPは互換用です。低遅延の正本にはしません。
+
+ローカルでは`pnpm dev:obs:local`の起動ログに出る`OBS_WHIP_SERVER`を使います。
 
 ## MediaMTX
 
 本番設定例は`deploy/mediamtx.yml`です。
 
-- RTMPは`:1935`で受けます。
-- RTSPは`127.0.0.1:8554`だけで待ち受けます。
-- HLS、WebRTC、SRTは無効化します。
+- WebRTC/WHEPは`:8889`で待ち受けます。
+- WebRTC mediaは`:8189/udp`を使います。
+- RTMPは互換用として`:1935`で受けます。
+- HLSとSRTは無効化します。
 - `publisher`ユーザーに`live/*`へのpublish権限を与えます。
-- ローカルホストだけにread権限を与え、ffmpegがRTSPを読みます。
 
-`deploy/mediamtx.yml`の`replace-with-strong-password`は本番値へ変更します。
-
-## ffmpeg
-
-ffmpegはMediaMTXのRTSP出力を読み、MPEG-DASHを生成します。
-
-```text
-rtsp://127.0.0.1:8554/live/main
-```
-
-生成先はGoバックエンドの`STREAM_DATA_DIR`配下です。
-
-```text
-/var/lib/boke-video/streams/main/manifest.mpd
-/var/lib/boke-video/streams/main/chunk-stream0-00001.m4s
-```
+MediaMTX公式ドキュメントでは、ブラウザは`/whep`のURLでWebRTCストリームを読めます。OBSはWHIPでMediaMTXへpublishできます。
 
 ## ブラウザ再生
 
-ブラウザはGoバックエンドからMPEG-DASHを取得します。
+フロントエンドは次のURLへWHEP接続します。
 
 ```text
-https://stream.example.com/live/main/manifest.mpd
+https://media.example.com/live/main/whep
 ```
 
-フロントエンドでは`dash.js`を使います。ローカル確認では1秒から2秒程度の遅延を目標にします。本番の目標遅延はオンプレ回線とCPUに合わせて調整します。
+環境変数は次です。
 
-## 画質
+```text
+VITE_STREAM_BASE_URL=https://media.example.com
+```
 
-| 画質 | 解像度 | fps | 映像ビットレート目安 |
-| --- | --- | ---: | ---: |
-| 1080p | 1920x1080 | 30 | 5Mbps |
-| 720p | 1280x720 | 30 | 3Mbps |
-| 480p | 854x480 | 30 | 1.5Mbps |
-| 360p | 640x360 | 30 | 800kbps |
+ローカルでは`http://127.0.0.1:8889`を使います。
 
-実装ではまず720p/360pのDASH生成を扱います。1080p/480pはオンプレ回線とCPUに合わせて追加します。
+## 100人視聴時の負荷
 
-## 帯域
-
-100人が同時視聴する場合、オンプレ側の上り帯域が制約になります。
+WebRTCは視聴者ごとにMediaMTXから映像を送ります。サーバーCPUはDASH変換より軽くなりますが、上り帯域は視聴者数に比例します。
 
 | 映像ビットレート | 同時100人の上り帯域 |
 | --- | ---: |
 | 800kbps | 約80Mbps |
 | 1.5Mbps | 約150Mbps |
 | 3Mbps | 約300Mbps |
-| 5Mbps | 約500Mbps |
+
+100人を1台で扱う場合は、720p/30fps、1.5Mbps以下を初期値にします。視聴者数や回線が増える場合は、MediaMTXのread replicaを追加します。
+
+## Cloudflareとの関係
+
+Cloudflare TunnelはAPIとWebSocket用です。低遅延映像のmedia経路をCloudflare Tunnelへ入れません。
+
+本番で外部視聴させる場合は、MediaMTXのWHEP用HTTPポートとWebRTC用UDPポートを到達可能にします。UDPを開けられない環境ではTURNを使いますが、その場合も遅延と帯域負荷は増えます。

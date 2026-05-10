@@ -4,7 +4,6 @@
 
 Goバックエンドは次を担当します。
 
-- DASHマニフェストとセグメントをHTTPで配信する
 - コメント投稿を受ける
 - ルーム内の視聴者へコメントを配信する
 - 簡易なレート制限を行う
@@ -13,24 +12,20 @@ Goバックエンドは次を担当します。
 - 管理者向けAPIを提供する
 - Cloudflare Access JWTを検証する
 
-RTMP受信、RTSP受信、エンコード、MPEG-DASH生成はGoバックエンドの責務ではありません。MediaMTXとffmpegが担当します。
+映像の受信と視聴者への配信はGoバックエンドの責務ではありません。MediaMTXが担当します。
 
 ## API
 
 ```text
 GET /healthz
-GET /live/:roomId/manifest.mpd
-GET /live/:roomId/:segmentName
 GET /api/rooms
 GET /api/rooms/:roomId
-GET /api/rooms/:roomId/status
 GET /api/rooms/:roomId/comments
 GET /ws/rooms/:roomId/comments
 POST /api/rooms/:roomId/comments
 POST /api/admin/rooms
 PATCH /api/admin/rooms/:roomId
 DELETE /api/admin/comments/:commentId
-GET /api/admin/rooms/:roomId/status
 ```
 
 ## SQLite
@@ -67,7 +62,6 @@ SQLiteはWALを有効にします。初期規模100人では外部DBを追加し
 ```text
 LISTEN_ADDR=127.0.0.1:8080
 DATABASE_PATH=/var/lib/boke-video/boke-video.sqlite3
-STREAM_DATA_DIR=/var/lib/boke-video/streams
 ```
 
 CORSとCloudflare Access関連の設定値は`docs/cloudflare.md`を参照します。

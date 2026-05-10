@@ -7,7 +7,7 @@
 ```text
 backend/   Goバックエンド
 frontend/  ViteとTypeScriptのフロントエンド
-deploy/    systemd、cloudflared、MediaMTX、ffmpegの配置サンプル
+deploy/    systemd、cloudflared、MediaMTXの配置サンプル
 docs/      仕様
 ```
 
@@ -17,7 +17,7 @@ docs/      仕様
 
 | ファイル | 内容 |
 | --- | --- |
-| `docs/streaming.md` | OBS入力、MediaMTX、ffmpeg、MPEG-DASH |
+| `docs/streaming.md` | OBS入力、MediaMTX、WebRTC/WHEP |
 | `docs/comments.md` | コメント仕様 |
 | `docs/auth-and-security.md` | Cloudflare Access、管理者判定、セキュリティ |
 | `docs/cloudflare.md` | Cloudflare Access、Tunnel、ローカルデバッグ |

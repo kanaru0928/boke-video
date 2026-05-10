@@ -18,7 +18,6 @@
 | --- | --- |
 | `deploy/cloudflared/boke-video.yml.example` | Cloudflare Tunnel設定例 |
 | `deploy/mediamtx.yml` | MediaMTX本番設定例 |
-| `deploy/ffmpeg-dash.example.sh` | ffmpeg変換スクリプト例 |
 | `deploy/systemd/*.service` | systemdユニット例 |
 
 ## フロントエンド
@@ -45,7 +44,6 @@ systemdで次を管理します。
 boke-video.service
 cloudflared-boke-video.service
 mediamtx-boke-video.service
-boke-video-obs-packager.service
 ```
 
 配置例は`deploy/systemd/`にあります。
@@ -57,5 +55,4 @@ curl -fsS http://127.0.0.1:8080/healthz
 sudo systemctl status boke-video.service
 sudo systemctl status cloudflared-boke-video.service
 sudo systemctl status mediamtx-boke-video.service
-sudo systemctl status boke-video-obs-packager.service
 ```

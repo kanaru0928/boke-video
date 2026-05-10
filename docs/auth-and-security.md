@@ -4,7 +4,7 @@ Cloudflare AccessとCloudflare Tunnelの具体的な設定手順は`docs/cloudfl
 
 ## Cloudflare Access
 
-Cloudflare Accessは通常画面、管理画面、MPEG-DASH、WebSocket、APIを保護します。
+Cloudflare Accessは通常画面、管理画面、WebSocket、APIを保護します。
 
 GoバックエンドはCloudflare Accessがオリジンへ付与する`Cf-Access-Jwt-Assertion`を検証します。
 
@@ -24,9 +24,9 @@ GoバックエンドはCloudflare Accessがオリジンへ付与する`Cf-Access
 
 ## OBS入力
 
-OBS入力はCloudflare Accessで保護しません。RTMPはHTTPではなく、OBSから任意HTTPヘッダーも送れないためです。Cloudflare AccessのService TokenもHTTPヘッダーで送る仕組みなので、OBSのRTMP接続には使いません。
+OBS入力はCloudflare Accessで保護しません。WHIPとRTMPの認証、オリジン側のファイアウォール、MediaMTX設定で守ります。
 
-OBS入力の接続仕様は`docs/streaming.md`を参照します。OBS入力はMediaMTXのRTMP認証とオリジン側のネットワーク制限で守ります。
+OBS入力の接続仕様は`docs/streaming.md`を参照します。
 
 ## CORSとCSP
 
