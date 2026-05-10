@@ -121,15 +121,9 @@ async function runCommentSmoke({
   );
   assert(
     liveResponses.some(
-      (entry) => entry.url.endsWith("/manifest.mpd") && entry.status === 200,
+      (entry) => entry.url.endsWith("/whep") && entry.status === 201,
     ),
-    "manifest was not loaded",
-  );
-  assert(
-    liveResponses.some(
-      (entry) => entry.url.includes("chunk-stream") && entry.status === 200,
-    ),
-    "DASH chunks were not loaded",
+    "WHEP session was not created",
   );
 
   await page.reload({ waitUntil: "networkidle" });

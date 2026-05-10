@@ -13,13 +13,6 @@ export type Room = {
   createdAt: string;
 };
 
-export type RoomStreamStatus = {
-  roomId: string;
-  stream: "ready" | "stale" | "missing";
-  manifestPath: string;
-  manifestAgeSec: number;
-};
-
 export async function fetchRooms(config: AppConfig): Promise<Room[]> {
   const response = await fetch(`${config.apiBaseUrl}/api/rooms`, {
     credentials: "include",
@@ -102,26 +95,6 @@ export async function fetchComments(
   return parsed.filter(isCommentMessage);
 }
 
-export async function fetchRoomStreamStatus(
-  config: AppConfig,
-  roomId: string,
-): Promise<RoomStreamStatus | null> {
-  const response = await fetch(
-    `${config.apiBaseUrl}/api/rooms/${encodeURIComponent(roomId)}/status`,
-    {
-      credentials: "include",
-    },
-  );
-  if (!response.ok) {
-    return null;
-  }
-  const parsed: unknown = await response.json();
-  if (!isRoomStreamStatus(parsed)) {
-    return null;
-  }
-  return parsed;
-}
-
 export function isRoom(value: unknown): value is Room {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -149,23 +122,6 @@ export function isCommentMessage(value: unknown): value is CommentMessage {
     isCommentFontSize(message.fontSize) &&
     typeof message.sentAt === "string"
   );
-}
-
-function isRoomStreamStatus(value: unknown): value is RoomStreamStatus {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-  const status = value as Record<string, unknown>;
-  return (
-    typeof status.roomId === "string" &&
-    isStreamStatus(status.stream) &&
-    typeof status.manifestPath === "string" &&
-    typeof status.manifestAgeSec === "number"
-  );
-}
-
-function isStreamStatus(value: unknown): value is RoomStreamStatus["stream"] {
-  return value === "ready" || value === "stale" || value === "missing";
 }
 
 function isCommentDirection(value: unknown): value is CommentDirection {

@@ -3,7 +3,6 @@ set -eu
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 DATABASE_PATH="${DATABASE_PATH:-/tmp/boke-video-local.sqlite3}"
-STREAM_DATA_DIR="${STREAM_DATA_DIR:-/tmp/boke-video-streams}"
 MEDIAMTX_CONFIG="${MEDIAMTX_CONFIG:-/tmp/boke-video-mediamtx.yml}"
 STREAM_MODE="${1:-${STREAM_MODE:-mock}}"
 LOCAL_OBS_USER="${LOCAL_OBS_USER:-publisher}"
@@ -81,15 +80,13 @@ if [ "${STREAM_MODE}" = "obs-cloudflare" ]; then
 fi
 
 rm -f "${DATABASE_PATH}"
-rm -rf "${STREAM_DATA_DIR}"
 
 export DATABASE_PATH
-export STREAM_DATA_DIR
+export VITE_STREAM_BASE_URL="${VITE_STREAM_BASE_URL:-http://127.0.0.1:8889}"
 if [ "${STREAM_MODE}" = "obs-cloudflare" ]; then
   export LOCAL_ROOM_SETUP="${LOCAL_ROOM_SETUP:-database}"
   export ALLOWED_ORIGINS="${ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}"
   export VITE_API_BASE_URL="${VITE_API_BASE_URL:-${CLOUDFLARE_ACCESS_ORIGIN}}"
-  export VITE_STREAM_BASE_URL="${VITE_STREAM_BASE_URL:-${CLOUDFLARE_ACCESS_ORIGIN}}"
   export VITE_COMMENT_WS_URL="${VITE_COMMENT_WS_URL:-$(printf "%s" "${CLOUDFLARE_ACCESS_ORIGIN}" | sed 's#^https://#wss://#;s#^http://#ws://#')}"
 fi
 
@@ -109,17 +106,18 @@ if [ "${STREAM_MODE}" = "obs-cloudflare" ] && [ -n "${CLOUDFLARE_TUNNEL_CONFIG}"
   CLOUDFLARED_PID="$!"
 fi
 
-if [ "${STREAM_MODE}" = "obs" ] || [ "${STREAM_MODE}" = "obs-no-auth" ] || [ "${STREAM_MODE}" = "obs-auth" ] || [ "${STREAM_MODE}" = "obs-cloudflare" ]; then
-  if lsof -tiTCP:8554 -sTCP:LISTEN >/dev/null || lsof -tiTCP:1935 -sTCP:LISTEN >/dev/null; then
-    echo "using existing MediaMTX listener"
-  elif command -v mediamtx >/dev/null; then
-    if [ "${STREAM_MODE}" = "obs-auth" ] || [ "${STREAM_MODE}" = "obs-cloudflare" ]; then
-      cat >"${MEDIAMTX_CONFIG}" <<EOF
+if lsof -tiTCP:8554 -sTCP:LISTEN >/dev/null || lsof -tiTCP:1935 -sTCP:LISTEN >/dev/null || lsof -tiTCP:8889 -sTCP:LISTEN >/dev/null; then
+  echo "using existing MediaMTX listener"
+elif command -v mediamtx >/dev/null; then
+  if [ "${STREAM_MODE}" = "obs-auth" ] || [ "${STREAM_MODE}" = "obs-cloudflare" ]; then
+    cat >"${MEDIAMTX_CONFIG}" <<EOF
 rtspAddress: 127.0.0.1:8554
 rtspTransports: [tcp]
 rtmpAddress: :1935
 hls: no
-webrtc: no
+webrtc: yes
+webrtcAddress: :8889
+webrtcLocalUDPAddress: :8189
 srt: no
 
 authMethod: internal
@@ -135,27 +133,38 @@ authInternalUsers:
     ips: ["127.0.0.1", "::1"]
     permissions:
       - action: read
-        path:
+        path: "~^live/.+$"
 
 paths:
   all_others:
     source: publisher
 EOF
-    else
-      cat >"${MEDIAMTX_CONFIG}" <<'EOF'
+  else
+    cat >"${MEDIAMTX_CONFIG}" <<'EOF'
+rtspAddress: 127.0.0.1:8554
+rtspTransports: [tcp]
+rtmpAddress: :1935
+hls: no
+webrtc: yes
+webrtcAddress: :8889
+webrtcLocalUDPAddress: :8189
+srt: no
+
 paths:
   all_others:
     source: publisher
 EOF
-    fi
-    echo "starting MediaMTX with ${MEDIAMTX_CONFIG}"
-    mediamtx "${MEDIAMTX_CONFIG}" &
-    MEDIAMTX_PID="$!"
-    sleep 1
-  else
-    echo "mediamtx command is missing. Install it with: brew install mediamtx" >&2
-    exit 1
   fi
+  echo "starting MediaMTX with ${MEDIAMTX_CONFIG}"
+  mediamtx "${MEDIAMTX_CONFIG}" &
+  MEDIAMTX_PID="$!"
+  sleep 1
+else
+  echo "mediamtx command is missing. Install it with: brew install mediamtx" >&2
+  exit 1
+fi
+
+if [ "${STREAM_MODE}" = "obs" ] || [ "${STREAM_MODE}" = "obs-no-auth" ] || [ "${STREAM_MODE}" = "obs-auth" ] || [ "${STREAM_MODE}" = "obs-cloudflare" ]; then
   "${ROOT_DIR}/scripts/start-local-obs-stream.sh" &
 else
   "${ROOT_DIR}/scripts/start-local-dummy-stream.sh" &

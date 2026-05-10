@@ -53,7 +53,6 @@ func main() {
 		Verifier:       verifier,
 		CommentHub:     commentHub,
 		AllowedOrigins: cfg.AllowedOrigins,
-		StreamDataDir:  cfg.StreamDataDir,
 	})
 
 	server := &http.Server{

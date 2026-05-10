@@ -11,7 +11,6 @@ import type { AppConfig } from "../../shared/config/config";
 import type { CommentMessage } from "../comments/types";
 import { deleteComment, fetchComments, type Room } from "../rooms/room_api";
 import { useRooms } from "../rooms/useRooms";
-import { useRoomStreamStatus } from "./useRoomStreamStatus";
 
 type AdminPageProps = {
   config: AppConfig;
@@ -82,7 +81,6 @@ export function AdminPage({ config }: AdminPageProps) {
         {rooms.map((room) => (
           <AdminRoom
             comments={commentsByRoomId[room.id] ?? null}
-            config={config}
             key={room.id}
             onLoadComments={loadComments}
             onRemoveComment={removeComment}
@@ -97,7 +95,6 @@ export function AdminPage({ config }: AdminPageProps) {
 
 type AdminRoomProps = {
   comments: CommentMessage[] | null;
-  config: AppConfig;
   onLoadComments: (roomId: string) => Promise<void>;
   onRemoveComment: (roomId: string, commentId: string) => Promise<void>;
   onUpdateTitle: (roomId: string, title: string) => Promise<void>;
@@ -106,15 +103,12 @@ type AdminRoomProps = {
 
 function AdminRoom({
   comments,
-  config,
   onLoadComments,
   onRemoveComment,
   onUpdateTitle,
   room,
 }: AdminRoomProps) {
   const [title, setTitle] = useState(room.title);
-  const streamStatus = useRoomStreamStatus(config, room.id);
-
   useEffect(() => {
     setTitle(room.title);
   }, [room.title]);
@@ -129,7 +123,6 @@ function AdminRoom({
         value={title}
       />
       <p>{room.id}</p>
-      <p className="admin-status">配信状態: {streamStatus}</p>
       <a href={`/?room=${encodeURIComponent(room.id)}`}>
         <ExternalLink aria-hidden="true" size={17} />
         開く

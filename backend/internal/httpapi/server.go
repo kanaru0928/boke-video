@@ -9,9 +9,6 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"os"
-	"path"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -32,7 +29,6 @@ type ServerConfig struct {
 	Verifier       *access.Verifier
 	CommentHub     *comment.Hub
 	AllowedOrigins []string
-	StreamDataDir  string
 }
 
 type Server struct {
@@ -41,7 +37,6 @@ type Server struct {
 	verifier       *access.Verifier
 	commentHub     *comment.Hub
 	allowedOrigins []string
-	streamDataDir  string
 	limiter        *rateLimiter
 }
 
@@ -52,7 +47,6 @@ func NewServer(cfg ServerConfig) *Server {
 		verifier:       cfg.Verifier,
 		commentHub:     cfg.CommentHub,
 		allowedOrigins: cfg.AllowedOrigins,
-		streamDataDir:  cfg.StreamDataDir,
 		limiter:        newRateLimiter(time.Second),
 	}
 }
@@ -67,16 +61,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet && r.URL.Path == "/healthz":
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
-	case strings.HasPrefix(r.URL.Path, "/live/") && r.Method == http.MethodGet:
-		s.handleStreamFile(w, r)
 	case r.Method == http.MethodGet && r.URL.Path == "/api/rooms":
 		s.handleListRooms(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/api/admin/rooms":
 		s.handleCreateRoom(w, r)
 	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/comments"):
 		s.handleListComments(w, r)
-	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/status"):
-		s.handleRoomStatus(w, r)
 	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/"):
 		s.handleGetRoom(w, r)
 	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/comments"):
@@ -87,8 +77,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.handleUpdateRoom(w, r)
 	case r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/api/admin/comments/"):
 		s.handleDeleteComment(w, r)
-	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/admin/rooms/") && strings.HasSuffix(r.URL.Path, "/status"):
-		s.handleRoomStatus(w, r)
 	default:
 		writeError(w, http.StatusNotFound, "not found")
 	}
@@ -218,34 +206,6 @@ func (s *Server) handleDeleteComment(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (s *Server) handleRoomStatus(w http.ResponseWriter, r *http.Request) {
-	if _, ok := s.requirePrincipal(w, r); !ok {
-		return
-	}
-	roomID := roomStatusPathValue(r.URL.Path)
-	_, err := s.repository.GetRoom(r.Context(), roomID)
-	if err != nil {
-		writeRepositoryError(w, err)
-		return
-	}
-	status := s.streamStatus(roomID)
-	writeJSON(w, http.StatusOK, map[string]any{
-		"roomId":         roomID,
-		"stream":         status.Stream,
-		"manifestPath":   status.ManifestPath,
-		"manifestAgeSec": status.ManifestAgeSec,
-	})
-}
-
-func roomStatusPathValue(urlPath string) string {
-	switch {
-	case strings.HasPrefix(urlPath, "/api/admin/rooms/"):
-		return strings.TrimSuffix(strings.TrimPrefix(urlPath, "/api/admin/rooms/"), "/status")
-	default:
-		return strings.TrimSuffix(strings.TrimPrefix(urlPath, "/api/rooms/"), "/status")
-	}
-}
-
 func (s *Server) handleListComments(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.requirePrincipal(w, r); !ok {
 		return
@@ -364,46 +324,6 @@ func (s *Server) createCommentFromRequest(ctx context.Context, roomID string, au
 	}
 
 	return storedToMessage(stored), nil
-}
-
-func (s *Server) handleStreamFile(w http.ResponseWriter, r *http.Request) {
-	if _, ok := s.requirePrincipal(w, r); !ok {
-		return
-	}
-	cleanPath := path.Clean(strings.TrimPrefix(r.URL.Path, "/live/"))
-	if cleanPath == "." || strings.HasPrefix(cleanPath, "../") || strings.Contains(cleanPath, "/../") {
-		writeError(w, http.StatusBadRequest, "invalid stream path")
-		return
-	}
-	http.ServeFile(w, r, path.Join(s.streamDataDir, cleanPath))
-}
-
-type roomStreamStatus struct {
-	Stream         string
-	ManifestPath   string
-	ManifestAgeSec int64
-}
-
-func (s *Server) streamStatus(roomID string) roomStreamStatus {
-	manifestPath := filepath.Join(s.streamDataDir, roomID, "manifest.mpd")
-	stat, err := os.Stat(manifestPath)
-	if err != nil {
-		return roomStreamStatus{
-			Stream:       "missing",
-			ManifestPath: manifestPath,
-		}
-	}
-
-	manifestAgeSec := int64(time.Since(stat.ModTime()).Seconds())
-	stream := "stale"
-	if manifestAgeSec <= 10 {
-		stream = "ready"
-	}
-	return roomStreamStatus{
-		Stream:         stream,
-		ManifestPath:   manifestPath,
-		ManifestAgeSec: manifestAgeSec,
-	}
 }
 
 func (s *Server) isAllowedOrigin(origin string) bool {

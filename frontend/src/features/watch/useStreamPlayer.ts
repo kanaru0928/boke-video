@@ -1,8 +1,7 @@
 import { type RefObject, useEffect, useRef, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
-import { DashPlayer } from "../player/dash_player";
-import { fetchRoomStreamStatus } from "../rooms/room_api";
-import { canPlayStream, streamStatusMessage } from "./watch_stream";
+import { WebRtcPlayer } from "../player/webrtc_player";
+import { buildWhepUrl, streamStatusMessage } from "./watch_stream";
 
 type UseStreamPlayerResult = {
   streamMessage: string;
@@ -13,14 +12,12 @@ export function useStreamPlayer(
   roomId: string,
   videoRef: RefObject<HTMLVideoElement | null>,
 ): UseStreamPlayerResult {
-  const playerRef = useRef<DashPlayer | null>(null);
+  const playerRef = useRef<WebRtcPlayer | null>(null);
   const attachedRoomIdRef = useRef("");
-  const [streamMessage, setStreamMessage] = useState(
-    streamStatusMessage("unknown"),
-  );
+  const [streamMessage, setStreamMessage] = useState(streamStatusMessage());
 
   useEffect(() => {
-    playerRef.current = new DashPlayer();
+    playerRef.current = new WebRtcPlayer();
     return () => {
       playerRef.current?.destroy();
       playerRef.current = null;
@@ -42,30 +39,51 @@ export function useStreamPlayer(
       video.load();
     };
 
-    const attachStreamWhenReady = async (): Promise<void> => {
-      if (roomId === "") {
-        setStreamMessage(streamStatusMessage("unknown"));
-        return;
-      }
-      const status = await fetchRoomStreamStatus(config, roomId);
-      if (canceled) {
-        return;
-      }
-      if (canPlayStream(status)) {
-        setStreamMessage("");
-        if (attachedRoomIdRef.current !== roomId && videoRef.current !== null) {
-          const manifestUrl = `${config.streamBaseUrl}/live/${encodeURIComponent(roomId)}/manifest.mpd`;
-          playerRef.current?.attach(videoRef.current, manifestUrl);
-          attachedRoomIdRef.current = roomId;
-        }
-        return;
-      }
-
-      detachStream();
-      setStreamMessage(streamStatusMessage(status?.stream ?? "unknown"));
+    const scheduleReconnect = (): void => {
       timerId = window.setTimeout(() => {
         void attachStreamWhenReady();
       }, 1000);
+    };
+
+    const attachStreamWhenReady = async (): Promise<void> => {
+      if (roomId === "") {
+        setStreamMessage(streamStatusMessage());
+        return;
+      }
+      if (attachedRoomIdRef.current === roomId) {
+        return;
+      }
+
+      try {
+        if (videoRef.current === null) {
+          return;
+        }
+        await playerRef.current?.attach(
+          videoRef.current,
+          buildWhepUrl(config.streamBaseUrl, roomId),
+          () => {
+            if (canceled) {
+              return;
+            }
+            detachStream();
+            setStreamMessage(streamStatusMessage());
+            scheduleReconnect();
+          },
+        );
+        if (canceled) {
+          return;
+        }
+        attachedRoomIdRef.current = roomId;
+        setStreamMessage("");
+        return;
+      } catch {
+        if (canceled) {
+          return;
+        }
+        detachStream();
+        setStreamMessage(streamStatusMessage());
+        scheduleReconnect();
+      }
     };
 
     void attachStreamWhenReady();

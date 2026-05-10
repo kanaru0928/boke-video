@@ -50,26 +50,6 @@ func TestServerStoresCommentAppearance(t *testing.T) {
 	}
 }
 
-func TestServerReturnsMissingStreamStatus(t *testing.T) {
-	server := newTestServer(t)
-
-	roomID := createTestRoom(t, server, "配信")
-	response := performRequest(server, http.MethodGet, "/api/rooms/"+roomID+"/status", "")
-	if response.Code != http.StatusOK {
-		t.Fatalf("room status code = %d, body = %s", response.Code, response.Body.String())
-	}
-
-	var body struct {
-		Stream string `json:"stream"`
-	}
-	if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
-		t.Fatalf("Decode returned error: %v", err)
-	}
-	if body.Stream != "missing" {
-		t.Fatalf("stream = %q", body.Stream)
-	}
-}
-
 func TestServerCreatesRoomWithRequestedID(t *testing.T) {
 	server := newTestServer(t)
 
@@ -133,7 +113,6 @@ func newTestServer(t *testing.T) *Server {
 		Verifier:       access.NewVerifier(access.VerifierConfig{}),
 		CommentHub:     comment.NewHub(),
 		AllowedOrigins: []string{"http://localhost:5173"},
-		StreamDataDir:  t.TempDir(),
 	})
 }
 

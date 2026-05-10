@@ -12,7 +12,6 @@
     "dev:obs:cloudflare": "LOCAL_OBS_AUTH=true scripts/local-dev.sh obs-cloudflare",
     "demo:backend": "scripts/local-backend.sh",
     "demo:frontend": "scripts/local-frontend.sh",
-    "demo:setup": "scripts/setup-local-sample-stream.sh",
     "demo:browser-smoke": "node scripts/local-browser-smoke-test.mjs",
     "demo:smoke": "node scripts/local-smoke-test.mjs",
     "demo:stream:obs": "scripts/start-local-obs-stream.sh",

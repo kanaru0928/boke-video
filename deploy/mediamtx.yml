@@ -2,7 +2,10 @@ rtspAddress: 127.0.0.1:8554
 rtspTransports: [tcp]
 rtmpAddress: :1935
 hls: no
-webrtc: no
+webrtc: yes
+webrtcAddress: :8889
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: ""
 srt: no
 
 authMethod: internal
@@ -18,7 +21,7 @@ authInternalUsers:
     ips: ["127.0.0.1", "::1"]
     permissions:
       - action: read
-        path:
+        path: "~^live/.+$"
       - action: api
       - action: metrics
       - action: pprof

@@ -168,7 +168,7 @@ export function WatchPage({ config }: WatchPageProps) {
             <div className="stream-status">{streamMessage}</div>
           ) : null}
           <div className="player-controls">
-            <button type="button" onClick={togglePlayback}>
+            <button id="play-toggle" type="button" onClick={togglePlayback}>
               {isPaused ? (
                 <Play aria-hidden="true" size={18} />
               ) : (
@@ -177,7 +177,7 @@ export function WatchPage({ config }: WatchPageProps) {
               {isPaused ? "再生" : "一時停止"}
             </button>
             <span className="live-badge">LIVE</span>
-            <button type="button" onClick={toggleMuted}>
+            <button id="mute-toggle" type="button" onClick={toggleMuted}>
               {isMuted ? (
                 <VolumeX aria-hidden="true" size={18} />
               ) : (

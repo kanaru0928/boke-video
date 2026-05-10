@@ -9,7 +9,6 @@ import (
 type Config struct {
 	ListenAddr     string
 	DatabasePath   string
-	StreamDataDir  string
 	AllowedOrigins []string
 	AccessEnabled  bool
 	AccessAudience string
@@ -21,7 +20,6 @@ func Load() (Config, error) {
 	cfg := Config{
 		ListenAddr:     env("LISTEN_ADDR", ":8080"),
 		DatabasePath:   env("DATABASE_PATH", "boke-video.sqlite3"),
-		StreamDataDir:  env("STREAM_DATA_DIR", "data/streams"),
 		AllowedOrigins: origins(env("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")),
 		AccessEnabled:  env("ACCESS_ENABLED", "false") == "true",
 		AccessAudience: os.Getenv("ACCESS_AUDIENCE"),

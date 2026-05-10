@@ -1,19 +1,8 @@
-import type { RoomStreamStatus } from "../rooms/room_api";
-
-export function canPlayStream(status: RoomStreamStatus | null): boolean {
-  return status?.stream === "ready" || status?.stream === "stale";
+export function buildWhepUrl(streamBaseUrl: string, roomId: string): string {
+  const baseUrl = streamBaseUrl.replace(/\/+$/, "");
+  return `${baseUrl}/live/${encodeURIComponent(roomId)}/whep`;
 }
 
-export function streamStatusMessage(
-  status: RoomStreamStatus["stream"] | "unknown",
-): string {
-  switch (status) {
-    case "ready":
-      return "";
-    case "stale":
-      return "配信が停止しています";
-    case "missing":
-    case "unknown":
-      return "配信を準備しています";
-  }
+export function streamStatusMessage(): string {
+  return "配信を準備しています";
 }
