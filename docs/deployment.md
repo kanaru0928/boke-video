@@ -6,7 +6,6 @@
 
 | 内容 | 正本 |
 | --- | --- |
-| ドメイン構成 | `docs/architecture.md` |
 | Accessポリシーとセキュリティ | `docs/auth-and-security.md` |
 | OBS入力とMediaMTX | `docs/streaming.md` |
 | バックエンド環境変数 | `docs/backend.md` |

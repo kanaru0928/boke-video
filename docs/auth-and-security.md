@@ -2,7 +2,7 @@
 
 ## Cloudflare Access
 
-Cloudflare Accessは`docs/architecture.md`の通常画面、管理画面、MPEG-DASH、WebSocket、APIを保護します。
+Cloudflare Accessは通常画面、管理画面、MPEG-DASH、WebSocket、APIを保護します。
 
 GoバックエンドはCloudflare Accessがオリジンへ付与する`Cf-Access-Jwt-Assertion`を検証します。
 
@@ -31,7 +31,7 @@ Goバックエンドは到達した管理APIリクエストのJWTを検証しま
 
 OBS入力はCloudflare Accessで保護しません。RTMPはHTTPではなく、OBSから任意HTTPヘッダーも送れないためです。Cloudflare AccessのService TokenもHTTPヘッダーで送る仕組みなので、OBSのRTMP接続には使いません。
 
-OBS入力の接続仕様は`docs/streaming.md`を参照します。OBS入力のホスト名は`docs/architecture.md`を参照します。
+OBS入力の接続仕様は`docs/streaming.md`を参照します。
 
 OBS入力は次で守ります。
 
