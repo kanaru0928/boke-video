@@ -11,6 +11,14 @@ deploy/    systemdとffmpegの運用サンプル
 cc-docs/   設計メモ
 ```
 
+## 実装状況
+
+Cloudflare Access JWT検証、MPEG-DASH再生、WebSocketコメント、SQLite保存、管理API、管理画面は実装済みです。
+
+アプリケーション独自のログイン、セッション、パスワード管理、オンプレ側のアカウント管理機能は実装していません。これはCloudflare Accessへ認証を任せる設計どおりです。管理者判定もCloudflare Accessのポリシーで行います。Goバックエンドは到達したリクエストのJWTを検証しますが、アプリ内ロールは持ちません。
+
+OBS入力は、現状ではGoプロセス内RTSP受信としては実装していません。ローカルとデプロイ例ではMediaMTXでOBS入力を受け、ffmpegでMPEG-DASHへ変換します。
+
 ## バックエンド
 
 ```sh
@@ -27,6 +35,55 @@ go build ./cmd/server
 ```sh
 pnpm install
 pnpm check
+```
+
+Cloudflare Workersへデプロイする場合は、`frontend/.env.production`へ本番URLを設定してからデプロイします。
+
+```sh
+VITE_API_BASE_URL=https://stream.example.com
+VITE_STREAM_BASE_URL=https://stream.example.com
+VITE_COMMENT_WS_URL=wss://stream.example.com
+```
+
+```sh
+pnpm deploy:frontend
+```
+
+Wrangler設定は`frontend/wrangler.jsonc`です。
+
+## Cloudflare Access
+
+フロントエンド、バックエンド、DASH、WebSocket、管理画面をCloudflare Accessの対象にします。バックエンドは`Cf-Access-Jwt-Assertion`を検証します。
+
+バックエンドの本番環境変数例は`backend/.env.example`です。
+
+```sh
+ACCESS_ENABLED=true
+ACCESS_AUDIENCE=replace-with-cloudflare-access-aud
+ACCESS_ISSUER=https://replace-with-team-name.cloudflareaccess.com
+ACCESS_CERTS_URL=https://replace-with-team-name.cloudflareaccess.com/cdn-cgi/access/certs
+ALLOWED_ORIGINS=https://video.example.com
+```
+
+`/admin`と`/api/admin/*`はCloudflare Access側で管理者だけに許可します。Goバックエンド側にはアプリ独自の管理者ロールを保存しません。
+
+## オンプレデプロイ
+
+Goバックエンド、Cloudflare Tunnel、MediaMTX、ffmpeg変換をsystemdで管理する例を`deploy/systemd/`に置いています。
+
+```text
+deploy/systemd/boke-video.service
+deploy/systemd/cloudflared-boke-video.service
+deploy/systemd/mediamtx-boke-video.service
+deploy/systemd/boke-video-obs-packager.service
+```
+
+Cloudflare Tunnelの設定例は`deploy/cloudflared/boke-video.yml.example`です。MediaMTXの設定例は`deploy/mediamtx.yml`です。
+
+ffmpeg変換サービスは`deploy/ffmpeg-dash.example.sh`を実行ファイルとして配置して使います。
+
+```sh
+sudo install -m 0755 deploy/ffmpeg-dash.example.sh /usr/local/bin/ffmpeg-dash-boke-video
 ```
 
 ## ローカル開発

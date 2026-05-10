@@ -14,6 +14,7 @@
     "demo:smoke": "node scripts/local-smoke-test.mjs",
     "demo:stream:obs": "scripts/start-local-obs-stream.sh",
     "demo:stream:dummy": "scripts/start-local-dummy-stream.sh",
+    "deploy:frontend": "pnpm --dir frontend run deploy",
     "format": "biome format --write . && gofmt -w backend/cmd backend/internal",
     "hooks:install": "lefthook install",
     "lint": "biome lint . && knip && pnpm backend:lint"

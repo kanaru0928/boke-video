@@ -1,0 +1,23 @@
+[Unit]
+Description=Boke Video OBS DASH packager
+After=network-online.target mediamtx-boke-video.service boke-video.service
+Wants=network-online.target mediamtx-boke-video.service boke-video.service
+
+[Service]
+Type=simple
+User=boke-video
+Group=boke-video
+Environment=ROOM_ID=main
+Environment=RTSP_INPUT=rtsp://127.0.0.1:8554/live/main
+Environment=OUTPUT_DIR=/var/lib/boke-video/streams/main
+ExecStart=/usr/local/bin/ffmpeg-dash-boke-video
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/boke-video
+
+[Install]
+WantedBy=multi-user.target

@@ -10,7 +10,6 @@
       "project": ["*.json", "*.yaml", "*.yml"]
     }
   },
-  "ignoreDependencies": ["wrangler"],
   "ignoreBinaries": [
     "go",
     "gofmt",
