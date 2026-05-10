@@ -29,12 +29,11 @@ docs/      仕様
 
 ```sh
 pnpm install
-pnpm dev:mock
-pnpm dev:obs
+pnpm dev:obs:local
 ```
 
-`pnpm dev:mock`はダミーライブ配信です。`pnpm dev:obs`はローカルOBS入力を使う開発用です。
-Cloudflare Access、Tunnel、3種類のデバッグ手順は`docs/cloudflare.md`にまとめています。
+`pnpm dev:obs:local`はローカルOBS入力を使う開発用です。
+Cloudflare AccessとTunnelを使うデバッグ手順は`docs/cloudflare.md`にまとめています。
 
 ## 検証
 

@@ -54,10 +54,10 @@ func origins(rawValue string) []string {
 	return origins
 }
 
-func env(key string, fallback string) string {
+func env(key string, defaultValue string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		return fallback
+		return defaultValue
 	}
 	return value
 }

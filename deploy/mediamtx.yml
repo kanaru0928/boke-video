@@ -17,7 +17,7 @@ authInternalUsers:
         path: "~^live/.+$"
   - user: any
     pass:
-    ips: ["127.0.0.1", "::1"]
+    ips: []
     permissions:
       - action: read
         path: "~^live/.+$"

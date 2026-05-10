@@ -24,7 +24,7 @@ GoバックエンドはCloudflare Accessがオリジンへ付与する`Cf-Access
 
 ## OBS入力
 
-OBS入力はCloudflare Accessで保護しません。WHIP認証、オリジン側のファイアウォール、MediaMTX設定で守ります。
+OBS入力はCloudflare Accessで保護しません。WHIP認証、オリジン側のファイアウォール、MediaMTX設定で守ります。視聴用WHEPもCloudflare Accessではなく、MediaMTX到達元のネットワーク制限で守ります。
 
 OBS入力の接続仕様は`docs/streaming.md`を参照します。
 

@@ -4,7 +4,7 @@ set -eu
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 DATABASE_PATH="${DATABASE_PATH:-/tmp/boke-video-local.sqlite3}"
 MEDIAMTX_CONFIG="${MEDIAMTX_CONFIG:-/tmp/boke-video-mediamtx.yml}"
-STREAM_MODE="${1:-${STREAM_MODE:-mock}}"
+STREAM_MODE="${1:-${STREAM_MODE:-obs-no-auth}}"
 LOCAL_OBS_USER="${LOCAL_OBS_USER:-publisher}"
 LOCAL_OBS_PASSWORD="${LOCAL_OBS_PASSWORD:-local-password}"
 CLOUDFLARE_ACCESS_ORIGIN="${CLOUDFLARE_ACCESS_ORIGIN:-}"
@@ -54,10 +54,10 @@ if lsof -tiTCP:5173 -sTCP:LISTEN >/dev/null; then
   exit 1
 fi
 case "${STREAM_MODE}" in
-  mock | obs | obs-no-auth | obs-auth | obs-cloudflare)
+  obs | obs-no-auth | obs-auth | obs-cloudflare)
     ;;
   *)
-    echo "stream mode must be mock, obs, obs-no-auth, obs-auth, or obs-cloudflare" >&2
+    echo "stream mode must be obs, obs-no-auth, obs-auth, or obs-cloudflare" >&2
     exit 1
     ;;
 esac
@@ -106,7 +106,7 @@ if [ "${STREAM_MODE}" = "obs-cloudflare" ] && [ -n "${CLOUDFLARE_TUNNEL_CONFIG}"
   CLOUDFLARED_PID="$!"
 fi
 
-if lsof -tiTCP:8554 -sTCP:LISTEN >/dev/null || lsof -tiTCP:8889 -sTCP:LISTEN >/dev/null; then
+if lsof -tiTCP:8889 -sTCP:LISTEN >/dev/null; then
   echo "using existing MediaMTX listener"
 elif command -v mediamtx >/dev/null; then
   if [ "${STREAM_MODE}" = "obs-auth" ] || [ "${STREAM_MODE}" = "obs-cloudflare" ]; then
@@ -129,25 +129,10 @@ authInternalUsers:
         path: "~^live/.+$"
   - user: any
     pass:
-    ips: ["127.0.0.1", "::1"]
+    ips: []
     permissions:
       - action: read
         path: "~^live/.+$"
-
-paths:
-  all_others:
-    source: publisher
-EOF
-  elif [ "${STREAM_MODE}" = "mock" ]; then
-    cat >"${MEDIAMTX_CONFIG}" <<'EOF'
-rtspAddress: 127.0.0.1:8554
-rtspTransports: [tcp]
-rtmp: no
-hls: no
-webrtc: yes
-webrtcAddress: :8889
-webrtcLocalUDPAddress: :8189
-srt: no
 
 paths:
   all_others:
@@ -177,11 +162,7 @@ else
   exit 1
 fi
 
-if [ "${STREAM_MODE}" = "obs" ] || [ "${STREAM_MODE}" = "obs-no-auth" ] || [ "${STREAM_MODE}" = "obs-auth" ] || [ "${STREAM_MODE}" = "obs-cloudflare" ]; then
-  "${ROOT_DIR}/scripts/start-local-obs-stream.sh" &
-else
-  "${ROOT_DIR}/scripts/start-local-dummy-stream.sh" &
-fi
+"${ROOT_DIR}/scripts/start-local-obs-stream.sh" &
 STREAM_PID="$!"
 
 wait "${STREAM_PID}"

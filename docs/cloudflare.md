@@ -92,14 +92,6 @@ ALLOWED_ORIGINS=https://video.example.com
 
 ## ローカルデバッグ
 
-### ローカル
-
-OBSなしで、ダミー配信を使います。
-
-```sh
-pnpm dev:mock
-```
-
 ### ローカル、OBSあり
 
 OBS入力をローカルで確認します。

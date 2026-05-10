@@ -27,6 +27,10 @@ OBS_RECOMMENDED_RATE_CONTROL=CBR
 OBS_RECOMMENDED_VIDEO_BITRATE=1500kbps
 EOF
 
+if [ "${LOCAL_OBS_AUTH:-false}" = "true" ]; then
+  echo "OBS_BEARER_TOKEN=${LOCAL_OBS_USER:-publisher}:${LOCAL_OBS_PASSWORD:-local-password}"
+fi
+
 echo "waiting for OBS input at ${WEBRTC_BASE_URL}/live/${ROOM_ID}/whip" >&2
 
 while true; do

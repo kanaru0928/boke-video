@@ -2,7 +2,7 @@
 
 ## 方針
 
-低遅延を優先するため、ブラウザ再生はMPEG-DASHではなくMediaMTXのWebRTC/WHEPを使います。Goバックエンドは映像を中継しません。
+低遅延を優先するため、ブラウザ再生はMediaMTXのWebRTC/WHEPを使います。Goバックエンドは映像を中継しません。
 
 ```text
 OBS
@@ -26,14 +26,17 @@ OBS側はBフレームを0にし、キーフレーム間隔を0.5秒にします
 
 ローカルでは`pnpm dev:obs:local`の起動ログに出る`OBS_WHIP_SERVER`を使います。
 
+認証ありの確認では、起動ログの`OBS_BEARER_TOKEN`をOBSのBearer Tokenへ入れます。MediaMTX公式ドキュメントでは、OBSのBearer Tokenには`user:password`の形式でWHIP認証情報を渡せます。
+
 ## MediaMTX
 
 本番設定例は`deploy/mediamtx.yml`です。
 
 - WebRTC/WHEPは`:8889`で待ち受けます。
 - WebRTC mediaは`:8189/udp`を使います。
-- RTMP、HLS、SRTは無効化します。
+- WHIP/WHEP以外の配信プロトコルは無効化します。
 - `publisher`ユーザーに`live/*`へのpublish権限を与えます。
+- 視聴者のreadはMediaMTXで許可し、公開範囲はファイアウォールで制限します。
 
 MediaMTX公式ドキュメントでは、ブラウザは`/whep`のURLでWebRTCストリームを読めます。OBSはWHIPでMediaMTXへpublishできます。
 
@@ -55,7 +58,7 @@ VITE_STREAM_BASE_URL=https://media.example.com
 
 ## 100人視聴時の負荷
 
-WebRTCは視聴者ごとにMediaMTXから映像を送ります。サーバーCPUはDASH変換より軽くなりますが、上り帯域は視聴者数に比例します。
+WebRTCは視聴者ごとにMediaMTXから映像を送ります。サーバーCPUは映像変換をしない構成なので抑えられますが、上り帯域は視聴者数に比例します。
 
 | 映像ビットレート | 同時100人の上り帯域 |
 | --- | ---: |
