@@ -41,7 +41,9 @@ MANIFEST_URL=${BACKEND_URL}/live/${ROOM_ID}/manifest.mpd
 RTSP_INPUT=${RTSP_INPUT}
 RTMP_INPUT=${RTMP_INPUT}
 OBS_STREAM_KEY=
-OBS_RECOMMENDED_KEYFRAME_INTERVAL=1s
+OBS_RECOMMENDED_OUTPUT_RESOLUTION=1280x720
+OBS_RECOMMENDED_FPS=30
+OBS_RECOMMENDED_KEYFRAME_INTERVAL=0.5s
 OBS_RECOMMENDED_B_FRAMES=0
 STREAM_DATA_DIR=${STREAM_DATA_DIR}
 EOF
@@ -55,10 +57,21 @@ fi
 while true; do
   wait_for_obs_input
   ffmpeg -hide_banner -loglevel warning \
-    -fflags +genpts \
+    -fflags +genpts+nobuffer \
     -i "${RTMP_INPUT}" \
     -map 0:v:0 -map 0:a:0? \
-    -c copy \
+    -filter:v "fps=30,scale=w=1280:h=720:force_original_aspect_ratio=decrease:force_divisible_by=2" \
+    -c:v libx264 \
+    -preset ultrafast \
+    -tune zerolatency \
+    -g 15 \
+    -keyint_min 15 \
+    -sc_threshold 0 \
+    -b:v 1800k \
+    -maxrate 2000k \
+    -bufsize 2000k \
+    -c:a aac \
+    -b:a 96k \
     -avoid_negative_ts make_zero \
     -use_timeline 1 \
     -use_template 1 \
