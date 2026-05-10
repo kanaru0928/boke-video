@@ -13,16 +13,7 @@ LOCAL_OBS_PASSWORD="${LOCAL_OBS_PASSWORD:-local-password}"
 LOCAL_OBS_AUTH="${LOCAL_OBS_AUTH:-false}"
 
 command -v ffmpeg >/dev/null
-command -v ffprobe >/dev/null
 command -v node >/dev/null
-
-wait_for_obs_input() {
-  echo "waiting for OBS input at ${RTMP_INPUT}" >&2
-  while ! ffprobe -v error "${RTMP_INPUT}" >/dev/null 2>&1; do
-    sleep 1
-  done
-  echo "OBS input is available at ${RTMP_INPUT}" >&2
-}
 
 mkdir -p "${STREAM_DATA_DIR}"
 
@@ -54,8 +45,9 @@ else
   echo "OBS_RTMP_SERVER=rtmp://127.0.0.1:1935/live/${ROOM_ID}"
 fi
 
+echo "waiting for OBS input at ${RTMP_INPUT}" >&2
+
 while true; do
-  wait_for_obs_input
   ffmpeg -hide_banner -loglevel warning \
     -fflags +genpts+nobuffer \
     -i "${RTMP_INPUT}" \
@@ -82,5 +74,6 @@ while true; do
     -adaptation_sets "id=0,streams=v id=1,streams=a" \
     -f dash \
     "${OUTPUT_DIR}/manifest.mpd"
+  echo "OBS input is not available. Retrying in 1 second." >&2
   sleep 1
 done

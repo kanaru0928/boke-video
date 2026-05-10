@@ -36,6 +36,9 @@ export class DashPlayer {
       },
     });
     this.player.initialize(video, manifestUrl, true);
+    video.autoplay = true;
+    video.muted = true;
+    void video.play();
   }
 
   destroy(): void {

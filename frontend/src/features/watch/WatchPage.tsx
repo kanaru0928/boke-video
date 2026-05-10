@@ -155,6 +155,7 @@ export function WatchPage({ config }: WatchPageProps) {
       <section className="watch-grid">
         <section ref={stageRef} className="stage">
           <video
+            autoPlay
             ref={videoRef}
             muted
             onPause={updatePlayerState}
