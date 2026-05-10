@@ -9,7 +9,16 @@ ROOM_TITLE="${ROOM_TITLE:-OBS live stream}"
 RTSP_INPUT="${RTSP_INPUT:-rtsp://127.0.0.1:8554/live/${ROOM_ID}}"
 
 command -v ffmpeg >/dev/null
+command -v ffprobe >/dev/null
 command -v node >/dev/null
+
+wait_for_obs_input() {
+  echo "waiting for OBS input at ${RTSP_INPUT}" >&2
+  while ! ffprobe -v error -rtsp_transport tcp "${RTSP_INPUT}" >/dev/null 2>&1; do
+    sleep 1
+  done
+  echo "OBS input is available at ${RTSP_INPUT}" >&2
+}
 
 mkdir -p "${STREAM_DATA_DIR}"
 
@@ -59,6 +68,7 @@ STREAM_DATA_DIR=${STREAM_DATA_DIR}
 EOF
 
 while true; do
+  wait_for_obs_input
   ffmpeg -hide_banner -loglevel warning \
     -rtsp_transport tcp \
     -i "${RTSP_INPUT}" \
@@ -88,6 +98,5 @@ while true; do
     -adaptation_sets "id=0,streams=v id=1,streams=a" \
     -f dash \
     "${OUTPUT_DIR}/manifest.mpd"
-  echo "waiting for OBS input at ${RTSP_INPUT}" >&2
   sleep 1
 done
