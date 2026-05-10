@@ -48,7 +48,7 @@ fi
 echo "waiting for OBS input at ${RTMP_INPUT}" >&2
 
 while true; do
-  ffmpeg -hide_banner -loglevel warning \
+  if ffmpeg -hide_banner -loglevel warning \
     -fflags +genpts+nobuffer \
     -i "${RTMP_INPUT}" \
     -map 0:v:0 -map 0:a:0? \
@@ -73,7 +73,10 @@ while true; do
     -remove_at_exit 0 \
     -adaptation_sets "id=0,streams=v id=1,streams=a" \
     -f dash \
-    "${OUTPUT_DIR}/manifest.mpd"
-  echo "OBS input is not available. Retrying in 1 second." >&2
+    "${OUTPUT_DIR}/manifest.mpd"; then
+    echo "OBS input ended. Retrying in 1 second." >&2
+  else
+    echo "OBS input is not available. Retrying in 1 second." >&2
+  fi
   sleep 1
 done
