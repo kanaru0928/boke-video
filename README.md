@@ -34,31 +34,7 @@ pnpm dev:obs
 ```
 
 `pnpm dev:mock`はダミーライブ配信です。`pnpm dev:obs`はローカルOBS入力を使う開発用です。
-
-目的ごとに次のコマンドを使います。
-
-| コマンド | 用途 |
-| --- | --- |
-| `pnpm dev:mock` | OBSなしでローカル確認します。 |
-| `pnpm dev:obs:local` | OBS入力を認証なしで確認します。 |
-| `pnpm dev:obs:auth` | OBS入力のMediaMTX認証をローカルで確認します。 |
-| `pnpm dev:obs:cloudflare` | Cloudflare AccessのJWT検証を実際のAccess URL経由で確認します。 |
-
-`pnpm dev:obs:auth`のOBS設定は、起動ログの`OBS_RTMP_SERVER`をサーバーへ入れ、ストリームキーを空欄にします。デフォルトの認証情報は`publisher`と`local-password`です。
-
-`pnpm dev:obs:cloudflare`は次の環境変数が必要です。
-
-```sh
-ACCESS_ENABLED=true
-ACCESS_AUDIENCE=Cloudflare Access ApplicationのAUD tag
-ACCESS_ISSUER=https://チーム名.cloudflareaccess.com
-ACCESS_CERTS_URL=https://チーム名.cloudflareaccess.com/cdn-cgi/access/certs
-CLOUDFLARE_ACCESS_ORIGIN=https://stream.example.com
-```
-
-Cloudflare Tunnelも同時に起動する場合は、追加で`CLOUDFLARE_TUNNEL_CONFIG`にcloudflared設定ファイルを指定します。
-
-Cloudflare Access、Tunnel、3種類のデバッグ手順は`docs/cloudflare.md`を参照します。
+Cloudflare Access、Tunnel、3種類のデバッグ手順は`docs/cloudflare.md`にまとめています。
 
 ## 検証
 

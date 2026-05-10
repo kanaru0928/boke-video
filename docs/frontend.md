@@ -23,17 +23,11 @@ Cloudflare Workersで静的アセットとして配信します。
 
 ## 設定
 
-```text
-VITE_API_BASE_URL=https://stream.example.com
-VITE_STREAM_BASE_URL=https://stream.example.com
-VITE_COMMENT_WS_URL=wss://stream.example.com
-```
+API、DASH、WebSocketの接続先はビルド時のVite環境変数で設定します。Cloudflare AccessとTunnelを含む設定値は`docs/cloudflare.md`を参照します。
 
 ## デプロイ
 
 デプロイ手順は`docs/deployment.md`を参照します。Wrangler設定は`frontend/wrangler.jsonc`です。`frontend/dist`をWorkers Assetsとして配信します。
-
-Cloudflare AccessとTunnelの設定は`docs/cloudflare.md`を参照します。
 
 ## レスポンシブ
 

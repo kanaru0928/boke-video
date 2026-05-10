@@ -20,29 +20,13 @@ GoバックエンドはCloudflare Accessがオリジンへ付与する`Cf-Access
 
 ## 管理者判定
 
-管理者判定はCloudflare Accessのポリシーで行います。
-
-| 対象 | パス | ポリシー |
-| --- | --- | --- |
-| 管理画面 | `/admin*` | 管理者 |
-| 管理API | `/api/admin/*` | 管理者 |
-
-Goバックエンドは到達した管理APIリクエストのJWTを検証しますが、アプリ内ロールは保存しません。
+管理者判定はCloudflare Accessのポリシーで行います。Goバックエンドはアプリ内ロールを保存しません。
 
 ## OBS入力
 
 OBS入力はCloudflare Accessで保護しません。RTMPはHTTPではなく、OBSから任意HTTPヘッダーも送れないためです。Cloudflare AccessのService TokenもHTTPヘッダーで送る仕組みなので、OBSのRTMP接続には使いません。
 
-OBS入力の接続仕様は`docs/streaming.md`を参照します。
-
-OBS入力は次で守ります。
-
-- MediaMTXのRTMP公開ポートはOBS入力専用にします。
-- MediaMTXの配信用認証を有効にします。
-- 推測しにくいユーザー名とパスワードを使います。
-- 可能ならオリジンのファイアウォールで配信者の接続元IPだけにTCP/1935を制限します。
-- RTSP、HLS、WebRTC、SRTなど不要な外部リスナーは公開しません。
-- Goバックエンド、DASH、WebSocket、APIは直接公開しません。
+OBS入力の接続仕様は`docs/streaming.md`を参照します。OBS入力はMediaMTXのRTMP認証とオリジン側のネットワーク制限で守ります。
 
 ## CORSとCSP
 

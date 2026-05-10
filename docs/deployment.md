@@ -31,7 +31,7 @@ pnpm deploy:frontend
 
 `/etc/boke-video/backend.env`を配置します。
 
-Cloudflare AccessとTunnelの手順は`docs/cloudflare.md`です。Cloudflare Tunnel設定例は`deploy/cloudflared/boke-video.yml.example`です。
+Cloudflare AccessとTunnelの手順は`docs/cloudflare.md`です。
 
 ## OBS入力
 
