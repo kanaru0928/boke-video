@@ -51,30 +51,21 @@ fi
 while true; do
   wait_for_obs_input
   ffmpeg -hide_banner -loglevel warning \
+    -fflags nobuffer \
     -rtsp_transport tcp \
     -i "${RTSP_INPUT}" \
-    -map 0:v:0 -map 0:v:0 -map 0:a:0? \
-    -filter:v:0 "scale=w=1280:h=720:force_original_aspect_ratio=decrease:force_divisible_by=2" \
-    -filter:v:1 "scale=w=640:h=360:force_original_aspect_ratio=decrease:force_divisible_by=2" \
-    -c:v libx264 \
-    -preset veryfast \
-    -tune zerolatency \
-    -g 30 \
-    -keyint_min 30 \
-    -sc_threshold 0 \
-    -b:v:0 1800k \
-    -maxrate:v:0 2000k \
-    -bufsize:v:0 3000k \
-    -b:v:1 700k \
-    -maxrate:v:1 900k \
-    -bufsize:v:1 1400k \
+    -map 0:v:0 -map 0:a:0? \
+    -c:v copy \
     -c:a aac \
     -b:a 96k \
     -use_timeline 1 \
     -use_template 1 \
     -seg_duration 1 \
-    -window_size 8 \
-    -extra_window_size 4 \
+    -streaming 1 \
+    -ldash 1 \
+    -target_latency 2 \
+    -window_size 4 \
+    -extra_window_size 2 \
     -remove_at_exit 0 \
     -adaptation_sets "id=0,streams=v id=1,streams=a" \
     -f dash \

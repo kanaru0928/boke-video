@@ -9,7 +9,20 @@ export class DashPlayer {
     this.player.updateSettings({
       streaming: {
         delay: {
-          liveDelay: 3,
+          liveDelay: 2,
+        },
+        buffer: {
+          bufferTimeDefault: 2,
+          bufferTimeAtTopQuality: 2,
+          bufferTimeAtTopQualityLongForm: 2,
+        },
+        liveCatchup: {
+          enabled: true,
+          maxDrift: 1,
+          playbackRate: {
+            min: -0.05,
+            max: 0.1,
+          },
         },
         abr: {
           autoSwitchBitrate: {

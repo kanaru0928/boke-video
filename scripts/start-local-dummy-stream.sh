@@ -50,8 +50,11 @@ exec ffmpeg -hide_banner -loglevel warning -re \
   -use_timeline 1 \
   -use_template 1 \
   -seg_duration 1 \
-  -window_size 8 \
-  -extra_window_size 4 \
+  -streaming 1 \
+  -ldash 1 \
+  -target_latency 2 \
+  -window_size 4 \
+  -extra_window_size 2 \
   -remove_at_exit 0 \
   -adaptation_sets "id=0,streams=v id=1,streams=a" \
   -f dash \
