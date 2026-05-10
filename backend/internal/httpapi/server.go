@@ -165,7 +165,7 @@ func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: time.Now().UTC(),
 	}
 	if err := s.repository.CreateRoom(r.Context(), room); err != nil {
-		s.writeServerError(w, err)
+		writeRepositoryError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusCreated, room)
@@ -464,6 +464,10 @@ func writeError(w http.ResponseWriter, status int, message string) {
 func writeRepositoryError(w http.ResponseWriter, err error) {
 	if errors.Is(err, sql.ErrNoRows) {
 		writeError(w, http.StatusNotFound, "not found")
+		return
+	}
+	if errors.Is(err, repository.ErrAlreadyExists) {
+		writeError(w, http.StatusConflict, "already exists")
 		return
 	}
 	writeError(w, http.StatusInternalServerError, "internal server error")

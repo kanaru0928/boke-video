@@ -3,11 +3,13 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"boke-video/backend/internal/comment"
 
-	_ "modernc.org/sqlite"
+	modernsqlite "modernc.org/sqlite"
+	sqlite3 "modernc.org/sqlite/lib"
 )
 
 type SQLite struct {
@@ -19,6 +21,8 @@ type Room struct {
 	Title     string    `json:"title"`
 	CreatedAt time.Time `json:"createdAt"`
 }
+
+var ErrAlreadyExists = errors.New("already exists")
 
 func OpenSQLite(path string) (*SQLite, error) {
 	db, err := sql.Open("sqlite", path)
@@ -72,7 +76,7 @@ func (s *SQLite) CreateRoom(ctx context.Context, room Room) error {
 		room.Title,
 		room.CreatedAt.Format(time.RFC3339Nano),
 	)
-	return err
+	return normalizeSQLiteError(err)
 }
 
 func (s *SQLite) UpdateRoomTitle(ctx context.Context, roomID string, title string) error {
@@ -119,7 +123,7 @@ func (s *SQLite) CreateComment(ctx context.Context, stored comment.StoredComment
 		string(stored.FontSize),
 		stored.SentAt.Format(time.RFC3339Nano),
 	)
-	return err
+	return normalizeSQLiteError(err)
 }
 
 func (s *SQLite) ListComments(ctx context.Context, roomID string, limit int) ([]comment.StoredComment, error) {
@@ -197,4 +201,18 @@ func requireAffected(result sql.Result) error {
 		return sql.ErrNoRows
 	}
 	return nil
+}
+
+func normalizeSQLiteError(err error) error {
+	if err == nil {
+		return nil
+	}
+	var sqliteErr *modernsqlite.Error
+	if errors.As(err, &sqliteErr) {
+		switch sqliteErr.Code() {
+		case sqlite3.SQLITE_CONSTRAINT_PRIMARYKEY, sqlite3.SQLITE_CONSTRAINT_UNIQUE:
+			return ErrAlreadyExists
+		}
+	}
+	return err
 }

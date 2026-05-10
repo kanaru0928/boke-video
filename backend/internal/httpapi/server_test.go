@@ -87,6 +87,20 @@ func TestServerCreatesRoomWithRequestedID(t *testing.T) {
 	}
 }
 
+func TestServerReturnsConflictForDuplicateRoomID(t *testing.T) {
+	server := newTestServer(t)
+
+	firstResponse := performRequest(server, http.MethodPost, "/api/admin/rooms", `{"id":"obs-local","title":"OBS"}`)
+	if firstResponse.Code != http.StatusCreated {
+		t.Fatalf("create room status = %d, body = %s", firstResponse.Code, firstResponse.Body.String())
+	}
+
+	secondResponse := performRequest(server, http.MethodPost, "/api/admin/rooms", `{"id":"obs-local","title":"OBS"}`)
+	if secondResponse.Code != http.StatusConflict {
+		t.Fatalf("duplicate room status = %d, body = %s", secondResponse.Code, secondResponse.Body.String())
+	}
+}
+
 func TestServerRejectsUnsafeRoomID(t *testing.T) {
 	server := newTestServer(t)
 
