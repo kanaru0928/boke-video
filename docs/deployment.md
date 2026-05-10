@@ -7,6 +7,7 @@
 | 内容 | 正本 |
 | --- | --- |
 | Accessポリシーとセキュリティ | `docs/auth-and-security.md` |
+| Cloudflare AccessとTunnel | `docs/cloudflare.md` |
 | OBS入力とMediaMTX | `docs/streaming.md` |
 | バックエンド環境変数 | `docs/backend.md` |
 | フロントエンド環境変数 | `docs/frontend.md` |
@@ -30,7 +31,7 @@ pnpm deploy:frontend
 
 `/etc/boke-video/backend.env`を配置します。
 
-Cloudflare Tunnel設定例は`deploy/cloudflared/boke-video.yml.example`です。
+Cloudflare AccessとTunnelの手順は`docs/cloudflare.md`です。Cloudflare Tunnel設定例は`deploy/cloudflared/boke-video.yml.example`です。
 
 ## OBS入力
 

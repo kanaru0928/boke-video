@@ -1,5 +1,7 @@
 # 認証とセキュリティ
 
+Cloudflare AccessとCloudflare Tunnelの具体的な設定手順は`docs/cloudflare.md`を正本にします。
+
 ## Cloudflare Access
 
 Cloudflare Accessは通常画面、管理画面、MPEG-DASH、WebSocket、APIを保護します。

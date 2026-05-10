@@ -70,7 +70,9 @@ DATABASE_PATH=/var/lib/boke-video/boke-video.sqlite3
 STREAM_DATA_DIR=/var/lib/boke-video/streams
 ALLOWED_ORIGINS=https://video.example.com
 ACCESS_ENABLED=true
-ACCESS_AUDIENCE=replace-with-cloudflare-access-aud
+ACCESS_AUDIENCE=replace-with-cloudflare-access-aud-tag
 ACCESS_ISSUER=https://replace-with-team-name.cloudflareaccess.com
 ACCESS_CERTS_URL=https://replace-with-team-name.cloudflareaccess.com/cdn-cgi/access/certs
 ```
+
+Cloudflare Accessの設定値は`docs/cloudflare.md`を参照します。

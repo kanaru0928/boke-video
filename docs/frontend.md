@@ -33,6 +33,8 @@ VITE_COMMENT_WS_URL=wss://stream.example.com
 
 デプロイ手順は`docs/deployment.md`を参照します。Wrangler設定は`frontend/wrangler.jsonc`です。`frontend/dist`をWorkers Assetsとして配信します。
 
+Cloudflare AccessとTunnelの設定は`docs/cloudflare.md`を参照します。
+
 ## レスポンシブ
 
 | 項目 | PC | スマホ |
