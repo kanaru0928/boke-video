@@ -36,8 +36,8 @@ exec ffmpeg -hide_banner -loglevel warning -re \
   -c:v libx264 \
   -preset veryfast \
   -tune zerolatency \
-  -g 30 \
-  -keyint_min 30 \
+  -g 15 \
+  -keyint_min 15 \
   -sc_threshold 0 \
   -b:v:0 1800k \
   -maxrate:v:0 2000k \
@@ -49,12 +49,9 @@ exec ffmpeg -hide_banner -loglevel warning -re \
   -b:a 96k \
   -use_timeline 1 \
   -use_template 1 \
-  -seg_duration 1 \
-  -streaming 1 \
-  -ldash 1 \
-  -target_latency 2 \
-  -window_size 4 \
-  -extra_window_size 2 \
+  -seg_duration 0.5 \
+  -window_size 3 \
+  -extra_window_size 1 \
   -remove_at_exit 0 \
   -adaptation_sets "id=0,streams=v id=1,streams=a" \
   -f dash \

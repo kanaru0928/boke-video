@@ -9,19 +9,19 @@ export class DashPlayer {
     this.player.updateSettings({
       streaming: {
         delay: {
-          liveDelay: 2,
+          liveDelay: 1.5,
         },
         buffer: {
-          bufferTimeDefault: 2,
-          bufferTimeAtTopQuality: 2,
-          bufferTimeAtTopQualityLongForm: 2,
+          bufferTimeDefault: 1,
+          bufferTimeAtTopQuality: 1,
+          bufferTimeAtTopQualityLongForm: 1,
         },
         liveCatchup: {
           enabled: true,
-          maxDrift: 1,
+          maxDrift: 0.5,
           playbackRate: {
             min: -0.05,
-            max: 0.1,
+            max: 0.15,
           },
         },
         abr: {
