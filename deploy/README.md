@@ -21,7 +21,11 @@ Cloudflare Tunnel
 
 OBS
   |
-  | RTMPまたはRTSP
+  | RTMP
+  v
+Cloudflare Spectrum
+  |
+  | tcp://127.0.0.1:1935
   v
 MediaMTX
   |
@@ -74,6 +78,8 @@ Cloudflare Zero TrustでAccessアプリケーションを作ります。
 
 GoバックエンドはCloudflare Accessがオリジンへ付与する`Cf-Access-Jwt-Assertion`を検証します。アプリ独自のログイン、セッション、パスワード、アカウント管理、管理者ロールは持ちません。
 
+OBSのRTMP入力はHTTPではないため、Cloudflare AccessのHTTPアプリケーションとして保護できません。AccessのService TokenもHTTPヘッダーで送る仕組みなので、OBSのRTMP接続には使えません。
+
 ## 3. バックエンド環境変数を配置する
 
 `backend/.env.example`をもとに、オンプレサーバーへ`/etc/boke-video/backend.env`を作ります。
@@ -115,7 +121,7 @@ DNSの公開ホスト名`stream.example.com`をこのTunnelへ向けます。
 sudo install -m 0644 deploy/mediamtx.yml /etc/boke-video/mediamtx.yml
 ```
 
-この設定例ではMediaMTXを`127.0.0.1`だけで待ち受けさせます。OBSを別端末から入れる場合は、Cloudflare Accessの任意TCP接続、SSHトンネル、VPN、またはオンプレ内の閉域ネットワークを使います。
+この設定例では、ffmpegが読むRTSPは`127.0.0.1`だけで待ち受け、OBS入力用RTMPは`:1935`で待ち受けます。Cloudflare Spectrumを使う場合は、オリジンのファイアウォールでCloudflareからのTCP/1935だけを許可します。
 
 この設定例では、MediaMTXのHLS、WebRTC、SRTリスナーは無効化しています。ブラウザ配信はGoバックエンドのMPEG-DASHで行います。
 
@@ -125,12 +131,21 @@ ffmpeg変換スクリプトを配置します。
 sudo install -m 0755 deploy/ffmpeg-dash.example.sh /usr/local/bin/ffmpeg-dash-boke-video
 ```
 
-OBSからの入力先は、接続方式に合わせて次のどちらかを使います。
+外部のOBS利用者のPCに`cloudflared`を入れない場合、Cloudflare Tunnelの任意TCP接続は使えません。Cloudflare公式ドキュメントでは、任意TCP接続にホスト側とクライアント側の両方の`cloudflared`が必要です。
 
-```text
-rtmp://127.0.0.1:1935/live/main
-rtsp://127.0.0.1:8554/live/main
-```
+その条件でCloudflareドメイン越しにOBSから直接接続する場合は、Cloudflare SpectrumでTCP/1935を公開します。SpectrumのTCPアプリケーションはCloudflare Tunnel originを使えないため、MediaMTXのRTMP待ち受けはCloudflare Spectrumから到達できるオリジンへ置きます。
+
+OBSの配信設定は次です。
+
+| 項目 | 値 |
+| --- | --- |
+| サービス | カスタム |
+| サーバー | `rtmp://obs-rtmp.example.com/live/main` |
+| ストリームキー | 空欄 |
+
+Cloudflare Streamを使う構成もあります。その場合、OBSはCloudflare StreamのRTMPS URLとStream Keyへ配信できます。ただし、映像の取り込み、エンコード、配信はCloudflare Stream側に移り、このリポジトリのMediaMTX、ffmpeg、MPEG-DASH配信経路とは別構成になります。
+
+MediaMTXには別途、配信用の認証設定を入れます。Cloudflare AccessのService TokenをOBSから送ることはできないため、RTMPのパス、ユーザー名、パスワード、またはMediaMTXの認証機能で制御します。
 
 ## 6. systemdサービスを配置する
 
