@@ -149,14 +149,7 @@ OBSの配信設定は次です。
 | サーバー | `rtmp://obs.example.com/live/main?user=publisher&pass=strong-password` |
 | ストリームキー | 空欄 |
 
-OBSの環境によってサーバーURLとストリームキーを分ける必要がある場合は、次の形にします。
-
-| 項目 | 値 |
-| --- | --- |
-| サーバー | `rtmp://obs.example.com/live` |
-| ストリームキー | `main?user=publisher&pass=strong-password` |
-
-`deploy/mediamtx.yml`の`replace-with-strong-password`は本番値へ変更します。MediaMTX公式ドキュメントでは、RTMPの認証情報はクエリパラメータとして渡せます。
+OBS設定はこの形に固定します。MediaMTX公式ドキュメントでは、OBSのRTMP publishはServerに`rtmp://host/path`を入れ、Stream keyを空欄にする手順です。MediaMTXのRTMP認証は`user`と`pass`のクエリパラメータで渡します。`deploy/mediamtx.yml`の`replace-with-strong-password`は本番値へ変更します。
 
 OBS入力はDNS onlyでオリジンへ直接到達するため、Cloudflare proxyによるIP秘匿やCloudflare Accessの認証はありません。可能ならオリジンのファイアウォールで配信者の接続元IPだけにTCP/1935を制限します。
 
