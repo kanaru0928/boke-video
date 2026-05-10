@@ -22,7 +22,7 @@ OBSはMediaMTXへWHIPで配信します。
 | サービス | `WHIP` |
 | サーバー | `https://media.example.com/live/main/whip` |
 
-OBS側はBフレームを0にし、キーフレーム間隔を0.5秒から1秒にします。音声はOpusを使います。RTMPは互換用です。低遅延の正本にはしません。
+OBS側はBフレームを0にし、キーフレーム間隔を0.5秒にします。720p/30fpsでは映像ビットレートを1.5Mbpsから2Mbpsにします。音声はOpusを使います。RTMPは互換用です。低遅延の正本にはしません。
 
 ローカルでは`pnpm dev:obs:local`の起動ログに出る`OBS_WHIP_SERVER`を使います。
 
