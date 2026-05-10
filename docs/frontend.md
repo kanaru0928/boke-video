@@ -25,11 +25,7 @@ VITE_COMMENT_WS_URL=wss://stream.example.com
 
 ## デプロイ
 
-```sh
-pnpm deploy:frontend
-```
-
-Wrangler設定は`frontend/wrangler.jsonc`です。`frontend/dist`をWorkers Assetsとして配信します。
+デプロイ手順は`docs/deployment.md`を参照します。Wrangler設定は`frontend/wrangler.jsonc`です。`frontend/dist`をWorkers Assetsとして配信します。
 
 ## レスポンシブ
 

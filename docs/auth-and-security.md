@@ -22,8 +22,8 @@ GoバックエンドはCloudflare Accessがオリジンへ付与する`Cf-Access
 
 | 対象 | パス | ポリシー |
 | --- | --- | --- |
-| 管理画面 | `https://video.example.com/admin*` | 管理者 |
-| 管理API | `https://stream.example.com/api/admin/*` | 管理者 |
+| 管理画面 | `/admin*` | 管理者 |
+| 管理API | `/api/admin/*` | 管理者 |
 
 Goバックエンドは到達した管理APIリクエストのJWTを検証しますが、アプリ内ロールは保存しません。
 

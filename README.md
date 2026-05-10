@@ -40,9 +40,3 @@ pnpm dev:obs
 ```sh
 pnpm check
 ```
-
-## フロントエンドデプロイ
-
-```sh
-pnpm deploy:frontend
-```
