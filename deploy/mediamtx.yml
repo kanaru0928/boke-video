@@ -1,6 +1,5 @@
-rtspAddress: 127.0.0.1:8554
-rtspTransports: [tcp]
-rtmpAddress: :1935
+rtsp: no
+rtmp: no
 hls: no
 webrtc: yes
 webrtcAddress: :8889

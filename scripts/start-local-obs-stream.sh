@@ -6,10 +6,6 @@ FRONTEND_URL="${FRONTEND_URL:-http://127.0.0.1:5173}"
 WEBRTC_BASE_URL="${WEBRTC_BASE_URL:-http://127.0.0.1:8889}"
 ROOM_ID="${ROOM_ID:-obs-local}"
 ROOM_TITLE="${ROOM_TITLE:-OBS live stream}"
-LOCAL_OBS_USER="${LOCAL_OBS_USER:-publisher}"
-LOCAL_OBS_PASSWORD="${LOCAL_OBS_PASSWORD:-local-password}"
-LOCAL_OBS_AUTH="${LOCAL_OBS_AUTH:-false}"
-LOCAL_OBS_SHOW_RTMP_LEGACY="${LOCAL_OBS_SHOW_RTMP_LEGACY:-false}"
 
 command -v node >/dev/null
 
@@ -30,14 +26,6 @@ OBS_RECOMMENDED_B_FRAMES=0
 OBS_RECOMMENDED_RATE_CONTROL=CBR
 OBS_RECOMMENDED_VIDEO_BITRATE=1500kbps
 EOF
-
-if [ "${LOCAL_OBS_SHOW_RTMP_LEGACY}" = "true" ]; then
-  if [ "${LOCAL_OBS_AUTH}" = "true" ]; then
-    echo "OBS_RTMP_SERVER_LEGACY=rtmp://127.0.0.1:1935/live?user=${LOCAL_OBS_USER}&pass=${LOCAL_OBS_PASSWORD}"
-  else
-    echo "OBS_RTMP_SERVER_LEGACY=rtmp://127.0.0.1:1935/live/${ROOM_ID}"
-  fi
-fi
 
 echo "waiting for OBS input at ${WEBRTC_BASE_URL}/live/${ROOM_ID}/whip" >&2
 

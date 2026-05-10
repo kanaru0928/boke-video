@@ -22,7 +22,7 @@ OBSはMediaMTXへWHIPで配信します。
 | サービス | `WHIP` |
 | サーバー | `https://media.example.com/live/main/whip` |
 
-OBS側はBフレームを0にし、キーフレーム間隔を0.5秒にします。720p/30fpsでは映像ビットレートを1.5Mbpsから2Mbpsにします。音声はOpusを使います。RTMPは互換用です。低遅延の正本にはしません。
+OBS側はBフレームを0にし、キーフレーム間隔を0.5秒にします。720p/30fpsでは映像ビットレートを1.5Mbpsから2Mbpsにします。音声はOpusを使います。
 
 ローカルでは`pnpm dev:obs:local`の起動ログに出る`OBS_WHIP_SERVER`を使います。
 
@@ -32,8 +32,7 @@ OBS側はBフレームを0にし、キーフレーム間隔を0.5秒にします
 
 - WebRTC/WHEPは`:8889`で待ち受けます。
 - WebRTC mediaは`:8189/udp`を使います。
-- RTMPは互換用として`:1935`で受けます。
-- HLSとSRTは無効化します。
+- RTMP、HLS、SRTは無効化します。
 - `publisher`ユーザーに`live/*`へのpublish権限を与えます。
 
 MediaMTX公式ドキュメントでは、ブラウザは`/whep`のURLでWebRTCストリームを読めます。OBSはWHIPでMediaMTXへpublishできます。

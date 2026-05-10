@@ -106,14 +106,13 @@ if [ "${STREAM_MODE}" = "obs-cloudflare" ] && [ -n "${CLOUDFLARE_TUNNEL_CONFIG}"
   CLOUDFLARED_PID="$!"
 fi
 
-if lsof -tiTCP:8554 -sTCP:LISTEN >/dev/null || lsof -tiTCP:1935 -sTCP:LISTEN >/dev/null || lsof -tiTCP:8889 -sTCP:LISTEN >/dev/null; then
+if lsof -tiTCP:8554 -sTCP:LISTEN >/dev/null || lsof -tiTCP:8889 -sTCP:LISTEN >/dev/null; then
   echo "using existing MediaMTX listener"
 elif command -v mediamtx >/dev/null; then
   if [ "${STREAM_MODE}" = "obs-auth" ] || [ "${STREAM_MODE}" = "obs-cloudflare" ]; then
     cat >"${MEDIAMTX_CONFIG}" <<EOF
-rtspAddress: 127.0.0.1:8554
-rtspTransports: [tcp]
-rtmpAddress: :1935
+rtsp: no
+rtmp: no
 hls: no
 webrtc: yes
 webrtcAddress: :8889
@@ -139,11 +138,25 @@ paths:
   all_others:
     source: publisher
 EOF
-  else
+  elif [ "${STREAM_MODE}" = "mock" ]; then
     cat >"${MEDIAMTX_CONFIG}" <<'EOF'
 rtspAddress: 127.0.0.1:8554
 rtspTransports: [tcp]
-rtmpAddress: :1935
+rtmp: no
+hls: no
+webrtc: yes
+webrtcAddress: :8889
+webrtcLocalUDPAddress: :8189
+srt: no
+
+paths:
+  all_others:
+    source: publisher
+EOF
+  else
+    cat >"${MEDIAMTX_CONFIG}" <<'EOF'
+rtsp: no
+rtmp: no
 hls: no
 webrtc: yes
 webrtcAddress: :8889
