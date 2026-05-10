@@ -13,34 +13,7 @@ command -v node >/dev/null
 mkdir -p "${STREAM_DATA_DIR}"
 
 ROOM_ID="$(
-  node - "${BACKEND_URL}" "${ROOM_ID}" "${ROOM_TITLE}" <<'NODE'
-const [backendUrl, roomId, roomTitle] = process.argv.slice(2);
-const response = await fetch(`${backendUrl}/api/admin/rooms`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    Origin: "http://127.0.0.1:5173",
-  },
-  body: JSON.stringify({ id: roomId, title: roomTitle }),
-});
-if (response.ok) {
-  const room = await response.json();
-  process.stdout.write(room.id);
-} else {
-  const existing = await fetch(
-    `${backendUrl}/api/rooms/${encodeURIComponent(roomId)}`,
-    {
-      headers: { Origin: "http://127.0.0.1:5173" },
-    },
-  );
-  if (existing.ok) {
-    const room = await existing.json();
-    process.stdout.write(room.id);
-  } else {
-    throw new Error(`room create failed: ${response.status} ${await response.text()}`);
-  }
-}
-NODE
+  node scripts/ensure-local-room.mjs "${BACKEND_URL}" "${ROOM_ID}" "${ROOM_TITLE}" "${FRONTEND_URL}"
 )"
 
 OUTPUT_DIR="${STREAM_DATA_DIR}/${ROOM_ID}"

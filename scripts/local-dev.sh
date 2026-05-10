@@ -95,4 +95,4 @@ else
 fi
 STREAM_PID="$!"
 
-wait
+wait "${STREAM_PID}"
