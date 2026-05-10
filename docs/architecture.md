@@ -1,35 +1,28 @@
 # アーキテクチャ
 
-## 方針
+## 目的
 
 Boke Videoは、100人規模の組織内ライブ配信を扱います。
 
-通常の視聴画面、管理画面、MPEG-DASH、WebSocket、APIはCloudflare AccessとCloudflare Tunnelで保護します。OBSのRTMP入力だけはCloudflare DNSのDNS onlyで別経路にし、MediaMTX認証とファイアウォールで守ります。
-
-アプリケーション独自のログイン、セッション、パスワード管理、アカウント管理は実装しません。
+このファイルは全体構成とドメインだけを定義します。映像配信、認証、デプロイの詳細は各ドキュメントを参照します。
 
 ## 構成
 
 ```text
 OBS
   |
-  | RTMP
-  | rtmp://obs.example.com/live/main?user=publisher&pass=strong-password
   v
 Cloudflare DNS only
   |
   v
 MediaMTX
   |
-  | RTSP
   v
 ffmpeg
   |
-  | MPEG-DASHファイル生成
   v
 Goバックエンド
   |
-  | DASH、WebSocket、API
   v
 Cloudflare Tunnel
   |
@@ -45,13 +38,11 @@ Cloudflare Workers
 
 ## ドメイン
 
-| 用途 | ホスト名 | Cloudflare設定 | 保護 |
-| --- | --- | --- | --- |
-| フロントエンド | `video.example.com` | Workers | Cloudflare Access |
-| Goバックエンド | `stream.example.com` | Tunnel | Cloudflare Access |
-| OBS入力 | `obs.example.com` | DNS only | MediaMTX認証、ファイアウォール |
-
-`obs.example.com`はCloudflare proxyを無効にします。Cloudflare Access、Cloudflare Tunnel、Service TokenはRTMP入力には使いません。
+| 用途 | ホスト名 | Cloudflare設定 |
+| --- | --- | --- |
+| フロントエンド | `video.example.com` | Workers |
+| Goバックエンド | `stream.example.com` | Tunnel |
+| OBS入力 | `obs.example.com` | DNS only |
 
 ## 非目標
 
@@ -62,3 +53,12 @@ Cloudflare Workers
 - アプリケーション独自の認証機能
 - OBS入力をCloudflare Accessで直接認証すること
 - OBS利用者PCへ`cloudflared`を導入すること
+
+## 詳細
+
+- 映像配信は`docs/streaming.md`を参照します。
+- コメントは`docs/comments.md`を参照します。
+- 認証とセキュリティは`docs/auth-and-security.md`を参照します。
+- バックエンドは`docs/backend.md`を参照します。
+- フロントエンドは`docs/frontend.md`を参照します。
+- デプロイは`docs/deployment.md`を参照します。

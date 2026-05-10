@@ -2,7 +2,7 @@
 
 ## Cloudflare Access
 
-通常画面、管理画面、MPEG-DASH、WebSocket、APIはCloudflare Accessで保護します。
+Cloudflare Accessは`docs/architecture.md`の通常画面、管理画面、MPEG-DASH、WebSocket、APIを保護します。
 
 GoバックエンドはCloudflare Accessがオリジンへ付与する`Cf-Access-Jwt-Assertion`を検証します。
 
@@ -31,10 +31,10 @@ Goバックエンドは到達した管理APIリクエストのJWTを検証しま
 
 OBS入力はCloudflare Accessで保護しません。RTMPはHTTPではなく、OBSから任意HTTPヘッダーも送れないためです。Cloudflare AccessのService TokenもHTTPヘッダーで送る仕組みなので、OBSのRTMP接続には使いません。
 
+OBS入力の接続仕様は`docs/streaming.md`を参照します。OBS入力のホスト名は`docs/architecture.md`を参照します。
+
 OBS入力は次で守ります。
 
-- `obs.example.com`を視聴/API用ホスト名と分けます。
-- `obs.example.com`はCloudflare DNS onlyにします。
 - MediaMTXのRTMP公開ポートはOBS入力専用にします。
 - MediaMTXの配信用認証を有効にします。
 - 推測しにくいユーザー名とパスワードを使います。
@@ -47,9 +47,3 @@ OBS入力は次で守ります。
 Goバックエンドは`ALLOWED_ORIGINS`に含まれるWorkersのフロントエンドドメインだけをCORSで許可します。
 
 Content Security Policyは、自分の配信元からのスクリプト、HTTPS/WSS接続、同一オリジンまたはblobのmediaだけを許可します。
-
-## データ保存
-
-保存するデータは配信ルームとコメントだけです。認証情報、パスワード、メールアドレスは保存しません。
-
-コメント投稿者はCloudflare Access JWTの`sub`だけを`author_sub`として保存します。

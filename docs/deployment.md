@@ -1,18 +1,43 @@
 # デプロイ
 
-詳細な手順は`deploy/README.md`に置きます。このファイルでは構成だけをまとめます。
+## 正本
 
-## Cloudflare
+デプロイで参照する仕様は次です。
 
-| 用途 | ホスト名 | Cloudflare設定 |
-| --- | --- | --- |
-| フロントエンド | `video.example.com` | Workers+Access |
-| Goバックエンド | `stream.example.com` | Tunnel+Access |
-| OBS入力 | `obs.example.com` | DNS only |
+| 内容 | 正本 |
+| --- | --- |
+| ドメイン構成 | `docs/architecture.md` |
+| Accessポリシーとセキュリティ | `docs/auth-and-security.md` |
+| OBS入力とMediaMTX | `docs/streaming.md` |
+| バックエンド環境変数 | `docs/backend.md` |
+| フロントエンド環境変数 | `docs/frontend.md` |
 
-OBS入力はCloudflare proxyを通しません。
+## 配置サンプル
 
-## オンプレ
+| ファイル | 用途 |
+| --- | --- |
+| `deploy/cloudflared/boke-video.yml.example` | Cloudflare Tunnel設定例 |
+| `deploy/mediamtx.yml` | MediaMTX本番設定例 |
+| `deploy/ffmpeg-dash.example.sh` | ffmpeg変換スクリプト例 |
+| `deploy/systemd/*.service` | systemdユニット例 |
+
+## フロントエンド
+
+```sh
+pnpm deploy:frontend
+```
+
+## バックエンド
+
+`/etc/boke-video/backend.env`を配置します。
+
+Cloudflare Tunnel設定例は`deploy/cloudflared/boke-video.yml.example`です。
+
+## OBS入力
+
+`deploy/mediamtx.yml`の`replace-with-strong-password`を本番値へ変更して配置します。
+
+## systemd
 
 systemdで次を管理します。
 
@@ -23,11 +48,14 @@ mediamtx-boke-video.service
 boke-video-obs-packager.service
 ```
 
-## 配置ファイル
+配置例は`deploy/systemd/`にあります。
 
-| ファイル | 用途 |
-| --- | --- |
-| `deploy/cloudflared/boke-video.yml.example` | Cloudflare Tunnel設定例 |
-| `deploy/mediamtx.yml` | MediaMTX本番設定例 |
-| `deploy/ffmpeg-dash.example.sh` | ffmpeg変換スクリプト例 |
-| `deploy/systemd/*.service` | systemdユニット例 |
+## 動作確認
+
+```sh
+curl -fsS http://127.0.0.1:8080/healthz
+sudo systemctl status boke-video.service
+sudo systemctl status cloudflared-boke-video.service
+sudo systemctl status mediamtx-boke-video.service
+sudo systemctl status boke-video-obs-packager.service
+```

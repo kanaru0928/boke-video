@@ -49,8 +49,7 @@ wss://stream.example.com/ws/rooms/main/comments
 - `color`は許可色の一覧から選びます。
 - `fontSize`は`small`、`medium`、`large`だけを許可します。
 - 同一接続からの投稿は秒間1件までに制限します。
-- 投稿者はCloudflare Access JWTの`sub`で識別します。
-- Cloudflare Access JWTの`email`はコメントDBに保存しません。
+- 投稿者の保存仕様は`docs/backend.md`を参照します。
 
 ## 表示
 

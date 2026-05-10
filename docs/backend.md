@@ -60,6 +60,8 @@ CREATE INDEX comments_room_id_sent_at_index
 
 SQLiteはWALを有効にします。初期規模100人では外部DBを追加しません。
 
+保存するデータは配信ルームとコメントだけです。認証情報、パスワード、メールアドレスは保存しません。コメント投稿者はCloudflare Access JWTの`sub`だけを`author_sub`として保存します。
+
 ## 環境変数
 
 ```text
