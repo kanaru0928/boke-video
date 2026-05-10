@@ -7,6 +7,9 @@ STREAM_DATA_DIR="${STREAM_DATA_DIR:-/tmp/boke-video-streams}"
 ROOM_ID="${ROOM_ID:-obs-local}"
 ROOM_TITLE="${ROOM_TITLE:-OBS live stream}"
 RTSP_INPUT="${RTSP_INPUT:-rtsp://127.0.0.1:8554/live/${ROOM_ID}}"
+LOCAL_OBS_USER="${LOCAL_OBS_USER:-publisher}"
+LOCAL_OBS_PASSWORD="${LOCAL_OBS_PASSWORD:-local-password}"
+LOCAL_OBS_AUTH="${LOCAL_OBS_AUTH:-false}"
 
 command -v ffmpeg >/dev/null
 command -v ffprobe >/dev/null
@@ -35,10 +38,15 @@ ROOM_ID=${ROOM_ID}
 WATCH_URL=${FRONTEND_URL}/?room=${ROOM_ID}
 MANIFEST_URL=${BACKEND_URL}/live/${ROOM_ID}/manifest.mpd
 RTSP_INPUT=${RTSP_INPUT}
-OBS_RTMP_SERVER=rtmp://127.0.0.1:1935/live/${ROOM_ID}
 OBS_STREAM_KEY=
 STREAM_DATA_DIR=${STREAM_DATA_DIR}
 EOF
+
+if [ "${LOCAL_OBS_AUTH}" = "true" ]; then
+  echo "OBS_RTMP_SERVER=rtmp://127.0.0.1:1935/live/${ROOM_ID}?user=${LOCAL_OBS_USER}&pass=${LOCAL_OBS_PASSWORD}"
+else
+  echo "OBS_RTMP_SERVER=rtmp://127.0.0.1:1935/live/${ROOM_ID}"
+fi
 
 while true; do
   wait_for_obs_input
