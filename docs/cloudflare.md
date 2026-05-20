@@ -6,7 +6,7 @@
 
 | ホスト名 | 設定 |
 | --- | --- |
-| `boke-video.example.com` | Workers Custom Domain |
+| `bokevideo.example.com` | Workers Custom Domain |
 | `stream.example.com` | TunnelのDNS route、`<tunnel-id>.cfargotunnel.com`へのCNAME |
 | `ingest.example.com` | Oracle IPへのDNS-only A/AAAA |
 | `rtc.example.com` | Oracle IPへのDNS-only A/AAAA |
@@ -19,8 +19,8 @@ Access Applicationはdeny by defaultにします。
 
 | 対象 | Application domain | 許可 |
 | --- | --- | --- |
-| 視聴画面 | `boke-video.example.com` | 視聴者 |
-| 管理画面 | `boke-video.example.com/admin*` | 管理者 |
+| 視聴画面 | `bokevideo.example.com` | 視聴者 |
+| 管理画面 | `bokevideo.example.com/admin*` | 管理者 |
 | バックエンド | `stream.example.com` | 視聴者 |
 | 管理API | `stream.example.com/api/admin/*` | 管理者 |
 

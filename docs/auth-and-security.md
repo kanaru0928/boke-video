@@ -4,7 +4,7 @@
 
 ## Access JWT
 
-Cloudflare Accessは`boke-video.example.com`と`stream.example.com`を保護します。Goバックエンドは`Cf-Access-Jwt-Assertion`の署名、`aud`、`iss`、`exp`、`sub`を検証します。
+Cloudflare Accessは`bokevideo.example.com`と`stream.example.com`を保護します。Goバックエンドは`Cf-Access-Jwt-Assertion`の署名、`aud`、`iss`、`exp`、`sub`を検証します。
 
 アプリケーション独自のログイン、セッション、パスワード管理、アカウント管理、管理者ロールは持ちません。
 
