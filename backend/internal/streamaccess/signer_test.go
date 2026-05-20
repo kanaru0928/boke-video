@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func TestSignerBuildsOvenMediaEngineSignedWhepURL(t *testing.T) {
+func TestSignerBuildsOvenMediaEngineSignedPlaybackURL(t *testing.T) {
 	signer, err := NewSigner(Config{
 		BaseURL: "https://rtc.example.com",
 		Secret:  "secret",
@@ -23,9 +23,9 @@ func TestSignerBuildsOvenMediaEngineSignedWhepURL(t *testing.T) {
 		t.Fatalf("NewSigner returned error: %v", err)
 	}
 
-	signedURL, err := signer.SignedWhepURL("main")
+	signedURL, err := signer.SignedPlaybackURL("main")
 	if err != nil {
-		t.Fatalf("SignedWhepURL returned error: %v", err)
+		t.Fatalf("SignedPlaybackURL returned error: %v", err)
 	}
 
 	parsedURL, err := url.Parse(signedURL)
@@ -38,7 +38,10 @@ func TestSignerBuildsOvenMediaEngineSignedWhepURL(t *testing.T) {
 	if parsedURL.Host != "rtc.example.com:443" {
 		t.Fatalf("host = %q", parsedURL.Host)
 	}
-	if parsedURL.Path != "/live/main/whep" {
+	if parsedURL.Scheme != "wss" {
+		t.Fatalf("scheme = %q", parsedURL.Scheme)
+	}
+	if parsedURL.Path != "/live/main" {
 		t.Fatalf("path = %q", parsedURL.Path)
 	}
 

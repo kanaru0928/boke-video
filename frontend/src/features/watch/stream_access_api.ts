@@ -1,7 +1,7 @@
 import type { AppConfig } from "../../shared/config/config";
 
 type StreamAccess = {
-  whepUrl: string;
+  playbackUrl: string;
 };
 
 export async function fetchStreamAccess(
@@ -31,6 +31,7 @@ export function isStreamAccess(value: unknown): value is StreamAccess {
   }
   const streamAccess = value as Record<string, unknown>;
   return (
-    typeof streamAccess.whepUrl === "string" && streamAccess.whepUrl !== ""
+    typeof streamAccess.playbackUrl === "string" &&
+    streamAccess.playbackUrl !== ""
   );
 }

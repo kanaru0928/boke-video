@@ -45,11 +45,12 @@ assert(
   `stream access failed: ${streamAccessResult.response.status}`,
 );
 assert(
-  typeof streamAccessResult.body.whepUrl === "string" &&
-    streamAccessResult.body.whepUrl.includes("/live/") &&
-    streamAccessResult.body.whepUrl.includes("policy=") &&
-    streamAccessResult.body.whepUrl.includes("signature="),
-  "stream access did not include a signed WHEP URL",
+  typeof streamAccessResult.body.playbackUrl === "string" &&
+    streamAccessResult.body.playbackUrl.startsWith("ws") &&
+    streamAccessResult.body.playbackUrl.includes("/live/") &&
+    streamAccessResult.body.playbackUrl.includes("policy=") &&
+    streamAccessResult.body.playbackUrl.includes("signature="),
+  "stream access did not include a signed playback URL",
 );
 
 const commentResult = await request(`/api/rooms/${roomId}/comments`, {

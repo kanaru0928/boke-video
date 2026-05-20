@@ -8,7 +8,7 @@
 OBS
   -> WHIP/WebRTC
   -> WebRTC Media Server
-  -> WHEP/WebRTC
+  -> OvenMediaEngine WebRTC
   -> ブラウザ
 ```
 
@@ -47,22 +47,22 @@ WebRTC Media ServerはOracle上で動かします。第一候補はOvenMediaEngi
 必須要件は次です。
 
 - WHIP入力を受けられる
-- WHEP出力を提供できる
+- WebRTC出力を提供できる
 - 視聴者100人未満を1台で扱える
 - WebRTC media用UDPポートを固定または狭い範囲に制限できる
-- WHIPとWHEPの認証を外部トークンで制御できる
+- WHIP入力とWebRTC視聴の認証を外部トークンで制御できる
 
 映像変換は行いません。
 
 ## ブラウザ再生
 
-フロントエンドはGoバックエンドから署名済みWHEP URLを取得し、そのURLでWebRTC Media Serverへ接続します。
+フロントエンドはGoバックエンドから署名済み再生URLを取得し、そのURLでWebRTC Media Serverへ接続します。
 
 ```text
 http://127.0.0.1:3333/live/main
 ```
 
-Goバックエンドは次の環境変数から署名済みWHEP URLを発行します。
+Goバックエンドは次の環境変数から署名済み再生URLを発行します。
 
 ```text
 STREAM_PUBLIC_BASE_URL=http://127.0.0.1:3333
@@ -71,7 +71,7 @@ STREAM_SIGNING_SECRET=local-stream-signing-secret
 
 `STREAM_SIGNING_SECRET`はOvenMediaEngineの`SignedPolicy`の`SecretKey`と同じ値にします。
 
-ブラウザはWHEPのHTTPシグナリングで接続を開始し、mediaはOracle VCNで開けたUDPポートへ流れます。
+ブラウザはOvenMediaEngineのWebSocketシグナリングで接続を開始し、mediaはOracle VCNで開けたUDPポートへ流れます。
 
 ## 遅延目標
 
@@ -91,11 +91,11 @@ Cloudflare TunnelはWebRTC media経路には使いません。WebRTC mediaはOra
 公開するポートはWebRTC Media Serverの設定に合わせて最小化します。
 
 ```text
-443/tcp          WHIP/WHEPのHTTPSシグナリング
+443/tcp          WHIP入力とWebRTC視聴のHTTPS/WSSシグナリング
 10000-10005/udp  WebRTC media
 ```
 
-実際のUDP範囲は採用するWebRTC Media Serverの設定値を正本にします。配信者用WHIPと視聴者用WHEPはホスト名を分けます。
+実際のUDP範囲は採用するWebRTC Media Serverの設定値を正本にします。配信者用WHIPと視聴者用WebRTCはホスト名を分けます。
 
 ```text
 ingest.example.com  配信者OBS用
@@ -106,9 +106,9 @@ rtc.example.com     視聴者ブラウザ用
 
 WHIP入力は配信者用Bearer Tokenで保護します。OBSにはWHIP URLとBearer Tokenを設定します。
 
-WHEP視聴は、Cloudflare Accessで視聴画面へ入ったユーザーに対してGoバックエンドが短寿命トークンを発行し、そのトークンをWHEPシグナリングへ渡します。
+視聴は、Cloudflare Accessで視聴画面へ入ったユーザーに対してGoバックエンドが短寿命トークンを発行し、そのトークンをOvenMediaEngineのシグナリングへ渡します。
 
-UDP media自体をCloudflare Accessで保護しません。認証済みのWHIP/WHEPシグナリングから成立したWebRTC接続だけがmediaを送受信します。
+UDP media自体をCloudflare Accessで保護しません。認証済みのWHIP入力とWebRTC視聴シグナリングから成立したWebRTC接続だけがmediaを送受信します。
 
 ## 100人視聴時の負荷
 

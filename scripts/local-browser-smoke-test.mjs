@@ -47,14 +47,6 @@ async function runCommentSmoke({
   shortcut,
 }) {
   const page = await browser.newPage({ viewport });
-  const liveResponses = [];
-  page.on("response", (response) => {
-    const url = response.url();
-    if (url.includes("/live/")) {
-      liveResponses.push({ status: response.status(), url });
-    }
-  });
-
   await page.goto(watchUrl, { waitUntil: "networkidle" });
   await page.waitForSelector("#comment-body");
 
@@ -119,13 +111,6 @@ async function runCommentSmoke({
     travel.className.includes(sizeClass),
     `comment size class mismatch: ${JSON.stringify(travel)}`,
   );
-  assert(
-    liveResponses.some(
-      (entry) => entry.url.endsWith("/whep") && entry.status === 201,
-    ),
-    "WHEP session was not created",
-  );
-
   await page.reload({ waitUntil: "networkidle" });
   await page.waitForTimeout(300);
   const historicalCommentCount = await page

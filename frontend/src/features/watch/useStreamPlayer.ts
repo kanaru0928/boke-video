@@ -1,6 +1,6 @@
 import { type RefObject, useEffect, useRef, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
-import { WebRtcPlayer } from "../player/webrtc_player";
+import { OvenMediaEnginePlayer } from "../player/oven_media_engine_player";
 import { fetchStreamAccess } from "./stream_access_api";
 import { streamStatusMessage } from "./watch_stream";
 
@@ -13,12 +13,12 @@ export function useStreamPlayer(
   roomId: string,
   videoRef: RefObject<HTMLVideoElement | null>,
 ): UseStreamPlayerResult {
-  const playerRef = useRef<WebRtcPlayer | null>(null);
+  const playerRef = useRef<OvenMediaEnginePlayer | null>(null);
   const attachedRoomIdRef = useRef("");
   const [streamMessage, setStreamMessage] = useState(streamStatusMessage());
 
   useEffect(() => {
-    playerRef.current = new WebRtcPlayer();
+    playerRef.current = new OvenMediaEnginePlayer();
     return () => {
       playerRef.current?.destroy();
       playerRef.current = null;
@@ -65,7 +65,7 @@ export function useStreamPlayer(
         }
         await playerRef.current?.attach(
           videoRef.current,
-          streamAccess.whepUrl,
+          streamAccess.playbackUrl,
           () => {
             if (canceled) {
               return;

@@ -6,7 +6,7 @@ import (
 )
 
 type streamAccessResponse struct {
-	WhepURL string `json:"whepUrl"`
+	PlaybackURL string `json:"playbackUrl"`
 }
 
 func (s *Server) handleCreateStreamAccess(w http.ResponseWriter, r *http.Request) {
@@ -18,10 +18,10 @@ func (s *Server) handleCreateStreamAccess(w http.ResponseWriter, r *http.Request
 		writeRepositoryError(w, err)
 		return
 	}
-	whepURL, err := s.streamAccess.SignedWhepURL(roomID)
+	playbackURL, err := s.streamAccess.SignedPlaybackURL(roomID)
 	if err != nil {
 		s.writeServerError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, streamAccessResponse{WhepURL: whepURL})
+	writeJSON(w, http.StatusCreated, streamAccessResponse{PlaybackURL: playbackURL})
 }

@@ -67,14 +67,15 @@ func NewSigner(cfg Config) (*Signer, error) {
 	}, nil
 }
 
-func (s *Signer) SignedWhepURL(roomID string) (string, error) {
+func (s *Signer) SignedPlaybackURL(roomID string) (string, error) {
 	policyValue, err := s.encodedPolicy()
 	if err != nil {
 		return "", err
 	}
 
 	signedURL := *s.baseURL
-	signedURL.Path = "/live/" + url.PathEscape(roomID) + "/whep"
+	signedURL.Scheme = playbackScheme(signedURL.Scheme)
+	signedURL.Path = "/live/" + url.PathEscape(roomID)
 	query := signedURL.Query()
 	query.Set("policy", policyValue)
 	signedURL.RawQuery = query.Encode()
@@ -83,6 +84,13 @@ func (s *Signer) SignedWhepURL(roomID string) (string, error) {
 	query.Set("signature", signature)
 	signedURL.RawQuery = query.Encode()
 	return signedURL.String(), nil
+}
+
+func playbackScheme(scheme string) string {
+	if scheme == "https" {
+		return "wss"
+	}
+	return "ws"
 }
 
 func (s *Signer) encodedPolicy() (string, error) {

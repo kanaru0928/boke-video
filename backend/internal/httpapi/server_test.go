@@ -103,22 +103,22 @@ func TestServerCreatesSignedStreamAccess(t *testing.T) {
 	}
 
 	var parsed struct {
-		WhepURL string `json:"whepUrl"`
+		PlaybackURL string `json:"playbackUrl"`
 	}
 	if err := json.NewDecoder(response.Body).Decode(&parsed); err != nil {
 		t.Fatalf("Decode returned error: %v", err)
 	}
-	if parsed.WhepURL == "" {
-		t.Fatal("whepUrl is empty")
+	if parsed.PlaybackURL == "" {
+		t.Fatal("playbackUrl is empty")
 	}
-	if !strings.HasPrefix(parsed.WhepURL, "https://rtc.example.com:443/live/"+roomID+"/whep?") {
-		t.Fatalf("whepUrl = %q", parsed.WhepURL)
+	if !strings.HasPrefix(parsed.PlaybackURL, "wss://rtc.example.com:443/live/"+roomID+"?") {
+		t.Fatalf("playbackUrl = %q", parsed.PlaybackURL)
 	}
-	if !strings.Contains(parsed.WhepURL, "policy=") {
-		t.Fatalf("whepUrl missing policy: %q", parsed.WhepURL)
+	if !strings.Contains(parsed.PlaybackURL, "policy=") {
+		t.Fatalf("playbackUrl missing policy: %q", parsed.PlaybackURL)
 	}
-	if !strings.Contains(parsed.WhepURL, "signature=") {
-		t.Fatalf("whepUrl missing signature: %q", parsed.WhepURL)
+	if !strings.Contains(parsed.PlaybackURL, "signature=") {
+		t.Fatalf("playbackUrl missing signature: %q", parsed.PlaybackURL)
 	}
 }
 
