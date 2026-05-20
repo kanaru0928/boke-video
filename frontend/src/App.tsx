@@ -1,4 +1,5 @@
 import { AdminPage } from "./features/admin/AdminPage";
+import { RoomListPage } from "./features/rooms/RoomListPage";
 import { WatchPage } from "./features/watch/WatchPage";
 import type { AppConfig } from "./shared/config/config";
 
@@ -10,5 +11,8 @@ export function App({ config }: AppProps) {
   if (location.pathname.startsWith("/admin")) {
     return <AdminPage config={config} />;
   }
-  return <WatchPage config={config} />;
+  if (location.pathname.startsWith("/watch")) {
+    return <WatchPage config={config} />;
+  }
+  return <RoomListPage config={config} />;
 }

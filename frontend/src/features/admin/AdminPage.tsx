@@ -57,37 +57,45 @@ export function AdminPage({ config }: AdminPageProps) {
   return (
     <section className="admin-shell">
       <header className="topbar">
-        <h1>管理</h1>
-        <a className="link-button" href="/">
-          <MonitorPlay aria-hidden="true" size={18} />
-          視聴画面
-        </a>
+        <div className="site-mark">
+          <span className="site-mark-main">Boke Video</span>
+          <span className="site-mark-sub">ADMIN</span>
+        </div>
+        <nav className="topnav" aria-label="メニュー">
+          <a href="/">枠一覧</a>
+        </nav>
       </header>
-      <form className="admin-form" onSubmit={submitRoom}>
-        <input
-          maxLength={80}
-          onChange={(event) => setTitle(event.currentTarget.value)}
-          placeholder="ルーム名"
-          required
-          type="text"
-          value={title}
-        />
-        <button type="submit">
-          <Plus aria-hidden="true" size={18} />
-          作成
-        </button>
-      </form>
-      <section className="admin-list">
-        {rooms.map((room) => (
-          <AdminRoom
-            comments={commentsByRoomId[room.id] ?? null}
-            key={room.id}
-            onLoadComments={loadComments}
-            onRemoveComment={removeComment}
-            onUpdateTitle={updateRoomTitleById}
-            room={room}
+      <section className="admin-board">
+        <div className="admin-titlebar">
+          <MonitorPlay aria-hidden="true" size={18} />
+          <h1>番組管理</h1>
+        </div>
+        <form className="admin-form" onSubmit={submitRoom}>
+          <input
+            maxLength={80}
+            onChange={(event) => setTitle(event.currentTarget.value)}
+            placeholder="ルーム名"
+            required
+            type="text"
+            value={title}
           />
-        ))}
+          <button type="submit">
+            <Plus aria-hidden="true" size={18} />
+            作成
+          </button>
+        </form>
+        <section className="admin-list">
+          {rooms.map((room) => (
+            <AdminRoom
+              comments={commentsByRoomId[room.id] ?? null}
+              key={room.id}
+              onLoadComments={loadComments}
+              onRemoveComment={removeComment}
+              onUpdateTitle={updateRoomTitleById}
+              room={room}
+            />
+          ))}
+        </section>
       </section>
     </section>
   );
@@ -115,26 +123,33 @@ function AdminRoom({
 
   return (
     <article className="admin-room">
-      <input
-        aria-label="ルーム名"
-        maxLength={80}
-        onChange={(event) => setTitle(event.currentTarget.value)}
-        type="text"
-        value={title}
-      />
-      <p>{room.id}</p>
-      <a href={`/?room=${encodeURIComponent(room.id)}`}>
-        <ExternalLink aria-hidden="true" size={17} />
-        開く
-      </a>
-      <button type="button" onClick={() => void onUpdateTitle(room.id, title)}>
-        <Save aria-hidden="true" size={18} />
-        保存
-      </button>
-      <button type="button" onClick={() => void onLoadComments(room.id)}>
-        <MessageSquare aria-hidden="true" size={18} />
-        コメント
-      </button>
+      <div className="admin-room-main">
+        <input
+          aria-label="ルーム名"
+          maxLength={80}
+          onChange={(event) => setTitle(event.currentTarget.value)}
+          type="text"
+          value={title}
+        />
+        <p>{room.id}</p>
+      </div>
+      <div className="admin-actions">
+        <a href={`/watch?room=${encodeURIComponent(room.id)}`}>
+          <ExternalLink aria-hidden="true" size={17} />
+          開く
+        </a>
+        <button
+          type="button"
+          onClick={() => void onUpdateTitle(room.id, title)}
+        >
+          <Save aria-hidden="true" size={18} />
+          保存
+        </button>
+        <button type="button" onClick={() => void onLoadComments(room.id)}>
+          <MessageSquare aria-hidden="true" size={18} />
+          コメント
+        </button>
+      </div>
       {comments !== null ? (
         <section className="admin-comments">
           {comments.map((comment) => (

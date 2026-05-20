@@ -13,6 +13,14 @@ export type Room = {
   createdAt: string;
 };
 
+export type RoomStats = {
+  roomId: string;
+  visitorCount: number;
+  commentCount: number;
+  startedAt: string;
+  elapsedSeconds: number;
+};
+
 export async function fetchRooms(config: AppConfig): Promise<Room[]> {
   const response = await fetch(`${config.apiBaseUrl}/api/rooms`, {
     credentials: "include",
@@ -95,6 +103,33 @@ export async function fetchComments(
   return parsed.filter(isCommentMessage);
 }
 
+export async function fetchRoomStats(
+  config: AppConfig,
+  roomId: string,
+): Promise<RoomStats | null> {
+  const response = await fetch(
+    `${config.apiBaseUrl}/api/rooms/${encodeURIComponent(roomId)}/stats`,
+    {
+      credentials: "include",
+    },
+  );
+  return parseRoomStatsResponse(response);
+}
+
+export async function createRoomVisit(
+  config: AppConfig,
+  roomId: string,
+): Promise<RoomStats | null> {
+  const response = await fetch(
+    `${config.apiBaseUrl}/api/rooms/${encodeURIComponent(roomId)}/visits`,
+    {
+      method: "POST",
+      credentials: "include",
+    },
+  );
+  return parseRoomStatsResponse(response);
+}
+
 export function isRoom(value: unknown): value is Room {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -104,6 +139,23 @@ export function isRoom(value: unknown): value is Room {
     typeof room.id === "string" &&
     typeof room.title === "string" &&
     typeof room.createdAt === "string"
+  );
+}
+
+export function isRoomStats(value: unknown): value is RoomStats {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const stats = value as Record<string, unknown>;
+  return (
+    typeof stats.roomId === "string" &&
+    typeof stats.visitorCount === "number" &&
+    Number.isInteger(stats.visitorCount) &&
+    typeof stats.commentCount === "number" &&
+    Number.isInteger(stats.commentCount) &&
+    typeof stats.startedAt === "string" &&
+    typeof stats.elapsedSeconds === "number" &&
+    Number.isInteger(stats.elapsedSeconds)
   );
 }
 
@@ -147,6 +199,19 @@ async function parseRoomResponse(response: Response): Promise<Room | null> {
   }
   const parsed: unknown = await response.json();
   if (!isRoom(parsed)) {
+    return null;
+  }
+  return parsed;
+}
+
+async function parseRoomStatsResponse(
+  response: Response,
+): Promise<RoomStats | null> {
+  if (!response.ok) {
+    return null;
+  }
+  const parsed: unknown = await response.json();
+  if (!isRoomStats(parsed)) {
     return null;
   }
   return parsed;

@@ -2,6 +2,7 @@ import {
   Maximize,
   Pause,
   Play,
+  RefreshCw,
   Send,
   Settings,
   Volume2,
@@ -20,13 +21,16 @@ import {
   type CommentCreateRequest,
   type CommentDirection,
   type CommentFontSize,
+  type CommentMessage,
   commentColors,
   commentDirections,
 } from "../comments/types";
 import { useRooms } from "../rooms/useRooms";
 import { isCommentSubmitShortcut } from "./comment_shortcuts";
+import { commentLogNumber, formatElapsedTime } from "./room_activity";
 import { useCommentRenderer } from "./useCommentRenderer";
 import { useCommentSocket } from "./useCommentSocket";
+import { useRoomActivity } from "./useRoomActivity";
 import { useStreamPlayer } from "./useStreamPlayer";
 
 type WatchPageProps = {
@@ -53,10 +57,19 @@ export function WatchPage({ config }: WatchPageProps) {
   const { rooms } = useRooms(config);
   const { clearComments, commentsLayerRef, renderComment } =
     useCommentRenderer();
+  const { comments, elapsedSeconds, recordComment, stats } = useRoomActivity(
+    config,
+    selectedRoomId,
+  );
+  const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? null;
+  const renderAndRecordComment = (message: CommentMessage): void => {
+    renderComment(message);
+    recordComment(message);
+  };
   const { sendComment } = useCommentSocket(
     config,
     selectedRoomId,
-    renderComment,
+    renderAndRecordComment,
   );
   const { streamMessage } = useStreamPlayer(config, selectedRoomId, videoRef);
 
@@ -71,7 +84,7 @@ export function WatchPage({ config }: WatchPageProps) {
       history.replaceState(
         null,
         "",
-        `/?room=${encodeURIComponent(initialRoomId)}`,
+        `/watch?room=${encodeURIComponent(initialRoomId)}`,
       );
     }
   }, [rooms, selectedRoomId]);
@@ -110,7 +123,7 @@ export function WatchPage({ config }: WatchPageProps) {
   const switchRoom = (roomId: string): void => {
     clearComments();
     setSelectedRoomId(roomId);
-    history.replaceState(null, "", `/?room=${encodeURIComponent(roomId)}`);
+    history.replaceState(null, "", `/watch?room=${encodeURIComponent(roomId)}`);
   };
 
   const togglePlayback = (): void => {
@@ -146,69 +159,103 @@ export function WatchPage({ config }: WatchPageProps) {
   return (
     <section className="watch-shell">
       <header className="topbar">
-        <h1>Boke Video</h1>
-        <a className="link-button" href="/admin">
-          <Settings aria-hidden="true" size={18} />
-          管理
-        </a>
+        <div className="site-mark">
+          <span className="site-mark-main">Boke Video</span>
+          <span className="site-mark-sub">LIVE</span>
+        </div>
+        <nav className="topnav" aria-label="メニュー">
+          <a href="/">枠一覧</a>
+          <a href="/admin">管理</a>
+        </nav>
       </header>
+      <section className="program-board">
+        <div>
+          <p className="program-kicker">ON AIR</p>
+          <h1>コメント生放送</h1>
+        </div>
+        <label className="room-select">
+          <span>番組</span>
+          <select
+            value={selectedRoomId}
+            onChange={(event) => switchRoom(event.currentTarget.value)}
+          >
+            {rooms.map((room) => (
+              <option key={room.id} value={room.id}>
+                {room.title}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
       <section className="watch-grid">
-        <section ref={stageRef} className="stage">
-          <video
-            autoPlay
-            ref={videoRef}
-            muted
-            onPause={updatePlayerState}
-            onPlay={updatePlayerState}
-            onVolumeChange={updatePlayerState}
-            playsInline
-          />
-          <div ref={commentsLayerRef} className="comments-layer" />
-          {streamMessage !== "" ? (
-            <div className="stream-status">{streamMessage}</div>
-          ) : null}
+        <main className="player-column">
+          <div className="program-caption">
+            {selectedRoom?.title ?? "コメント生放送"}
+          </div>
+          <section ref={stageRef} className="stage">
+            <video
+              autoPlay
+              ref={videoRef}
+              muted
+              onPause={updatePlayerState}
+              onPlay={updatePlayerState}
+              onVolumeChange={updatePlayerState}
+              playsInline
+            />
+            <div ref={commentsLayerRef} className="comments-layer" />
+            {streamMessage !== "" ? (
+              <div className="stream-status">{streamMessage}</div>
+            ) : null}
+          </section>
           <div className="player-controls">
-            <button id="play-toggle" type="button" onClick={togglePlayback}>
+            <button
+              aria-label={isPaused ? "再生" : "一時停止"}
+              id="play-toggle"
+              type="button"
+              onClick={togglePlayback}
+            >
               {isPaused ? (
                 <Play aria-hidden="true" size={18} />
               ) : (
                 <Pause aria-hidden="true" size={18} />
               )}
-              {isPaused ? "再生" : "一時停止"}
             </button>
-            <span className="live-badge">LIVE</span>
-            <button id="mute-toggle" type="button" onClick={toggleMuted}>
+            <button
+              aria-label={isMuted ? "消音中" : "音声"}
+              id="mute-toggle"
+              type="button"
+              onClick={toggleMuted}
+            >
               {isMuted ? (
                 <VolumeX aria-hidden="true" size={18} />
               ) : (
                 <Volume2 aria-hidden="true" size={18} />
               )}
-              {isMuted ? "消音中" : "音声"}
+            </button>
+            <span className="play-time">
+              経過時間　{formatElapsedTime(elapsedSeconds)}
+            </span>
+            <span className="live-badge">●LIVE</span>
+            <button
+              aria-label="更新"
+              id="reload-toggle"
+              type="button"
+              onClick={() => location.reload()}
+            >
+              <RefreshCw aria-hidden="true" size={18} />
             </button>
             <button
+              aria-label="全画面"
               id="fullscreen-toggle"
               type="button"
               onClick={toggleFullscreen}
             >
               <Maximize aria-hidden="true" size={18} />
-              全画面
             </button>
+            <a className="setting-link" href="/admin" aria-label="管理">
+              <Settings aria-hidden="true" size={18} />
+            </a>
           </div>
-        </section>
-        <aside className="side-panel">
-          <label className="field">
-            <span>ルーム</span>
-            <select
-              value={selectedRoomId}
-              onChange={(event) => switchRoom(event.currentTarget.value)}
-            >
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.title}
-                </option>
-              ))}
-            </select>
-          </label>
           <form className="comment-form" onSubmit={submitComment}>
             <div className="comment-compose">
               <textarea
@@ -221,56 +268,100 @@ export function WatchPage({ config }: WatchPageProps) {
               />
               <button type="submit">
                 <Send aria-hidden="true" size={18} />
-                送信
+                コメント
               </button>
             </div>
-            <fieldset className="choice-field">
-              <legend>方向</legend>
-              <div className="choice-grid choice-grid-direction">
-                {commentDirections.map((direction) => (
-                  <ChoiceChip
-                    checked={direction === selectedDirection}
-                    key={direction}
-                    name="comment-direction"
-                    onChange={() => setSelectedDirection(direction)}
-                    text={directionLabel(direction)}
-                    value={direction}
+            <div className="comment-options">
+              <fieldset className="choice-field">
+                <legend>方向</legend>
+                <div className="choice-grid choice-grid-direction">
+                  {commentDirections.map((direction) => (
+                    <ChoiceChip
+                      checked={direction === selectedDirection}
+                      key={direction}
+                      name="comment-direction"
+                      onChange={() => setSelectedDirection(direction)}
+                      text={directionLabel(direction)}
+                      value={direction}
+                    />
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset className="choice-field">
+                <legend>大きさ</legend>
+                <div className="choice-grid choice-grid-size">
+                  {commentSizeOptions.map((size) => (
+                    <ChoiceChip
+                      checked={size.value === selectedSize}
+                      key={size.value}
+                      name="comment-size"
+                      onChange={() => setSelectedSize(size.value)}
+                      text={size.label}
+                      value={size.value}
+                    />
+                  ))}
+                </div>
+              </fieldset>
+              <div className="color-row">
+                {commentColors.map((color) => (
+                  <button
+                    aria-label={color}
+                    className={
+                      color === selectedColor
+                        ? "color-button is-selected"
+                        : "color-button"
+                    }
+                    key={color}
+                    onClick={() => setSelectedColor(color)}
+                    style={{ backgroundColor: color }}
+                    type="button"
                   />
                 ))}
               </div>
-            </fieldset>
-            <fieldset className="choice-field">
-              <legend>大きさ</legend>
-              <div className="choice-grid choice-grid-size">
-                {commentSizeOptions.map((size) => (
-                  <ChoiceChip
-                    checked={size.value === selectedSize}
-                    key={size.value}
-                    name="comment-size"
-                    onChange={() => setSelectedSize(size.value)}
-                    text={size.label}
-                    value={size.value}
-                  />
-                ))}
-              </div>
-            </fieldset>
-            <div className="color-row">
-              {commentColors.map((color) => (
-                <button
-                  aria-label={color}
-                  className={
-                    color === selectedColor
-                      ? "color-button is-selected"
-                      : "color-button"
-                  }
-                  key={color}
-                  onClick={() => setSelectedColor(color)}
-                  style={{ backgroundColor: color }}
-                  type="button"
-                />
-              ))}
             </div>
           </form>
+        </main>
+        <aside className="side-panel">
+          <div className="counter-strip">
+            <span>
+              来場者
+              <br />
+              {stats?.visitorCount ?? 0}
+            </span>
+            <span>
+              コメント
+              <br />
+              {stats?.commentCount ?? comments.length}
+            </span>
+            <span>
+              経過
+              <br />
+              {formatElapsedTime(elapsedSeconds)}
+            </span>
+          </div>
+          <div className="tab-row">
+            <button type="button" className="is-active">
+              コメント
+            </button>
+          </div>
+          <ol className="comment-log" aria-label="コメント">
+            {comments.map((comment, index) => (
+              <li key={comment.commentId}>
+                <span>
+                  {commentLogNumber(
+                    index,
+                    comments.length,
+                    stats?.commentCount ?? comments.length,
+                  )}
+                </span>
+                <p>{comment.body}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="info-ticker">
+            <span>INFO</span>
+            <p>{selectedRoom === null ? "番組取得中" : "コメント受付中"}</p>
+          </div>
         </aside>
       </section>
     </section>
