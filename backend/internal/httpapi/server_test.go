@@ -8,11 +8,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"boke-video/backend/internal/access"
 	"boke-video/backend/internal/comment"
 	"boke-video/backend/internal/repository"
+	"boke-video/backend/internal/streamaccess"
 )
 
 func TestServerStoresCommentAppearance(t *testing.T) {
@@ -90,6 +93,44 @@ func TestServerRejectsUnsafeRoomID(t *testing.T) {
 	}
 }
 
+func TestServerCreatesSignedStreamAccess(t *testing.T) {
+	server := newTestServer(t)
+	roomID := createTestRoom(t, server, "配信")
+
+	response := performRequest(server, http.MethodPost, "/api/rooms/"+roomID+"/stream-access", "")
+	if response.Code != http.StatusCreated {
+		t.Fatalf("stream access status = %d, body = %s", response.Code, response.Body.String())
+	}
+
+	var parsed struct {
+		WhepURL string `json:"whepUrl"`
+	}
+	if err := json.NewDecoder(response.Body).Decode(&parsed); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if parsed.WhepURL == "" {
+		t.Fatal("whepUrl is empty")
+	}
+	if !strings.HasPrefix(parsed.WhepURL, "https://rtc.example.com:443/live/"+roomID+"/whep?") {
+		t.Fatalf("whepUrl = %q", parsed.WhepURL)
+	}
+	if !strings.Contains(parsed.WhepURL, "policy=") {
+		t.Fatalf("whepUrl missing policy: %q", parsed.WhepURL)
+	}
+	if !strings.Contains(parsed.WhepURL, "signature=") {
+		t.Fatalf("whepUrl missing signature: %q", parsed.WhepURL)
+	}
+}
+
+func TestServerRejectsStreamAccessForMissingRoom(t *testing.T) {
+	server := newTestServer(t)
+
+	response := performRequest(server, http.MethodPost, "/api/rooms/missing/stream-access", "")
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("stream access status = %d, body = %s", response.Code, response.Body.String())
+	}
+}
+
 func newTestServer(t *testing.T) *Server {
 	t.Helper()
 
@@ -107,12 +148,25 @@ func newTestServer(t *testing.T) *Server {
 		t.Fatalf("Migrate returned error: %v", err)
 	}
 
+	streamAccess, err := streamaccess.NewSigner(streamaccess.Config{
+		BaseURL: "https://rtc.example.com",
+		Secret:  "secret",
+		TTL:     time.Minute,
+		Now: func() time.Time {
+			return time.Unix(1000, 0).UTC()
+		},
+	})
+	if err != nil {
+		t.Fatalf("NewSigner returned error: %v", err)
+	}
+
 	return NewServer(ServerConfig{
 		Logger:         slog.Default(),
 		Repository:     db,
 		Verifier:       access.NewVerifier(access.VerifierConfig{}),
 		CommentHub:     comment.NewHub(),
 		AllowedOrigins: []string{"http://localhost:5173"},
+		StreamAccess:   streamAccess,
 	})
 }
 

@@ -18,6 +18,7 @@ import (
 	"boke-video/backend/internal/access"
 	"boke-video/backend/internal/comment"
 	"boke-video/backend/internal/repository"
+	"boke-video/backend/internal/streamaccess"
 
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
@@ -29,6 +30,7 @@ type ServerConfig struct {
 	Verifier       *access.Verifier
 	CommentHub     *comment.Hub
 	AllowedOrigins []string
+	StreamAccess   *streamaccess.Signer
 }
 
 type Server struct {
@@ -37,6 +39,7 @@ type Server struct {
 	verifier       *access.Verifier
 	commentHub     *comment.Hub
 	allowedOrigins []string
+	streamAccess   *streamaccess.Signer
 	limiter        *rateLimiter
 }
 
@@ -47,6 +50,7 @@ func NewServer(cfg ServerConfig) *Server {
 		verifier:       cfg.Verifier,
 		commentHub:     cfg.CommentHub,
 		allowedOrigins: cfg.AllowedOrigins,
+		streamAccess:   cfg.StreamAccess,
 		limiter:        newRateLimiter(time.Second),
 	}
 }
@@ -67,6 +71,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.handleCreateRoom(w, r)
 	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/comments"):
 		s.handleListComments(w, r)
+	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/stream-access"):
+		s.handleCreateStreamAccess(w, r)
 	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/"):
 		s.handleGetRoom(w, r)
 	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/comments"):
@@ -80,6 +86,23 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	default:
 		writeError(w, http.StatusNotFound, "not found")
 	}
+}
+
+func (s *Server) handleCreateStreamAccess(w http.ResponseWriter, r *http.Request) {
+	if _, ok := s.requirePrincipal(w, r); !ok {
+		return
+	}
+	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/rooms/"), "/stream-access")
+	if _, err := s.repository.GetRoom(r.Context(), roomID); err != nil {
+		writeRepositoryError(w, err)
+		return
+	}
+	whepURL, err := s.streamAccess.SignedWhepURL(roomID)
+	if err != nil {
+		s.writeServerError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]string{"whepUrl": whepURL})
 }
 
 func (s *Server) setCommonHeaders(w http.ResponseWriter, r *http.Request) {

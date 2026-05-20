@@ -14,6 +14,7 @@ import (
 	"boke-video/backend/internal/config"
 	"boke-video/backend/internal/httpapi"
 	"boke-video/backend/internal/repository"
+	"boke-video/backend/internal/streamaccess"
 )
 
 func main() {
@@ -47,12 +48,23 @@ func main() {
 	commentHub := comment.NewHub()
 	go commentHub.Run(context.Background())
 
+	streamAccess, err := streamaccess.NewSigner(streamaccess.Config{
+		BaseURL: cfg.StreamPublicBaseURL,
+		Secret:  cfg.StreamSigningSecret,
+		TTL:     time.Minute,
+	})
+	if err != nil {
+		logger.Error("configure stream access", "error", err)
+		os.Exit(1)
+	}
+
 	handler := httpapi.NewServer(httpapi.ServerConfig{
 		Logger:         logger,
 		Repository:     db,
 		Verifier:       verifier,
 		CommentHub:     commentHub,
 		AllowedOrigins: cfg.AllowedOrigins,
+		StreamAccess:   streamAccess,
 	})
 
 	server := &http.Server{
