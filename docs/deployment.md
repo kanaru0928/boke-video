@@ -5,7 +5,7 @@
 ## 全体構成
 
 ```text
-video.example.com
+boke-video.example.com
   Browser -> Cloudflare Access -> Cloudflare Workers
 
 stream.example.com
@@ -24,7 +24,7 @@ rtc.example.com
 
 | ホスト名 | 役割 | 設定 |
 | --- | --- | --- |
-| `video.example.com` | フロントエンド | Workers Custom Domain |
+| `boke-video.example.com` | フロントエンド | Workers Custom Domain |
 | `stream.example.com` | API、コメントWebSocket | Tunnelの公開ホスト名 |
 | `ingest.example.com` | OBS WHIP入力 | Oracle IPへのDNS-only A/AAAA |
 | `rtc.example.com` | 視聴者向けWebRTC | Oracle IPへのDNS-only A/AAAA |
@@ -40,7 +40,7 @@ rtc.example.com
 
 ## 認証
 
-Cloudflare Accessは`video.example.com`と`stream.example.com`を保護します。Goバックエンドは`Cf-Access-Jwt-Assertion`を検証し、署名、`aud`、`iss`、`exp`、`sub`を必須にします。
+Cloudflare Accessは`boke-video.example.com`と`stream.example.com`を保護します。Goバックエンドは`Cf-Access-Jwt-Assertion`を検証し、署名、`aud`、`iss`、`exp`、`sub`を必須にします。
 
 管理画面と管理APIへ到達できるユーザーはCloudflare Accessのポリシーで制限します。動画枠の更新、削除、コメント削除、WHIP Token再発行は、動画枠を作成したJWTの`sub`だけに許可します。
 
@@ -52,8 +52,8 @@ Access Applicationはdeny by defaultにします。
 
 | 対象 | Application domain | 許可 |
 | --- | --- | --- |
-| 視聴画面 | `video.example.com` | 視聴者 |
-| 管理画面 | `video.example.com/admin*` | 管理者 |
+| 視聴画面 | `boke-video.example.com` | 視聴者 |
+| 管理画面 | `boke-video.example.com/admin*` | 管理者 |
 | バックエンド | `stream.example.com` | 視聴者 |
 | 管理API | `stream.example.com/api/admin/*` | 管理者 |
 
@@ -80,7 +80,7 @@ ingress:
 ```text
 LISTEN_ADDR=127.0.0.1:8080
 DATABASE_PATH=/var/lib/boke-video/boke-video.sqlite3
-ALLOWED_ORIGINS=https://video.example.com
+ALLOWED_ORIGINS=https://boke-video.example.com
 
 ACCESS_ENABLED=true
 ACCESS_AUDIENCE=Cloudflare Access ApplicationのAUD tag
@@ -128,4 +128,4 @@ sudo systemctl status cloudflared-boke-video.service
 sudo systemctl status ovenmediaengine.service
 ```
 
-ブラウザでは`https://video.example.com`へAccessログインし、視聴画面と管理画面を確認します。
+ブラウザでは`https://boke-video.example.com`へAccessログインし、視聴画面と管理画面を確認します。
