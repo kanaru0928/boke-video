@@ -60,4 +60,32 @@ func TestSQLiteStoresRoomAndComment(t *testing.T) {
 	if comments[0].FontSize != stored.FontSize {
 		t.Fatalf("comment font size = %q", comments[0].FontSize)
 	}
+
+	visitedAt := time.Date(2026, 5, 9, 0, 2, 0, 0, time.UTC)
+	if err := db.RecordRoomVisit(ctx, room.ID, "user-1", visitedAt); err != nil {
+		t.Fatalf("RecordRoomVisit returned error: %v", err)
+	}
+	if err := db.RecordRoomVisit(ctx, room.ID, "user-1", visitedAt.Add(time.Minute)); err != nil {
+		t.Fatalf("RecordRoomVisit returned error: %v", err)
+	}
+	if err := db.RecordRoomVisit(ctx, room.ID, "user-2", visitedAt.Add(2*time.Minute)); err != nil {
+		t.Fatalf("RecordRoomVisit returned error: %v", err)
+	}
+
+	stats, err := db.GetRoomStats(ctx, room.ID)
+	if err != nil {
+		t.Fatalf("GetRoomStats returned error: %v", err)
+	}
+	if stats.RoomID != room.ID {
+		t.Fatalf("stats.RoomID = %q", stats.RoomID)
+	}
+	if stats.VisitorCount != 2 {
+		t.Fatalf("stats.VisitorCount = %d", stats.VisitorCount)
+	}
+	if stats.CommentCount != 1 {
+		t.Fatalf("stats.CommentCount = %d", stats.CommentCount)
+	}
+	if !stats.StartedAt.Equal(room.CreatedAt) {
+		t.Fatalf("stats.StartedAt = %s", stats.StartedAt)
+	}
 }
