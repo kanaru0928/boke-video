@@ -97,7 +97,6 @@
             <WebRTC>
               <Rtx>true</Rtx>
               <Ulpfec>true</Ulpfec>
-              <JitterBuffer>true</JitterBuffer>
             </WebRTC>
           </Publishers>
         </Application>
