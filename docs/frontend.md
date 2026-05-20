@@ -23,7 +23,7 @@ Cloudflare Workersで静的アセットとして配信します。
 
 ## 設定
 
-API、OvenMediaEngine、コメントWebSocketの接続先はビルド時のVite環境変数で設定します。Cloudflare Access、Tunnel、Oracle VCNを含む設定値は`docs/cloudflare.md`を参照します。
+API、OvenMediaEngine、コメントWebSocketの接続先はビルド時のVite環境変数で設定します。本番の設定値は`docs/deployment.md`を正本にします。
 
 ## デプロイ
 

@@ -1,5 +1,7 @@
 # バックエンド
 
+本番の設定値と公開経路は`docs/deployment.md`を正本にします。
+
 ## 責務
 
 Goバックエンドは次を担当します。
@@ -14,7 +16,7 @@ Goバックエンドは次を担当します。
 - OvenMediaEngine視聴用の短寿命トークンを発行する
 - OBS WHIP入力のBearer Tokenを検証してOvenMediaEngineへ転送する
 
-映像mediaの受信と視聴者への配信はGoバックエンドの責務ではありません。WebRTC Media Serverが担当します。
+WebRTC mediaの受信と視聴者への配信はOvenMediaEngineが担当します。
 
 ## API
 
@@ -74,4 +76,4 @@ STREAM_SIGNING_SECRET=replace-with-strong-secret
 WHIP_UPSTREAM_BASE_URL=http://127.0.0.1:3333
 ```
 
-CORSとCloudflare Access関連の設定値は`docs/cloudflare.md`を参照します。
+CORSとCloudflare Access関連の設定値は`docs/deployment.md`を参照します。
