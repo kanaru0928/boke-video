@@ -1,4 +1,4 @@
-import { Bot, ExternalLink, MonitorPlay, Settings } from "lucide-react";
+import { Bot, MonitorPlay, Settings } from "lucide-react";
 import { useEffect } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import type { Room } from "./room_api";
@@ -71,25 +71,32 @@ function RoomCard({ room }: RoomCardProps) {
 
   return (
     <article className="room-card">
-      <div className={`room-thumbnail ${thumbnail.toneClassName}`}>
-        {thumbnail.url === null ? (
-          <div className="room-thumbnail-generated">
-            <Bot aria-hidden="true" size={30} />
-            <strong>{thumbnail.initials}</strong>
-            <span>Loading</span>
-          </div>
-        ) : (
-          <img alt="" src={thumbnail.url} />
-        )}
-      </div>
+      <a
+        aria-label={`${room.title}を視聴`}
+        className="room-thumbnail-link"
+        href={`/watch?room=${encodeURIComponent(room.id)}`}
+      >
+        <div className={`room-thumbnail ${thumbnail.toneClassName}`}>
+          {thumbnail.url === null ? (
+            <div className="room-thumbnail-generated">
+              <Bot aria-hidden="true" size={34} />
+              <strong>{thumbnail.initials}</strong>
+              <span>Loading</span>
+            </div>
+          ) : (
+            <img alt="" src={thumbnail.url} />
+          )}
+        </div>
+      </a>
       <div className="room-card-main">
-        <h2>{room.title}</h2>
+        <a
+          className="room-card-title"
+          href={`/watch?room=${encodeURIComponent(room.id)}`}
+        >
+          {room.title}
+        </a>
         <p>{room.id}</p>
       </div>
-      <a href={`/watch?room=${encodeURIComponent(room.id)}`}>
-        <ExternalLink aria-hidden="true" size={17} />
-        視聴
-      </a>
     </article>
   );
 }
