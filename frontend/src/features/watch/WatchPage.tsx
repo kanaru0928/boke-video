@@ -59,7 +59,6 @@ import {
   commentsLayerClassName,
   counterStripClassName,
   directionChoiceGridClassName,
-  infoTickerClassName,
   liveBadgeClassName,
   playerColumnClassName,
   playerControlsClassName,
@@ -419,10 +418,6 @@ export function WatchPage({ config }: WatchPageProps) {
               </li>
             ))}
           </ol>
-          <div className={infoTickerClassName}>
-            <span>INFO</span>
-            <p>{selectedRoom === null ? "番組取得中" : "コメント受付中"}</p>
-          </div>
         </aside>
       </section>
     </section>

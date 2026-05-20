@@ -86,7 +86,7 @@ export const selectedColorButtonClassName =
   "outline-2 outline-offset-2 outline-[#006bd6]";
 
 export const sidePanelClassName =
-  "grid min-h-[360px] grid-rows-[auto_auto_minmax(0,1fr)_auto] border border-[#8c8c8c] bg-white shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#b8b8b8] max-[860px]:min-h-[280px] max-[520px]:min-h-[230px]";
+  "grid min-h-[360px] grid-rows-[auto_auto_minmax(0,1fr)] border border-[#8c8c8c] bg-white shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#b8b8b8] max-[860px]:min-h-[280px] max-[520px]:min-h-[230px]";
 
 export const counterStripClassName =
   "grid grid-cols-3 border-b border-[#d2d2d2] bg-white [&_span]:border-l [&_span]:border-[#e2e2e2] [&_span]:px-1 [&_span]:py-[7px] [&_span]:text-center [&_span]:text-xs [&_span]:leading-[1.35] [&_span]:text-[#777777] [&_span:first-child]:border-l-0 max-[520px]:[&_span]:py-[5px]";
@@ -110,9 +110,6 @@ export const commentLogBodyClassName =
   "m-0 p-[9px_8px] text-[13px] [overflow-wrap:anywhere] max-[520px]:pt-[7px]";
 
 export const secondCommentLogBodyClassName = "font-extrabold text-[#ff4b73]";
-
-export const infoTickerClassName =
-  "grid grid-cols-[auto_1fr] items-center gap-[7px] border-t border-[#d5d5d5] bg-white px-2 py-[7px] [&_span]:bg-[#202020] [&_span]:px-[5px] [&_span]:py-0.5 [&_span]:font-[Arial,sans-serif] [&_span]:text-[11px] [&_span]:font-extrabold [&_span]:text-white [&_p]:m-0 [&_p]:text-[13px]";
 
 export const choiceChipLabelClassName = "relative block min-w-0";
 
