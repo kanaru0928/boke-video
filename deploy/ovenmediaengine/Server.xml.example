@@ -50,11 +50,33 @@
         <Application>
           <Name>live</Name>
           <Type>live</Type>
+          <OutputProfiles>
+            <OutputProfile>
+              <Name>default</Name>
+              <OutputStreamName>${OriginStreamName}</OutputStreamName>
+              <Encodes>
+                <Video>
+                  <Bypass>true</Bypass>
+                </Video>
+                <Audio>
+                  <Bypass>true</Bypass>
+                </Audio>
+              </Encodes>
+            </OutputProfile>
+          </OutputProfiles>
           <Providers>
-            <WebRTC />
+            <WebRTC>
+              <CrossDomains>
+                <Url>*</Url>
+              </CrossDomains>
+            </WebRTC>
           </Providers>
           <Publishers>
-            <WebRTC />
+            <WebRTC>
+              <CrossDomains>
+                <Url>*</Url>
+              </CrossDomains>
+            </WebRTC>
           </Publishers>
         </Application>
       </Applications>
