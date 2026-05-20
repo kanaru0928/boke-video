@@ -88,23 +88,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleCreateStreamAccess(w http.ResponseWriter, r *http.Request) {
-	if _, ok := s.requirePrincipal(w, r); !ok {
-		return
-	}
-	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/rooms/"), "/stream-access")
-	if _, err := s.repository.GetRoom(r.Context(), roomID); err != nil {
-		writeRepositoryError(w, err)
-		return
-	}
-	whepURL, err := s.streamAccess.SignedWhepURL(roomID)
-	if err != nil {
-		s.writeServerError(w, err)
-		return
-	}
-	writeJSON(w, http.StatusCreated, map[string]string{"whepUrl": whepURL})
-}
-
 func (s *Server) setCommonHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Vary", "Origin")
 	w.Header().Set("Content-Security-Policy", "default-src 'self'; connect-src 'self' https: wss:; media-src 'self' blob:; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'")
