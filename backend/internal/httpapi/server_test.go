@@ -55,6 +55,58 @@ func TestServerStoresCommentAppearance(t *testing.T) {
 	}
 }
 
+func TestServerReturnsRoomStatsFromStoredData(t *testing.T) {
+	server := newTestServer(t)
+
+	roomID := createTestRoom(t, server, "配信")
+	visitResponse := performRequest(server, http.MethodPost, "/api/rooms/"+roomID+"/visits", "")
+	if visitResponse.Code != http.StatusCreated {
+		t.Fatalf("create room visit status = %d, body = %s", visitResponse.Code, visitResponse.Body.String())
+	}
+	secondVisitResponse := performRequest(server, http.MethodPost, "/api/rooms/"+roomID+"/visits", "")
+	if secondVisitResponse.Code != http.StatusCreated {
+		t.Fatalf("create second room visit status = %d, body = %s", secondVisitResponse.Code, secondVisitResponse.Body.String())
+	}
+
+	createCommentRequest := `{
+		"body": "こんにちは",
+		"direction": "rightToLeft",
+		"color": "#ffffff",
+		"fontSize": "medium"
+	}`
+	commentResponse := performRequest(server, http.MethodPost, "/api/rooms/"+roomID+"/comments", createCommentRequest)
+	if commentResponse.Code != http.StatusCreated {
+		t.Fatalf("create comment status = %d, body = %s", commentResponse.Code, commentResponse.Body.String())
+	}
+
+	statsResponse := performRequest(server, http.MethodGet, "/api/rooms/"+roomID+"/stats", "")
+	if statsResponse.Code != http.StatusOK {
+		t.Fatalf("room stats status = %d, body = %s", statsResponse.Code, statsResponse.Body.String())
+	}
+
+	var stats struct {
+		RoomID         string `json:"roomId"`
+		VisitorCount   int    `json:"visitorCount"`
+		CommentCount   int    `json:"commentCount"`
+		ElapsedSeconds int    `json:"elapsedSeconds"`
+	}
+	if err := json.NewDecoder(statsResponse.Body).Decode(&stats); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if stats.RoomID != roomID {
+		t.Fatalf("stats.RoomID = %q", stats.RoomID)
+	}
+	if stats.VisitorCount != 1 {
+		t.Fatalf("stats.VisitorCount = %d", stats.VisitorCount)
+	}
+	if stats.CommentCount != 1 {
+		t.Fatalf("stats.CommentCount = %d", stats.CommentCount)
+	}
+	if stats.ElapsedSeconds < 0 {
+		t.Fatalf("stats.ElapsedSeconds = %d", stats.ElapsedSeconds)
+	}
+}
+
 func TestServerCreatesRoomWithRequestedID(t *testing.T) {
 	server := newTestServer(t)
 
@@ -69,6 +121,12 @@ func TestServerCreatesRoomWithRequestedID(t *testing.T) {
 	}
 	if room.ID != "obs-local" {
 		t.Fatalf("room.ID = %q", room.ID)
+	}
+	if room.ThumbnailURL != "n/a" {
+		t.Fatalf("room.ThumbnailURL = %q", room.ThumbnailURL)
+	}
+	if room.ThumbnailRefreshSeconds != 30 {
+		t.Fatalf("room.ThumbnailRefreshSeconds = %d", room.ThumbnailRefreshSeconds)
 	}
 }
 
@@ -160,11 +218,14 @@ func TestServerRejectsAdminMutationForAnotherOwner(t *testing.T) {
 	server := newTestServer(t)
 	roomID := "other-room"
 	err := server.repository.CreateRoom(context.Background(), repository.Room{
-		ID:              roomID,
-		Title:           "他人の配信",
-		OwnerSub:        "other-owner",
-		IngestTokenHash: ingestauth.HashToken("token"),
-		CreatedAt:       time.Now().UTC(),
+		ID:                      roomID,
+		Title:                   "他人の配信",
+		ThumbnailURL:            "n/a",
+		ThumbnailUpdatedAt:      time.Now().UTC(),
+		ThumbnailRefreshSeconds: 30,
+		OwnerSub:                "other-owner",
+		IngestTokenHash:         ingestauth.HashToken("token"),
+		CreatedAt:               time.Now().UTC(),
 	})
 	if err != nil {
 		t.Fatalf("CreateRoom returned error: %v", err)
@@ -308,6 +369,9 @@ func newTestServer(t *testing.T) *Server {
 		CommentHub:     comment.NewHub(),
 		AllowedOrigins: []string{"http://localhost:5173"},
 		StreamAccess:   streamAccess,
+		Now: func() time.Time {
+			return time.Unix(2000, 0).UTC()
+		},
 	})
 }
 

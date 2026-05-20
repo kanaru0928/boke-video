@@ -53,12 +53,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	now := time.Now().UTC()
 	err = db.CreateRoom(ctx, repository.Room{
-		ID:              roomID,
-		Title:           roomTitle,
-		OwnerSub:        "local-dev",
-		IngestTokenHash: ingestauth.HashToken(ingestToken),
-		CreatedAt:       time.Now().UTC(),
+		ID:                      roomID,
+		Title:                   roomTitle,
+		ThumbnailURL:            "n/a",
+		ThumbnailUpdatedAt:      now,
+		ThumbnailRefreshSeconds: 30,
+		OwnerSub:                "local-dev",
+		IngestTokenHash:         ingestauth.HashToken(ingestToken),
+		CreatedAt:               now,
 	})
 	if err != nil {
 		log.Fatal(err)

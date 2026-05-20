@@ -26,6 +26,9 @@ import (
 	"github.com/coder/websocket/wsjson"
 )
 
+const roomThumbnailRefreshSeconds = 30
+const roomThumbnailUnavailable = "n/a"
+
 type ServerConfig struct {
 	Logger         *slog.Logger
 	Repository     *repository.SQLite
@@ -34,6 +37,7 @@ type ServerConfig struct {
 	AllowedOrigins []string
 	StreamAccess   *streamaccess.Signer
 	WhipProxy      *whipproxy.Proxy
+	Now            func() time.Time
 }
 
 type Server struct {
@@ -45,9 +49,14 @@ type Server struct {
 	streamAccess   *streamaccess.Signer
 	whipProxy      *whipproxy.Proxy
 	limiter        *rateLimiter
+	now            func() time.Time
 }
 
 func NewServer(cfg ServerConfig) *Server {
+	now := cfg.Now
+	if now == nil {
+		now = time.Now
+	}
 	return &Server{
 		logger:         cfg.Logger,
 		repository:     cfg.Repository,
@@ -57,6 +66,7 @@ func NewServer(cfg ServerConfig) *Server {
 		streamAccess:   cfg.StreamAccess,
 		whipProxy:      cfg.WhipProxy,
 		limiter:        newRateLimiter(time.Second),
+		now:            now,
 	}
 }
 
@@ -78,6 +88,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.handleCreateRoom(w, r)
 	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/comments"):
 		s.handleListComments(w, r)
+	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/stats"):
+		s.handleGetRoomStats(w, r)
+	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/visits"):
+		s.handleCreateRoomVisit(w, r)
 	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/stream-access"):
 		s.handleCreateStreamAccess(w, r)
 	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/"):
@@ -185,12 +199,16 @@ func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		s.writeServerError(w, err)
 		return
 	}
+	now := s.now().UTC()
 	room := repository.Room{
-		ID:              roomID,
-		Title:           req.Title,
-		OwnerSub:        principal.Subject,
-		IngestTokenHash: ingestauth.HashToken(ingestToken),
-		CreatedAt:       time.Now().UTC(),
+		ID:                      roomID,
+		Title:                   req.Title,
+		ThumbnailURL:            roomThumbnailUnavailable,
+		ThumbnailUpdatedAt:      now,
+		ThumbnailRefreshSeconds: roomThumbnailRefreshSeconds,
+		OwnerSub:                principal.Subject,
+		IngestTokenHash:         ingestauth.HashToken(ingestToken),
+		CreatedAt:               now,
 	}
 	if err := s.repository.CreateRoom(r.Context(), room); err != nil {
 		writeRepositoryError(w, err)
@@ -340,6 +358,37 @@ func (s *Server) handleListComments(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, messages)
 }
 
+func (s *Server) handleGetRoomStats(w http.ResponseWriter, r *http.Request) {
+	if _, ok := s.requirePrincipal(w, r); !ok {
+		return
+	}
+	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/rooms/"), "/stats")
+	stats, err := s.repository.GetRoomStats(r.Context(), roomID)
+	if err != nil {
+		writeRepositoryError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, s.roomStatsResponseFromStats(stats))
+}
+
+func (s *Server) handleCreateRoomVisit(w http.ResponseWriter, r *http.Request) {
+	principal, ok := s.requirePrincipal(w, r)
+	if !ok {
+		return
+	}
+	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/rooms/"), "/visits")
+	if err := s.repository.RecordRoomVisit(r.Context(), roomID, principal.Subject, s.now().UTC()); err != nil {
+		writeRepositoryError(w, err)
+		return
+	}
+	stats, err := s.repository.GetRoomStats(r.Context(), roomID)
+	if err != nil {
+		writeRepositoryError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, s.roomStatsResponseFromStats(stats))
+}
+
 func (s *Server) handleCreateComment(w http.ResponseWriter, r *http.Request) {
 	principal, ok := s.requirePrincipal(w, r)
 	if !ok {
@@ -414,7 +463,7 @@ func (s *Server) createCommentFromRequest(ctx context.Context, roomID string, au
 		return comment.Message{}, err
 	}
 
-	now := time.Now().UTC()
+	now := s.now().UTC()
 	stored := comment.StoredComment{
 		ID:        newID(),
 		RoomID:    roomID,
@@ -468,6 +517,25 @@ func storedToMessage(stored comment.StoredComment) comment.Message {
 		Color:     stored.Color,
 		FontSize:  stored.FontSize,
 		SentAt:    stored.SentAt,
+	}
+}
+
+type roomStatsResponse struct {
+	RoomID         string    `json:"roomId"`
+	VisitorCount   int       `json:"visitorCount"`
+	CommentCount   int       `json:"commentCount"`
+	StartedAt      time.Time `json:"startedAt"`
+	ElapsedSeconds int       `json:"elapsedSeconds"`
+}
+
+func (s *Server) roomStatsResponseFromStats(stats repository.RoomStats) roomStatsResponse {
+	elapsedSeconds := max(int(s.now().UTC().Sub(stats.StartedAt).Seconds()), 0)
+	return roomStatsResponse{
+		RoomID:         stats.RoomID,
+		VisitorCount:   stats.VisitorCount,
+		CommentCount:   stats.CommentCount,
+		StartedAt:      stats.StartedAt,
+		ElapsedSeconds: elapsedSeconds,
 	}
 }
 

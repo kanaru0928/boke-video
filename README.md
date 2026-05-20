@@ -35,7 +35,7 @@ pnpm dev
 
 `pnpm demo:media`はOvenMediaEngineをDockerで起動し、`127.0.0.1:3333`でOBSのWHIP入力とブラウザのWebRTC視聴を受けます。OBSのサーバーには`http://127.0.0.1:3333/live/<roomId>?direction=whip`を入れ、Bearer Tokenは空にします。
 
-ブラウザは`http://127.0.0.1:5173/?room=<roomId>`を開きます。再生URLはGoバックエンドが`ws://127.0.0.1:3333/live/<roomId>/master`として発行するため、手入力しません。
+ブラウザは`http://127.0.0.1:5173/watch?room=<roomId>`を開きます。再生URLはGoバックエンドが`ws://127.0.0.1:3333/live/<roomId>/master`として発行するため、手入力しません。
 
 ## 検証
 

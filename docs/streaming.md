@@ -63,5 +63,5 @@ OBSには管理画面で作成した動画枠のWHIP URLとBearer Tokenを入れ
 - OBSの配信状態が開始になる
 - OvenMediaEngineログに`Stream has been prepared`が出る
 - OvenMediaEngineログに`WebRTC Stream has been created`が出る
-- ブラウザで`http://127.0.0.1:5173/?room=<roomId>`を開くと映像が出る
+- ブラウザで`http://127.0.0.1:5173/watch?room=<roomId>`を開くと映像が出る
 - WebRTC Publisherログが`Rtx(true) Ulpfec(true) JitterBuffer(false)`になる

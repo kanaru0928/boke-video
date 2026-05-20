@@ -11,6 +11,17 @@ export type Room = {
   id: string;
   title: string;
   createdAt: string;
+  thumbnailUrl: string;
+  thumbnailUpdatedAt: string;
+  thumbnailRefreshSeconds: number;
+};
+
+export type RoomStats = {
+  roomId: string;
+  visitorCount: number;
+  commentCount: number;
+  startedAt: string;
+  elapsedSeconds: number;
 };
 
 export type CreatedRoom = Room & {
@@ -145,6 +156,33 @@ export async function fetchComments(
   return parsed.filter(isCommentMessage);
 }
 
+export async function fetchRoomStats(
+  config: AppConfig,
+  roomId: string,
+): Promise<RoomStats | null> {
+  const response = await fetch(
+    `${config.apiBaseUrl}/api/rooms/${encodeURIComponent(roomId)}/stats`,
+    {
+      credentials: "include",
+    },
+  );
+  return parseRoomStatsResponse(response);
+}
+
+export async function createRoomVisit(
+  config: AppConfig,
+  roomId: string,
+): Promise<RoomStats | null> {
+  const response = await fetch(
+    `${config.apiBaseUrl}/api/rooms/${encodeURIComponent(roomId)}/visits`,
+    {
+      method: "POST",
+      credentials: "include",
+    },
+  );
+  return parseRoomStatsResponse(response);
+}
+
 export function isRoom(value: unknown): value is Room {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -153,7 +191,28 @@ export function isRoom(value: unknown): value is Room {
   return (
     typeof room.id === "string" &&
     typeof room.title === "string" &&
-    typeof room.createdAt === "string"
+    typeof room.createdAt === "string" &&
+    typeof room.thumbnailUrl === "string" &&
+    typeof room.thumbnailUpdatedAt === "string" &&
+    typeof room.thumbnailRefreshSeconds === "number" &&
+    Number.isInteger(room.thumbnailRefreshSeconds)
+  );
+}
+
+export function isRoomStats(value: unknown): value is RoomStats {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const stats = value as Record<string, unknown>;
+  return (
+    typeof stats.roomId === "string" &&
+    typeof stats.visitorCount === "number" &&
+    Number.isInteger(stats.visitorCount) &&
+    typeof stats.commentCount === "number" &&
+    Number.isInteger(stats.commentCount) &&
+    typeof stats.startedAt === "string" &&
+    typeof stats.elapsedSeconds === "number" &&
+    Number.isInteger(stats.elapsedSeconds)
   );
 }
 
@@ -226,6 +285,19 @@ async function parseCreatedRoomResponse(
   }
   const parsed: unknown = await response.json();
   if (!isCreatedRoom(parsed)) {
+    return null;
+  }
+  return parsed;
+}
+
+async function parseRoomStatsResponse(
+  response: Response,
+): Promise<RoomStats | null> {
+  if (!response.ok) {
+    return null;
+  }
+  const parsed: unknown = await response.json();
+  if (!isRoomStats(parsed)) {
     return null;
   }
   return parsed;
