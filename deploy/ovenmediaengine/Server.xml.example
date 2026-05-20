@@ -72,11 +72,7 @@
             </WebRTC>
           </Providers>
           <Publishers>
-            <WebRTC>
-              <CrossDomains>
-                <Url>*</Url>
-              </CrossDomains>
-            </WebRTC>
+            <WebRTC />
           </Publishers>
         </Application>
       </Applications>
