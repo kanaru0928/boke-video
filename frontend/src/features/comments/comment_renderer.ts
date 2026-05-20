@@ -100,14 +100,14 @@ function startCommentAnimation(
   direction: CommentMessage["direction"],
   root: HTMLElement,
 ): Animation {
+  const travelWidth = root.clientWidth + element.scrollWidth;
+  const travelHeight = root.clientHeight + element.scrollHeight;
   switch (direction) {
     case "rightToLeft":
       return element.animate(
         [
           { transform: "translateX(0)" },
-          {
-            transform: `translateX(-${root.clientWidth + element.clientWidth}px)`,
-          },
+          { transform: `translateX(-${travelWidth}px)` },
         ],
         { duration: 6000, easing: "linear", fill: "forwards" },
       );
@@ -115,9 +115,7 @@ function startCommentAnimation(
       return element.animate(
         [
           { transform: "translateX(0)" },
-          {
-            transform: `translateX(${root.clientWidth + element.clientWidth}px)`,
-          },
+          { transform: `translateX(${travelWidth}px)` },
         ],
         { duration: 6000, easing: "linear", fill: "forwards" },
       );
@@ -125,9 +123,7 @@ function startCommentAnimation(
       return element.animate(
         [
           { transform: "translateY(-100%)" },
-          {
-            transform: `translateY(${root.clientHeight + element.clientHeight}px)`,
-          },
+          { transform: `translateY(${travelHeight}px)` },
         ],
         { duration: 6000, easing: "linear", fill: "forwards" },
       );
@@ -135,9 +131,7 @@ function startCommentAnimation(
       return element.animate(
         [
           { transform: "translateY(100%)" },
-          {
-            transform: `translateY(-${root.clientHeight + element.clientHeight}px)`,
-          },
+          { transform: `translateY(-${travelHeight}px)` },
         ],
         { duration: 6000, easing: "linear", fill: "forwards" },
       );
