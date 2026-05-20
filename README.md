@@ -29,6 +29,7 @@ docs/      仕様
 
 ```sh
 pnpm install
+pnpm dev
 ```
 
 ## 検証

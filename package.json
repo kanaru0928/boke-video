@@ -5,6 +5,7 @@
     "backend:check": "cd backend && gofmt -w ./cmd ./internal && go test ./...",
     "backend:lint": "cd backend && go vet ./...",
     "check": "biome check . && knip && pnpm --dir frontend run typecheck && pnpm --dir frontend run test && pnpm --dir frontend run build && pnpm backend:lint && pnpm backend:check",
+    "dev": "scripts/local-dev.sh",
     "demo:backend": "scripts/local-backend.sh",
     "demo:frontend": "scripts/local-frontend.sh",
     "demo:browser-smoke": "node scripts/local-browser-smoke-test.mjs",
