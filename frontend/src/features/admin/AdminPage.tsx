@@ -9,6 +9,13 @@ import {
 } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
+import { AppHeader } from "../../shared/ui/AppHeader";
+import { Board } from "../../shared/ui/Board";
+import {
+  appShellClassName,
+  buttonClassName,
+  formControlClassName,
+} from "../../shared/ui/styles";
 import type { CommentMessage } from "../comments/types";
 import { deleteComment, fetchComments, type Room } from "../rooms/room_api";
 import { useAdminRooms } from "../rooms/useAdminRooms";
@@ -98,23 +105,15 @@ export function AdminPage({ config }: AdminPageProps) {
   };
 
   return (
-    <section className="admin-shell">
-      <header className="topbar">
-        <a className="site-mark" href="/">
-          <span className="site-mark-main">Boke Video</span>
-          <span className="site-mark-sub">ADMIN</span>
-        </a>
-        <nav className="topnav" aria-label="メニュー">
-          <a href="/">枠一覧</a>
-        </nav>
-      </header>
-      <section className="admin-board">
-        <div className="admin-titlebar">
-          <MonitorPlay aria-hidden="true" size={18} />
-          <h1>番組管理</h1>
-        </div>
-        <form className="admin-form" onSubmit={submitRoom}>
+    <section className={appShellClassName}>
+      <AppHeader section="ADMIN" links={[{ href: "/", label: "枠一覧" }]} />
+      <Board icon={MonitorPlay} title="番組管理">
+        <form
+          className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] gap-[5px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2"
+          onSubmit={submitRoom}
+        >
           <input
+            className={formControlClassName}
             maxLength={80}
             onChange={(event) => setTitle(event.currentTarget.value)}
             placeholder="ルーム名"
@@ -122,12 +121,12 @@ export function AdminPage({ config }: AdminPageProps) {
             type="text"
             value={title}
           />
-          <button type="submit">
+          <button className={buttonClassName()} type="submit">
             <Plus aria-hidden="true" size={18} />
             作成
           </button>
         </form>
-        <section className="admin-list">
+        <section className="grid gap-1.5">
           {rooms.map((room) => (
             <AdminRoom
               comments={commentsByRoomId[room.id] ?? null}
@@ -142,7 +141,7 @@ export function AdminPage({ config }: AdminPageProps) {
             />
           ))}
         </section>
-      </section>
+      </Board>
     </section>
   );
 }
@@ -174,51 +173,76 @@ function AdminRoom({
   }, [room.title]);
 
   return (
-    <article className="admin-room">
-      <div className="admin-room-main">
+    <article className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 border border-[#a7a7a7] bg-white p-[7px] max-[860px]:grid-cols-1">
+      <div className="grid min-w-0 gap-[5px]">
         <input
           aria-label="ルーム名"
+          className={formControlClassName}
           maxLength={80}
           onChange={(event) => setTitle(event.currentTarget.value)}
           type="text"
           value={title}
         />
-        <p>{room.id}</p>
+        <p className="m-0 [overflow-wrap:anywhere] font-[Arial,sans-serif] text-xs text-[#666666]">
+          {room.id}
+        </p>
         {whipBearerToken !== null ? (
-          <p className="admin-token">{whipBearerToken}</p>
+          <p className="m-0 [overflow-wrap:anywhere] font-mono text-xs">
+            {whipBearerToken}
+          </p>
         ) : null}
       </div>
-      <div className="admin-actions">
-        <a href={`/watch?room=${encodeURIComponent(room.id)}`}>
+      <div className="flex flex-wrap justify-end gap-[5px] max-[860px]:justify-start">
+        <a
+          className={buttonClassName()}
+          href={`/watch?room=${encodeURIComponent(room.id)}`}
+        >
           <ExternalLink aria-hidden="true" size={17} />
           開く
         </a>
         <button
+          className={buttonClassName()}
           type="button"
           onClick={() => void onUpdateTitle(room.id, title)}
         >
           <Save aria-hidden="true" size={18} />
           保存
         </button>
-        <button type="button" onClick={() => void onLoadComments(room.id)}>
+        <button
+          className={buttonClassName()}
+          type="button"
+          onClick={() => void onLoadComments(room.id)}
+        >
           <MessageSquare aria-hidden="true" size={18} />
           コメント
         </button>
-        <button type="button" onClick={() => void onRotateIngestToken(room.id)}>
+        <button
+          className={buttonClassName()}
+          type="button"
+          onClick={() => void onRotateIngestToken(room.id)}
+        >
           <KeyRound aria-hidden="true" size={18} />
           再発行
         </button>
-        <button type="button" onClick={() => void onRemoveRoom(room.id)}>
+        <button
+          className={buttonClassName()}
+          type="button"
+          onClick={() => void onRemoveRoom(room.id)}
+        >
           <Trash2 aria-hidden="true" size={18} />
           削除
         </button>
       </div>
       {comments !== null ? (
-        <section className="admin-comments">
+        <section className="col-span-full grid gap-0 border border-[#c9c9c9]">
           {comments.map((comment) => (
-            <article className="admin-comment" key={comment.commentId}>
-              <p>{comment.body}</p>
+            <article
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-t border-[#e4e4e4] p-[5px] first:border-t-0"
+              key={comment.commentId}
+            >
+              <p className="m-0 [overflow-wrap:anywhere]">{comment.body}</p>
               <button
+                className={buttonClassName()}
                 type="button"
                 onClick={() => void onRemoveComment(room.id, comment.commentId)}
               >

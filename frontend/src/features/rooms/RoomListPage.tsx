@@ -1,6 +1,10 @@
 import { Bot, MonitorPlay, Newspaper, Settings } from "lucide-react";
 import { useEffect } from "react";
 import type { AppConfig } from "../../shared/config/config";
+import { AppHeader } from "../../shared/ui/AppHeader";
+import { Board } from "../../shared/ui/Board";
+import { cn } from "../../shared/ui/classNames";
+import { appShellClassName, buttonClassName } from "../../shared/ui/styles";
 import type { Room } from "./room_api";
 import {
   roomThumbnail,
@@ -27,46 +31,36 @@ export function RoomListPage({ config }: RoomListPageProps) {
   }, [refreshRooms, rooms]);
 
   return (
-    <section className="rooms-shell">
-      <header className="topbar">
-        <a className="site-mark" href="/">
-          <span className="site-mark-main">Boke Video</span>
-          <span className="site-mark-sub">ROOMS</span>
-        </a>
-        <nav className="topnav" aria-label="メニュー">
-          <a href="/admin">管理</a>
-        </nav>
-      </header>
-      <section className="rooms-board">
-        <div className="admin-titlebar">
-          <MonitorPlay aria-hidden="true" size={18} />
-          <h1>枠一覧</h1>
-        </div>
+    <section className={appShellClassName}>
+      <AppHeader section="ROOMS" links={[{ href: "/admin", label: "管理" }]} />
+      <Board
+        className="grid min-h-[calc(100vh-96px)] grid-rows-[auto_minmax(0,1fr)]"
+        icon={MonitorPlay}
+        title="枠一覧"
+      >
         {rooms.length === 0 ? (
-          <div className="rooms-empty">
+          <div className="flex items-center justify-between gap-2 border border-t-0 border-[#a7a7a7] bg-white p-[7px]">
             <p>現在表示できる枠はありません</p>
-            <a href="/admin">
+            <a className={buttonClassName()} href="/admin">
               <Settings aria-hidden="true" size={17} />
               管理
             </a>
           </div>
         ) : (
-          <section className="room-card-list">
+          <section className="grid content-start gap-[10px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2 [grid-template-columns:repeat(auto-fill,minmax(238px,1fr))] max-[860px]:grid-cols-2 max-[860px]:gap-[7px] max-[520px]:p-1.5">
             {rooms.map((room) => (
               <RoomCard key={room.id} room={room} />
             ))}
           </section>
         )}
-      </section>
-      <section className="articles-board">
-        <div className="admin-titlebar">
-          <Newspaper aria-hidden="true" size={18} />
-          <h1>記事</h1>
+      </Board>
+      <Board icon={Newspaper} title="記事">
+        <div className="border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-[18px]">
+          <p className="m-0 border border-[#a7a7a7] bg-white p-[14px] text-sm text-[#555555]">
+            準備中
+          </p>
         </div>
-        <div className="articles-empty">
-          <p>準備中</p>
-        </div>
-      </section>
+      </Board>
     </section>
   );
 }
@@ -79,32 +73,47 @@ function RoomCard({ room }: RoomCardProps) {
   const thumbnail = roomThumbnail(room);
 
   return (
-    <article className="room-card">
+    <article className="grid grid-rows-[auto_minmax(92px,1fr)] gap-0 border border-[#a7a7a7] bg-white">
       <a
         aria-label={`${room.title}を視聴`}
-        className="room-thumbnail-link"
+        className="block min-h-0 min-w-0 p-0 no-underline"
         href={`/watch?room=${encodeURIComponent(room.id)}`}
       >
-        <div className={`room-thumbnail ${thumbnail.toneClassName}`}>
+        <div
+          className={cn(
+            "relative aspect-video w-full overflow-hidden border-b border-[#b8b8b8] bg-[#dcdcdc] shadow-[inset_1px_1px_0_rgb(255_255_255_/_70%),inset_-1px_-1px_0_rgb(0_0_0_/_35%)]",
+            thumbnail.toneClassName,
+          )}
+        >
           {thumbnail.url === null ? (
-            <div className="room-thumbnail-generated">
+            <div className="grid h-full grid-cols-[auto_minmax(0,1fr)] grid-rows-[1fr_auto] items-center gap-x-[9px] p-3 text-white [text-shadow:1px_1px_0_#000000] max-[520px]:gap-x-1.5 max-[520px]:p-2">
               <Bot aria-hidden="true" size={34} />
-              <strong>{thumbnail.initials}</strong>
-              <span>Loading</span>
+              <strong className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[28px] leading-none max-[520px]:text-xl">
+                {thumbnail.initials}
+              </strong>
+              <span className="col-span-full border-t border-[rgb(255_255_255_/_55%)] pt-[3px] font-[Arial,sans-serif] text-[11px] tracking-normal">
+                Loading
+              </span>
             </div>
           ) : (
-            <img alt="" src={thumbnail.url} />
+            <img
+              alt=""
+              className="block h-full w-full object-cover"
+              src={thumbnail.url}
+            />
           )}
         </div>
       </a>
-      <div className="room-card-main">
+      <div className="grid min-w-0 content-start gap-2 px-3 pt-[10px] pb-3 max-[520px]:min-h-[104px] max-[520px]:p-2">
         <a
-          className="room-card-title"
+          className="line-clamp-2 min-h-14 overflow-hidden bg-transparent p-0 text-[19px] leading-[1.45] font-extrabold whitespace-normal text-[#202020] no-underline hover:text-[#004fb8] hover:underline max-[520px]:min-h-12 max-[520px]:text-[15px] max-[520px]:leading-[1.6]"
           href={`/watch?room=${encodeURIComponent(room.id)}`}
         >
           {room.title}
         </a>
-        <p>{room.id}</p>
+        <p className="m-0 [overflow-wrap:anywhere] font-[Arial,sans-serif] text-xs text-[#666666]">
+          {room.id}
+        </p>
       </div>
     </article>
   );

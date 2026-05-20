@@ -63,6 +63,6 @@ describe("roomThumbnail", () => {
     });
     expect(thumbnail.isGenerated).toBe(true);
     expect(thumbnail.url).toBeNull();
-    expect(thumbnail.toneClassName).toMatch(/^room-thumbnail-tone-/);
+    expect(thumbnail.toneClassName).toContain("linear-gradient");
   });
 });

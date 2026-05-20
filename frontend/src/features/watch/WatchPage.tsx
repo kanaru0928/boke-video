@@ -16,6 +16,14 @@ import {
   useState,
 } from "react";
 import type { AppConfig } from "../../shared/config/config";
+import { AppHeader } from "../../shared/ui/AppHeader";
+import { cn } from "../../shared/ui/classNames";
+import {
+  appShellClassName,
+  buttonClassName,
+  formControlClassName,
+  textareaClassName,
+} from "../../shared/ui/styles";
 import { directionLabel } from "../comments/comment_labels";
 import {
   type CommentCreateRequest,
@@ -32,6 +40,43 @@ import { useCommentRenderer } from "./useCommentRenderer";
 import { useCommentSocket } from "./useCommentSocket";
 import { useRoomActivity } from "./useRoomActivity";
 import { useStreamPlayer } from "./useStreamPlayer";
+import {
+  activeTabButtonClassName,
+  choiceChipInputClassName,
+  choiceChipLabelClassName,
+  choiceChipTextClassName,
+  choiceFieldClassName,
+  colorButtonClassName,
+  colorRowClassName,
+  commentComposeClassName,
+  commentFormClassName,
+  commentLogBodyClassName,
+  commentLogClassName,
+  commentLogItemClassName,
+  commentLogNumberClassName,
+  commentOptionsClassName,
+  commentSubmitButtonClassName,
+  commentsLayerClassName,
+  counterStripClassName,
+  directionChoiceGridClassName,
+  infoTickerClassName,
+  liveBadgeClassName,
+  playerColumnClassName,
+  playerControlsClassName,
+  playTimeClassName,
+  programBoardClassName,
+  programKickerClassName,
+  programTitleClassName,
+  roomSelectClassName,
+  secondCommentLogBodyClassName,
+  selectedColorButtonClassName,
+  sidePanelClassName,
+  sizeChoiceGridClassName,
+  stageClassName,
+  streamStatusClassName,
+  tabRowClassName,
+  watchGridClassName,
+} from "./watchStyles";
 
 type WatchPageProps = {
   config: AppConfig;
@@ -157,25 +202,25 @@ export function WatchPage({ config }: WatchPageProps) {
   };
 
   return (
-    <section className="watch-shell">
-      <header className="topbar">
-        <a className="site-mark" href="/">
-          <span className="site-mark-main">Boke Video</span>
-          <span className="site-mark-sub">LIVE</span>
-        </a>
-        <nav className="topnav" aria-label="メニュー">
-          <a href="/">枠一覧</a>
-          <a href="/admin">管理</a>
-        </nav>
-      </header>
-      <section className="program-board">
+    <section className={appShellClassName}>
+      <AppHeader
+        section="LIVE"
+        links={[
+          { href: "/", label: "枠一覧" },
+          { href: "/admin", label: "管理" },
+        ]}
+      />
+      <section className={programBoardClassName}>
         <div>
-          <p className="program-kicker">ON AIR</p>
-          <h1>{selectedRoom?.title ?? "番組取得中"}</h1>
+          <p className={programKickerClassName}>ON AIR</p>
+          <h1 className={programTitleClassName}>
+            {selectedRoom?.title ?? "番組取得中"}
+          </h1>
         </div>
-        <label className="room-select">
+        <label className={roomSelectClassName}>
           <span>番組</span>
           <select
+            className={formControlClassName}
             value={selectedRoomId}
             onChange={(event) => switchRoom(event.currentTarget.value)}
           >
@@ -187,11 +232,12 @@ export function WatchPage({ config }: WatchPageProps) {
           </select>
         </label>
       </section>
-      <section className="watch-grid">
-        <main className="player-column">
-          <section ref={stageRef} className="stage">
+      <section className={watchGridClassName}>
+        <main className={playerColumnClassName}>
+          <section ref={stageRef} className={stageClassName}>
             <video
               autoPlay
+              className="block h-full w-full bg-[#020202]"
               ref={videoRef}
               muted
               onPause={updatePlayerState}
@@ -199,14 +245,15 @@ export function WatchPage({ config }: WatchPageProps) {
               onVolumeChange={updatePlayerState}
               playsInline
             />
-            <div ref={commentsLayerRef} className="comments-layer" />
+            <div ref={commentsLayerRef} className={commentsLayerClassName} />
             {streamMessage !== "" ? (
-              <div className="stream-status">{streamMessage}</div>
+              <div className={streamStatusClassName}>{streamMessage}</div>
             ) : null}
           </section>
-          <div className="player-controls">
+          <div className={playerControlsClassName}>
             <button
               aria-label={isPaused ? "再生" : "一時停止"}
+              className={buttonClassName({ square: true })}
               id="play-toggle"
               type="button"
               onClick={togglePlayback}
@@ -219,6 +266,7 @@ export function WatchPage({ config }: WatchPageProps) {
             </button>
             <button
               aria-label={isMuted ? "消音中" : "音声"}
+              className={buttonClassName({ square: true })}
               id="mute-toggle"
               type="button"
               onClick={toggleMuted}
@@ -229,12 +277,13 @@ export function WatchPage({ config }: WatchPageProps) {
                 <Volume2 aria-hidden="true" size={18} />
               )}
             </button>
-            <span className="play-time">
+            <span className={playTimeClassName}>
               経過時間　{formatElapsedTime(elapsedSeconds)}
             </span>
-            <span className="live-badge">●LIVE</span>
+            <span className={liveBadgeClassName}>●LIVE</span>
             <button
               aria-label="更新"
+              className={buttonClassName({ square: true })}
               id="reload-toggle"
               type="button"
               onClick={() => location.reload()}
@@ -243,19 +292,28 @@ export function WatchPage({ config }: WatchPageProps) {
             </button>
             <button
               aria-label="全画面"
+              className={buttonClassName({
+                className: "max-[520px]:hidden",
+                square: true,
+              })}
               id="fullscreen-toggle"
               type="button"
               onClick={toggleFullscreen}
             >
               <Maximize aria-hidden="true" size={18} />
             </button>
-            <a className="setting-link" href="/admin" aria-label="管理">
+            <a
+              className={buttonClassName({ square: true })}
+              href="/admin"
+              aria-label="管理"
+            >
               <Settings aria-hidden="true" size={18} />
             </a>
           </div>
-          <form className="comment-form" onSubmit={submitComment}>
-            <div className="comment-compose">
+          <form className={commentFormClassName} onSubmit={submitComment}>
+            <div className={commentComposeClassName}>
               <textarea
+                className={textareaClassName}
                 maxLength={100}
                 onChange={(event) => setBody(event.currentTarget.value)}
                 onKeyDown={submitCommentByShortcut}
@@ -263,15 +321,15 @@ export function WatchPage({ config }: WatchPageProps) {
                 required
                 value={body}
               />
-              <button type="submit">
+              <button className={commentSubmitButtonClassName} type="submit">
                 <Send aria-hidden="true" size={18} />
                 コメント
               </button>
             </div>
-            <div className="comment-options">
-              <fieldset className="choice-field">
+            <div className={commentOptionsClassName}>
+              <fieldset className={choiceFieldClassName}>
                 <legend>方向</legend>
-                <div className="choice-grid choice-grid-direction">
+                <div className={directionChoiceGridClassName}>
                   {commentDirections.map((direction) => (
                     <ChoiceChip
                       checked={direction === selectedDirection}
@@ -284,9 +342,9 @@ export function WatchPage({ config }: WatchPageProps) {
                   ))}
                 </div>
               </fieldset>
-              <fieldset className="choice-field">
+              <fieldset className={choiceFieldClassName}>
                 <legend>大きさ</legend>
-                <div className="choice-grid choice-grid-size">
+                <div className={sizeChoiceGridClassName}>
                   {commentSizeOptions.map((size) => (
                     <ChoiceChip
                       checked={size.value === selectedSize}
@@ -299,15 +357,14 @@ export function WatchPage({ config }: WatchPageProps) {
                   ))}
                 </div>
               </fieldset>
-              <div className="color-row">
+              <div className={colorRowClassName}>
                 {commentColors.map((color) => (
                   <button
                     aria-label={color}
-                    className={
-                      color === selectedColor
-                        ? "color-button is-selected"
-                        : "color-button"
-                    }
+                    className={cn(
+                      buttonClassName({ className: colorButtonClassName }),
+                      color === selectedColor && selectedColorButtonClassName,
+                    )}
                     key={color}
                     onClick={() => setSelectedColor(color)}
                     style={{ backgroundColor: color }}
@@ -318,8 +375,8 @@ export function WatchPage({ config }: WatchPageProps) {
             </div>
           </form>
         </main>
-        <aside className="side-panel">
-          <div className="counter-strip">
+        <aside className={sidePanelClassName}>
+          <div className={counterStripClassName}>
             <span>
               来場者
               <br />
@@ -336,26 +393,33 @@ export function WatchPage({ config }: WatchPageProps) {
               {formatElapsedTime(elapsedSeconds)}
             </span>
           </div>
-          <div className="tab-row">
-            <button type="button" className="is-active">
+          <div className={tabRowClassName}>
+            <button type="button" className={activeTabButtonClassName}>
               コメント
             </button>
           </div>
-          <ol className="comment-log" aria-label="コメント">
+          <ol className={commentLogClassName} aria-label="コメント">
             {comments.map((comment, index) => (
-              <li key={comment.commentId}>
-                <span>
+              <li className={commentLogItemClassName} key={comment.commentId}>
+                <span className={commentLogNumberClassName}>
                   {commentLogNumber(
                     index,
                     comments.length,
                     stats?.commentCount ?? comments.length,
                   )}
                 </span>
-                <p>{comment.body}</p>
+                <p
+                  className={cn(
+                    commentLogBodyClassName,
+                    index === 1 && secondCommentLogBodyClassName,
+                  )}
+                >
+                  {comment.body}
+                </p>
               </li>
             ))}
           </ol>
-          <div className="info-ticker">
+          <div className={infoTickerClassName}>
             <span>INFO</span>
             <p>{selectedRoom === null ? "番組取得中" : "コメント受付中"}</p>
           </div>
@@ -381,15 +445,16 @@ function ChoiceChip<T extends string>({
   value,
 }: ChoiceChipProps<T>) {
   return (
-    <label className="choice-chip">
+    <label className={choiceChipLabelClassName}>
       <input
         checked={checked}
+        className={choiceChipInputClassName}
         name={name}
         onChange={onChange}
         type="radio"
         value={value}
       />
-      <span>{text}</span>
+      <span className={choiceChipTextClassName}>{text}</span>
     </label>
   );
 }

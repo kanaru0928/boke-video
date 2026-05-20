@@ -1,7 +1,14 @@
 import type { Room } from "./room_api";
 
-const thumbnailToneCount = 6;
 const unavailableThumbnailURL = "n/a";
+const thumbnailToneClassNames = [
+  "bg-[linear-gradient(135deg,#4b4b4b,#101010_55%,#d74a4a)]",
+  "bg-[linear-gradient(135deg,#3e5c78,#111111_55%,#e0bd38)]",
+  "bg-[linear-gradient(135deg,#6a4f7d,#111111_55%,#57b6d9)]",
+  "bg-[linear-gradient(135deg,#406b55,#111111_55%,#e06aa4)]",
+  "bg-[linear-gradient(135deg,#7a5b35,#111111_55%,#64d28d)]",
+  "bg-[linear-gradient(135deg,#5a5a72,#111111_55%,#ff8b3d)]",
+] as const;
 
 type RoomThumbnail = {
   initials: string;
@@ -15,7 +22,7 @@ export function roomThumbnail(room: Room): RoomThumbnail {
   return {
     initials: roomInitials(room.title),
     isGenerated,
-    toneClassName: `room-thumbnail-tone-${thumbnailTone(room.id)}`,
+    toneClassName: thumbnailToneClassNames[thumbnailTone(room.id)],
     url: isGenerated ? null : room.thumbnailUrl,
   };
 }
@@ -42,7 +49,7 @@ function thumbnailTone(seed: string): number {
     if (codePoint === undefined) {
       continue;
     }
-    hash = (hash * 31 + codePoint) % thumbnailToneCount;
+    hash = (hash * 31 + codePoint) % thumbnailToneClassNames.length;
   }
   return hash;
 }

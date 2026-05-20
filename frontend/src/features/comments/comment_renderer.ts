@@ -4,6 +4,7 @@ import {
   horizontalLaneTop,
   verticalLaneLeft,
 } from "./comment_layout";
+import { commentClassName } from "./comment_styles";
 import type { CommentMessage } from "./types";
 
 export class CommentRenderer {
@@ -25,26 +26,23 @@ export class CommentRenderer {
     }
 
     const element = document.createElement("div");
-    element.className = `comment comment-${message.direction} comment-size-${message.fontSize}`;
+    element.className = commentClassName(message.direction, message.fontSize);
     element.textContent = message.body;
     element.style.color = message.color;
-    element.style.setProperty(
-      "--comment-travel-x",
-      `${this.root.clientWidth}px`,
-    );
-    element.style.setProperty(
-      "--comment-travel-y",
-      `${this.root.clientHeight}px`,
-    );
     this.position(element, message.direction);
-
-    element.addEventListener("animationend", () => {
-      element.remove();
-      this.active.delete(element);
-    });
 
     this.active.add(element);
     this.root.append(element);
+
+    const animation = startCommentAnimation(
+      element,
+      message.direction,
+      this.root,
+    );
+    void animation.finished.finally(() => {
+      element.remove();
+      this.active.delete(element);
+    });
   }
 
   clear(): void {
@@ -95,4 +93,68 @@ export class CommentRenderer {
 
 function applyPosition(element: HTMLElement, position: CommentPosition): void {
   element.style[position.property] = position.value;
+}
+
+function startCommentAnimation(
+  element: HTMLElement,
+  direction: CommentMessage["direction"],
+  root: HTMLElement,
+): Animation {
+  switch (direction) {
+    case "rightToLeft":
+      return element.animate(
+        [
+          { transform: "translateX(0)" },
+          {
+            transform: `translateX(-${root.clientWidth + element.clientWidth}px)`,
+          },
+        ],
+        { duration: 6000, easing: "linear", fill: "forwards" },
+      );
+    case "leftToRight":
+      return element.animate(
+        [
+          { transform: "translateX(0)" },
+          {
+            transform: `translateX(${root.clientWidth + element.clientWidth}px)`,
+          },
+        ],
+        { duration: 6000, easing: "linear", fill: "forwards" },
+      );
+    case "topToBottom":
+      return element.animate(
+        [
+          { transform: "translateY(-100%)" },
+          {
+            transform: `translateY(${root.clientHeight + element.clientHeight}px)`,
+          },
+        ],
+        { duration: 6000, easing: "linear", fill: "forwards" },
+      );
+    case "bottomToTop":
+      return element.animate(
+        [
+          { transform: "translateY(100%)" },
+          {
+            transform: `translateY(-${root.clientHeight + element.clientHeight}px)`,
+          },
+        ],
+        { duration: 6000, easing: "linear", fill: "forwards" },
+      );
+    case "fixedTop":
+    case "fixedBottom":
+      return element.animate(
+        [
+          { opacity: 0 },
+          { opacity: 1, offset: 0.15 },
+          { opacity: 1, offset: 0.85 },
+          { opacity: 0 },
+        ],
+        {
+          duration: 4000,
+          easing: "linear",
+          fill: "forwards",
+        },
+      );
+  }
 }
