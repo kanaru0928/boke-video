@@ -34,11 +34,11 @@ Cloudflare AccessとTunnelの手順は`docs/cloudflare.md`です。
 
 ## 映像配信
 
-OvenMediaEngineをOracle上に配置します。設定値は`docs/streaming.md`を正本にします。
+OvenMediaEngineとGoバックエンドをOracle上に配置します。設定値は`docs/streaming.md`を正本にします。
 
-`deploy/ovenmediaengine/Server.xml.example`の`${PublicIP}`は、配信者と視聴者が到達できるOracleのグローバルIPへ置き換えます。`10000-10005/udp`はVCNのSecurity ListまたはNetwork Security GroupとOS firewallの両方で開けます。
+`deploy/ovenmediaengine/Server.xml.example`の`${PublicIP}`は、配信者と視聴者が到達できるOracleのグローバルIPへ置き換えます。`10000-10005/udp`はVCNのSecurity ListまたはNetwork Security GroupとOS firewallの両方で開けます。OvenMediaEngineの`3333/tcp`は公開せず、Goバックエンドからだけ到達させます。
 
-OBS入力は`https://ingest.example.com/live/<roomId>?direction=whip`です。視聴者ブラウザはGoバックエンドから`wss://rtc.example.com/live/<roomId>/master`の署名済みURLを受け取ります。
+OBS入力は`https://ingest.example.com/live/<roomId>?direction=whip`です。`ingest.example.com`はGoバックエンドのWHIP認証入口へ向けます。GoバックエンドはBearer Token検証後に`WHIP_UPSTREAM_BASE_URL`のOvenMediaEngineへ転送します。視聴者ブラウザはGoバックエンドから`wss://rtc.example.com/live/<roomId>/master`の署名済みURLを受け取ります。
 
 ## systemd
 

@@ -12,8 +12,9 @@ Goバックエンドは次を担当します。
 - 管理者向けAPIを提供する
 - Cloudflare Access JWTを検証する
 - OvenMediaEngine視聴用の短寿命トークンを発行する
+- OBS WHIP入力のBearer Tokenを検証してOvenMediaEngineへ転送する
 
-映像の受信と視聴者への配信はGoバックエンドの責務ではありません。WebRTC Media Serverが担当します。
+映像mediaの受信と視聴者への配信はGoバックエンドの責務ではありません。WebRTC Media Serverが担当します。
 
 ## API
 
@@ -24,8 +25,11 @@ GET /api/rooms/:roomId
 GET /api/rooms/:roomId/comments
 GET /ws/rooms/:roomId/comments
 POST /api/rooms/:roomId/comments
+GET /api/admin/rooms
 POST /api/admin/rooms
+POST /api/admin/rooms/:roomId/ingest-token
 PATCH /api/admin/rooms/:roomId
+DELETE /api/admin/rooms/:roomId
 DELETE /api/admin/comments/:commentId
 ```
 
@@ -35,6 +39,8 @@ DELETE /api/admin/comments/:commentId
 CREATE TABLE rooms (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
+  owner_sub TEXT NOT NULL,
+  ingest_token_hash TEXT NOT NULL,
   created_at TEXT NOT NULL
 );
 
@@ -56,7 +62,7 @@ CREATE INDEX comments_room_id_sent_at_index
 
 SQLiteはWALを有効にします。初期規模100人では外部DBを追加しません。
 
-保存するデータは配信ルームとコメントだけです。認証情報、パスワード、メールアドレスは保存しません。コメント投稿者はCloudflare Access JWTの`sub`だけを`author_sub`として保存します。
+保存するデータは配信ルーム、配信ルーム所有者、WHIP Bearer Tokenのハッシュ、コメントだけです。認証情報、パスワード、メールアドレス、WHIP Bearer Tokenの平文は保存しません。コメント投稿者はCloudflare Access JWTの`sub`だけを`author_sub`として保存します。
 
 ## 環境変数
 
@@ -65,6 +71,7 @@ LISTEN_ADDR=127.0.0.1:8080
 DATABASE_PATH=/var/lib/boke-video/boke-video.sqlite3
 STREAM_PUBLIC_BASE_URL=https://rtc.example.com
 STREAM_SIGNING_SECRET=replace-with-strong-secret
+WHIP_UPSTREAM_BASE_URL=http://127.0.0.1:3333
 ```
 
 CORSとCloudflare Access関連の設定値は`docs/cloudflare.md`を参照します。

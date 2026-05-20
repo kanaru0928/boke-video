@@ -20,11 +20,13 @@ GoバックエンドはCloudflare Accessがオリジンへ付与する`Cf-Access
 
 ## 管理者判定
 
-管理者判定はCloudflare Accessのポリシーで行います。Goバックエンドはアプリ内ロールを保存しません。
+管理画面と管理APIへ到達できるユーザーはCloudflare Accessのポリシーで制限します。Goバックエンドはアプリ内ロールを保存しません。
+
+動画枠の更新、削除、保存済みコメント削除は、動画枠を作成したCloudflare Access JWTの`sub`だけに許可します。他のユーザーが作成した動画枠は管理APIで変更できません。
 
 ## OBS入力
 
-OBS入力はCloudflare Accessで保護しません。映像配信の認証仕様は`docs/streaming.md`を正本にします。
+OBS入力はCloudflare Accessで保護しません。WHIPの`Authorization: Bearer`をGoバックエンドのWHIP入口で検証し、成功したリクエストだけをOvenMediaEngineへ転送します。映像配信の認証仕様は`docs/streaming.md`を正本にします。
 
 ## CORSとCSP
 

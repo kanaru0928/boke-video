@@ -4,4 +4,10 @@ credentials-file: /etc/cloudflared/replace-with-tunnel-id.json
 ingress:
   - hostname: stream.example.com
     service: http://127.0.0.1:8080
+    originRequest:
+      access:
+        required: true
+        teamName: replace-with-team-name
+        audTag:
+          - replace-with-access-aud-tag
   - service: http_status:404

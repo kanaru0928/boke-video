@@ -16,12 +16,18 @@ stream.example.com
     -> Cloudflare Tunnel
     -> Goバックエンド 127.0.0.1:8080
 
+ingest.example.com
+  OBS
+    -> Oracle上のTLS入口
+    -> Goバックエンド /live/*
+    -> OvenMediaEngine
+
 rtc.example.com
   ブラウザ
     -> WebRTC Media Server
 ```
 
-`ingest.example.com`と`rtc.example.com`はCloudflare AccessやCloudflare Tunnelを経由しません。WebRTC mediaはOracle VCNで開けたUDPポートへ直接流します。
+`ingest.example.com`と`rtc.example.com`はCloudflare AccessやCloudflare Tunnelを経由しません。`ingest.example.com`はWHIPのBearer TokenをGoバックエンドで検証します。WebRTC mediaはOracle VCNで開けたUDPポートへ直接流します。
 
 GoバックエンドはCloudflare Accessが付与する`Cf-Access-Jwt-Assertion`を検証します。映像配信の詳細は`docs/streaming.md`を正本にします。
 
@@ -31,10 +37,10 @@ GoバックエンドはCloudflare Accessが付与する`Cf-Access-Jwt-Assertion`
 | --- | --- | --- |
 | フロントエンド | `https://video.example.com` | Cloudflare Workers |
 | API、WebSocket | `https://stream.example.com` | Cloudflare Tunnel経由のGoバックエンド |
-| OBS入力 | `https://ingest.example.com` | WebRTC Media Server |
+| OBS入力 | `https://ingest.example.com` | GoバックエンドのWHIP認証入口 |
 | 視聴者向け映像 | `https://rtc.example.com` | WebRTC Media Server |
 
-Cloudflare Tunnelで扱うのは`stream.example.com`だけです。`ingest.example.com`と`rtc.example.com`はOracle VCNでWebRTC Media Serverへ到達させます。
+Cloudflare Tunnelで扱うのは`stream.example.com`だけです。`ingest.example.com`はOracle上のTLS入口からGoバックエンドへ到達させます。`rtc.example.com`はOracle VCNでWebRTC Media Serverへ到達させます。
 
 ## Access Application
 
@@ -47,7 +53,7 @@ Cloudflare Zero TrustでSelf-hosted applicationを作成します。Accessはden
 | バックエンド | `stream.example.com` | 視聴者を許可 |
 | 管理API | `stream.example.com/api/admin/*` | 管理者だけ許可 |
 
-管理者判定はCloudflare Accessのポリシーで行います。Goバックエンドは管理APIへ到達したリクエストのJWTを検証しますが、アプリ内ロールは保存しません。
+管理画面と管理APIへ到達できるユーザーはCloudflare Accessのポリシーで制限します。Goバックエンドは管理APIへ到達したリクエストのJWTを検証し、動画枠単位の所有者判定をJWTの`sub`で行います。アプリ内ロールは保存しません。
 
 ## JWT検証
 
@@ -73,10 +79,18 @@ credentials-file: /etc/cloudflared/replace-with-tunnel-id.json
 ingress:
   - hostname: stream.example.com
     service: http://127.0.0.1:8080
+    originRequest:
+      access:
+        required: true
+        teamName: replace-with-team-name
+        audTag:
+          - replace-with-access-aud-tag
   - service: http_status:404
 ```
 
 Tunnelを作成したら、DNSで`stream.example.com`をTunnelへ向けます。本番ではsystemdの`cloudflared-boke-video.service`で次を実行します。
+
+`originRequest.access`でもAccess JWTを検証します。Goバックエンドでも`Cf-Access-Jwt-Assertion`を検証するため、Tunnel境界とアプリ境界の両方でJWT検証を行います。
 
 ```sh
 cloudflared tunnel --config /etc/cloudflared/boke-video.yml run

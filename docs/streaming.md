@@ -21,10 +21,9 @@ OBSはWHIPでWebRTC Media Serverへ配信します。ローカルと本番でOBS
 | 項目 | 値 |
 | --- | --- |
 | サービス | `WHIP` |
-| ローカルサーバー | `http://127.0.0.1:3333/live/<roomId>?direction=whip` |
+| ローカルサーバー | `http://127.0.0.1:8080/live/<roomId>?direction=whip` |
 | 本番サーバー | `https://ingest.example.com/live/<roomId>?direction=whip` |
-| ローカル認証 | 空 |
-| 本番認証 | 配信者用Bearer Token |
+| 認証 | 管理画面で動画枠を作成した時に発行されるBearer Token |
 
 OBSはWHIP Simulcastで複数レイヤーを送信します。WebRTC Media Serverはコーデック変換を行わず、OvenMediaEngineのPlaylistで視聴者へ配信します。
 
@@ -79,9 +78,12 @@ Goバックエンドは次の環境変数から署名済み再生URLを発行し
 ```text
 STREAM_PUBLIC_BASE_URL=http://127.0.0.1:3333
 STREAM_SIGNING_SECRET=local-stream-signing-secret
+WHIP_UPSTREAM_BASE_URL=http://127.0.0.1:3333
 ```
 
 `STREAM_SIGNING_SECRET`はOvenMediaEngineの`SignedPolicy`の`SecretKey`と同じ値にします。
+
+`WHIP_UPSTREAM_BASE_URL`は、Bearer Token検証後にGoバックエンドがWHIPリクエストを転送するOvenMediaEngineのHTTPシグナリングoriginです。
 
 ブラウザはOvenMediaEngineのWebSocketシグナリングで接続を開始し、mediaはOracle VCNで開けたUDPポートへ流れます。
 
@@ -100,19 +102,22 @@ STREAM_SIGNING_SECRET=local-stream-signing-secret
 
 Cloudflare TunnelはWebRTC media経路には使いません。WebRTC mediaはOracle VCNで直接到達可能にします。
 
-公開するポートはWebRTC Media Serverの設定に合わせて最小化します。
+公開または内部で使用するポートはWebRTC Media Serverの設定に合わせて最小化します。
 
 ```text
-443/tcp          WHIP入力とWebRTC視聴のHTTPS/WSSシグナリング
+443/tcp          WHIP認証入口とWebRTC視聴のHTTPS/WSSシグナリング
+3333/tcp         Oracle内部のOvenMediaEngine HTTPシグナリング
 10000-10005/udp  WebRTC media
 ```
 
-実際のUDP範囲は採用するWebRTC Media Serverの設定値を正本にします。配信者用WHIPと視聴者用WebRTCはホスト名を分けます。
+`3333/tcp`は公開しません。Goバックエンドの`WHIP_UPSTREAM_BASE_URL`からOvenMediaEngineへ到達させる内部ポートです。実際のUDP範囲は採用するWebRTC Media Serverの設定値を正本にします。配信者用WHIPと視聴者用WebRTCはホスト名を分けます。
 
 ```text
 ingest.example.com  配信者OBS用
 rtc.example.com     視聴者ブラウザ用
 ```
+
+OvenMediaEngineのProviderは内部`3333/tcp`だけで受け、公開`443/tcp`には出しません。OvenMediaEngineのPublisherは公開`443/tcp`で視聴者向けWebRTCシグナリングを受けます。
 
 OvenMediaEngineのICE候補には、配信者と視聴者が到達できるグローバルIPを明示します。`*`はDocker bridge、VPN、内部NICなどの到達不能な候補を配るため、本番設定では使いません。
 
@@ -126,6 +131,8 @@ pnpm dev
 ```
 
 `pnpm demo:media`はDocker Desktop上のOvenMediaEngineを起動します。OBSから見るmedia経路はmacOSからDocker DesktopのLinux VMを経由するため、本番OracleのUDP直接受信とは同一ではありません。
+
+ローカルのOBSには管理画面で作成した動画枠のWHIP URLとBearer Tokenを入れます。OBSからOvenMediaEngineの`3333/tcp`へ直接入れず、Goバックエンドの`8080/tcp`でBearer Token検証を通します。
 
 ローカルで確認する項目は次です。
 
@@ -141,7 +148,7 @@ pnpm dev
 
 ## 認証
 
-WHIP入力は配信者用Bearer Tokenで保護します。OBSにはWHIP URLとBearer Tokenを設定します。
+WHIP入力は配信者用Bearer Tokenで保護します。OBSにはWHIP URLとBearer Tokenを設定します。GoバックエンドはBearer Tokenを検証し、正しい動画枠のトークンだけをOvenMediaEngineへ転送します。Bearer Tokenの平文は作成時または再発行時だけ返し、DBにはハッシュだけを保存します。
 
 視聴は、Cloudflare Accessで視聴画面へ入ったユーザーに対してGoバックエンドが短寿命トークンを発行し、そのトークンをOvenMediaEngineのシグナリングへ渡します。
 
