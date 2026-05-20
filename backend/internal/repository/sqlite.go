@@ -17,9 +17,12 @@ type SQLite struct {
 }
 
 type Room struct {
-	ID        string    `json:"id"`
-	Title     string    `json:"title"`
-	CreatedAt time.Time `json:"createdAt"`
+	ID                      string    `json:"id"`
+	Title                   string    `json:"title"`
+	ThumbnailURL            string    `json:"thumbnailUrl"`
+	ThumbnailUpdatedAt      time.Time `json:"thumbnailUpdatedAt"`
+	ThumbnailRefreshSeconds int       `json:"thumbnailRefreshSeconds"`
+	CreatedAt               time.Time `json:"createdAt"`
 }
 
 type RoomStats struct {
@@ -51,6 +54,9 @@ func (s *SQLite) Migrate(ctx context.Context) error {
 		`CREATE TABLE IF NOT EXISTS rooms (
 			id TEXT PRIMARY KEY,
 			title TEXT NOT NULL,
+			thumbnail_url TEXT NOT NULL,
+			thumbnail_updated_at TEXT NOT NULL,
+			thumbnail_refresh_seconds INTEGER NOT NULL,
 			created_at TEXT NOT NULL
 		)`,
 		`CREATE TABLE IF NOT EXISTS comments (
@@ -89,9 +95,13 @@ func (s *SQLite) Migrate(ctx context.Context) error {
 
 func (s *SQLite) CreateRoom(ctx context.Context, room Room) error {
 	_, err := s.db.ExecContext(ctx,
-		`INSERT INTO rooms (id, title, created_at) VALUES (?, ?, ?)`,
+		`INSERT INTO rooms (id, title, thumbnail_url, thumbnail_updated_at, thumbnail_refresh_seconds, created_at)
+		 VALUES (?, ?, ?, ?, ?, ?)`,
 		room.ID,
 		room.Title,
+		room.ThumbnailURL,
+		room.ThumbnailUpdatedAt.Format(time.RFC3339Nano),
+		room.ThumbnailRefreshSeconds,
 		room.CreatedAt.Format(time.RFC3339Nano),
 	)
 	return normalizeSQLiteError(err)
@@ -106,12 +116,12 @@ func (s *SQLite) UpdateRoomTitle(ctx context.Context, roomID string, title strin
 }
 
 func (s *SQLite) GetRoom(ctx context.Context, roomID string) (Room, error) {
-	row := s.db.QueryRowContext(ctx, `SELECT id, title, created_at FROM rooms WHERE id = ?`, roomID)
+	row := s.db.QueryRowContext(ctx, `SELECT id, title, thumbnail_url, thumbnail_updated_at, thumbnail_refresh_seconds, created_at FROM rooms WHERE id = ?`, roomID)
 	return scanRoom(row)
 }
 
 func (s *SQLite) ListRooms(ctx context.Context) ([]Room, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT id, title, created_at FROM rooms ORDER BY created_at DESC`)
+	rows, err := s.db.QueryContext(ctx, `SELECT id, title, thumbnail_url, thumbnail_updated_at, thumbnail_refresh_seconds, created_at FROM rooms ORDER BY created_at DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -230,13 +240,19 @@ type rowScanner interface {
 func scanRoom(scanner rowScanner) (Room, error) {
 	var room Room
 	var createdAt string
-	if err := scanner.Scan(&room.ID, &room.Title, &createdAt); err != nil {
+	var thumbnailUpdatedAt string
+	if err := scanner.Scan(&room.ID, &room.Title, &room.ThumbnailURL, &thumbnailUpdatedAt, &room.ThumbnailRefreshSeconds, &createdAt); err != nil {
+		return Room{}, err
+	}
+	parsedThumbnailUpdatedAt, err := time.Parse(time.RFC3339Nano, thumbnailUpdatedAt)
+	if err != nil {
 		return Room{}, err
 	}
 	parsedAt, err := time.Parse(time.RFC3339Nano, createdAt)
 	if err != nil {
 		return Room{}, err
 	}
+	room.ThumbnailUpdatedAt = parsedThumbnailUpdatedAt
 	room.CreatedAt = parsedAt
 	return room, nil
 }

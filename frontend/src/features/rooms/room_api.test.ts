@@ -7,6 +7,9 @@ describe("isRoom", () => {
       isRoom({
         id: "room-1",
         title: "配信",
+        thumbnailUrl: "n/a",
+        thumbnailUpdatedAt: "2026-05-09T00:00:00Z",
+        thumbnailRefreshSeconds: 30,
         createdAt: "2026-05-09T00:00:00Z",
       }),
     ).toBe(true);

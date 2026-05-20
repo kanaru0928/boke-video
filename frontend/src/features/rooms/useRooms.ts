@@ -4,6 +4,7 @@ import { createRoom, fetchRooms, type Room, updateRoomTitle } from "./room_api";
 
 type UseRoomsResult = {
   createRoomFromTitle: (title: string) => Promise<void>;
+  refreshRooms: () => Promise<void>;
   rooms: Room[];
   updateRoomTitleById: (roomId: string, title: string) => Promise<void>;
 };
@@ -41,5 +42,5 @@ export function useRooms(config: AppConfig): UseRoomsResult {
     void refreshRooms();
   }, [refreshRooms]);
 
-  return { createRoomFromTitle, rooms, updateRoomTitleById };
+  return { createRoomFromTitle, refreshRooms, rooms, updateRoomTitleById };
 }

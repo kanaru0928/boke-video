@@ -11,6 +11,9 @@ export type Room = {
   id: string;
   title: string;
   createdAt: string;
+  thumbnailUrl: string;
+  thumbnailUpdatedAt: string;
+  thumbnailRefreshSeconds: number;
 };
 
 export type RoomStats = {
@@ -138,7 +141,11 @@ export function isRoom(value: unknown): value is Room {
   return (
     typeof room.id === "string" &&
     typeof room.title === "string" &&
-    typeof room.createdAt === "string"
+    typeof room.createdAt === "string" &&
+    typeof room.thumbnailUrl === "string" &&
+    typeof room.thumbnailUpdatedAt === "string" &&
+    typeof room.thumbnailRefreshSeconds === "number" &&
+    Number.isInteger(room.thumbnailRefreshSeconds)
   );
 }
 

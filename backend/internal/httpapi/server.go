@@ -24,6 +24,9 @@ import (
 	"github.com/coder/websocket/wsjson"
 )
 
+const roomThumbnailRefreshSeconds = 30
+const roomThumbnailUnavailable = "n/a"
+
 type ServerConfig struct {
 	Logger         *slog.Logger
 	Repository     *repository.SQLite
@@ -164,10 +167,14 @@ func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		roomID = newID()
 	}
 
+	now := s.now().UTC()
 	room := repository.Room{
-		ID:        roomID,
-		Title:     req.Title,
-		CreatedAt: s.now().UTC(),
+		ID:                      roomID,
+		Title:                   req.Title,
+		ThumbnailURL:            roomThumbnailUnavailable,
+		ThumbnailUpdatedAt:      now,
+		ThumbnailRefreshSeconds: roomThumbnailRefreshSeconds,
+		CreatedAt:               now,
 	}
 	if err := s.repository.CreateRoom(r.Context(), room); err != nil {
 		writeRepositoryError(w, err)

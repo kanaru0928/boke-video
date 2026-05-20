@@ -22,9 +22,12 @@ func TestSQLiteStoresRoomAndComment(t *testing.T) {
 	}
 
 	room := Room{
-		ID:        "room-1",
-		Title:     "テスト配信",
-		CreatedAt: time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
+		ID:                      "room-1",
+		Title:                   "テスト配信",
+		ThumbnailURL:            "n/a",
+		ThumbnailUpdatedAt:      time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
+		ThumbnailRefreshSeconds: 30,
+		CreatedAt:               time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
 	}
 	if err := db.CreateRoom(ctx, room); err != nil {
 		t.Fatalf("CreateRoom returned error: %v", err)

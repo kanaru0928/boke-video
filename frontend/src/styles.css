@@ -661,9 +661,82 @@ video {
 
 .room-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 128px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
+}
+
+.room-thumbnail {
+  position: relative;
+  overflow: hidden;
+  width: 128px;
+  aspect-ratio: 16 / 9;
+  border: 4px solid #111111;
+  background: #dcdcdc;
+  box-shadow:
+    inset 1px 1px 0 rgb(255 255 255 / 70%),
+    inset -1px -1px 0 rgb(0 0 0 / 35%);
+}
+
+.room-thumbnail img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.room-thumbnail-generated {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  align-items: center;
+  gap: 0 7px;
+  height: 100%;
+  padding: 7px;
+  color: #ffffff;
+  text-shadow: 1px 1px 0 #000000;
+}
+
+.room-thumbnail-generated strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 22px;
+  line-height: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.room-thumbnail-generated span {
+  grid-column: 1 / -1;
+  border-top: 1px solid rgb(255 255 255 / 55%);
+  padding-top: 3px;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.room-thumbnail-tone-0 {
+  background: linear-gradient(135deg, #4b4b4b, #101010 55%, #d74a4a);
+}
+
+.room-thumbnail-tone-1 {
+  background: linear-gradient(135deg, #3e5c78, #111111 55%, #e0bd38);
+}
+
+.room-thumbnail-tone-2 {
+  background: linear-gradient(135deg, #6a4f7d, #111111 55%, #57b6d9);
+}
+
+.room-thumbnail-tone-3 {
+  background: linear-gradient(135deg, #406b55, #111111 55%, #e06aa4);
+}
+
+.room-thumbnail-tone-4 {
+  background: linear-gradient(135deg, #7a5b35, #111111 55%, #64d28d);
+}
+
+.room-thumbnail-tone-5 {
+  background: linear-gradient(135deg, #5a5a72, #111111 55%, #ff8b3d);
 }
 
 .room-card-main {
@@ -827,6 +900,10 @@ video {
 
   .admin-actions {
     justify-content: start;
+  }
+
+  .room-thumbnail {
+    width: min(220px, 100%);
   }
 }
 

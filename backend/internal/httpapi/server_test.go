@@ -120,6 +120,12 @@ func TestServerCreatesRoomWithRequestedID(t *testing.T) {
 	if room.ID != "obs-local" {
 		t.Fatalf("room.ID = %q", room.ID)
 	}
+	if room.ThumbnailURL != "n/a" {
+		t.Fatalf("room.ThumbnailURL = %q", room.ThumbnailURL)
+	}
+	if room.ThumbnailRefreshSeconds != 30 {
+		t.Fatalf("room.ThumbnailRefreshSeconds = %d", room.ThumbnailRefreshSeconds)
+	}
 }
 
 func TestServerReturnsConflictForDuplicateRoomID(t *testing.T) {
