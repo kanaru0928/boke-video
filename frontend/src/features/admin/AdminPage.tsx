@@ -100,10 +100,10 @@ export function AdminPage({ config }: AdminPageProps) {
   return (
     <section className="admin-shell">
       <header className="topbar">
-        <div className="site-mark">
+        <a className="site-mark" href="/">
           <span className="site-mark-main">Boke Video</span>
           <span className="site-mark-sub">ADMIN</span>
-        </div>
+        </a>
         <nav className="topnav" aria-label="メニュー">
           <a href="/">枠一覧</a>
         </nav>

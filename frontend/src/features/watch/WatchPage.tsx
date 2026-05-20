@@ -159,10 +159,10 @@ export function WatchPage({ config }: WatchPageProps) {
   return (
     <section className="watch-shell">
       <header className="topbar">
-        <div className="site-mark">
+        <a className="site-mark" href="/">
           <span className="site-mark-main">Boke Video</span>
           <span className="site-mark-sub">LIVE</span>
-        </div>
+        </a>
         <nav className="topnav" aria-label="メニュー">
           <a href="/">枠一覧</a>
           <a href="/admin">管理</a>
@@ -171,7 +171,7 @@ export function WatchPage({ config }: WatchPageProps) {
       <section className="program-board">
         <div>
           <p className="program-kicker">ON AIR</p>
-          <h1>コメント生放送</h1>
+          <h1>{selectedRoom?.title ?? "番組取得中"}</h1>
         </div>
         <label className="room-select">
           <span>番組</span>
@@ -189,9 +189,6 @@ export function WatchPage({ config }: WatchPageProps) {
       </section>
       <section className="watch-grid">
         <main className="player-column">
-          <div className="program-caption">
-            {selectedRoom?.title ?? "コメント生放送"}
-          </div>
           <section ref={stageRef} className="stage">
             <video
               autoPlay

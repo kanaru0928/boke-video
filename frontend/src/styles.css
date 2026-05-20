@@ -103,6 +103,8 @@ textarea {
   display: grid;
   gap: 0;
   padding-bottom: 5px;
+  color: inherit;
+  text-decoration: none;
 }
 
 .site-mark-main {
@@ -148,6 +150,7 @@ textarea {
 
 .program-board,
 .rooms-board,
+.articles-board,
 .admin-board {
   border: 1px solid #c29300;
   background: #fffdf2;
@@ -197,6 +200,7 @@ textarea {
 .player-column,
 .side-panel,
 .rooms-board,
+.articles-board,
 .admin-board {
   border: 1px solid #8c8c8c;
   background: #eeeeee;
@@ -208,21 +212,6 @@ textarea {
 .player-column {
   position: relative;
   padding: 5px;
-}
-
-.program-caption {
-  display: block;
-  border: 5px solid #000000;
-  border-bottom: 0;
-  background: #000000;
-  color: #ffffff;
-  padding: 9px 8px 10px;
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1;
-  text-align: center;
-  text-shadow: 2px 2px 0 #000000;
-  overflow-wrap: anywhere;
 }
 
 .stage {
@@ -612,8 +601,15 @@ video {
   padding: 5px;
 }
 
-.rooms-board {
+.rooms-board,
+.articles-board {
   padding: 5px;
+}
+
+.rooms-board {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: calc(100vh - 96px);
 }
 
 .admin-titlebar {
@@ -646,6 +642,7 @@ video {
 .room-card-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
+  align-content: start;
   gap: 10px;
   border: 1px solid #c2c2c2;
   border-top: 0;
@@ -804,6 +801,22 @@ video {
   justify-content: space-between;
   gap: 8px;
   border-top: 0;
+}
+
+.articles-empty {
+  border: 1px solid #c2c2c2;
+  border-top: 0;
+  background: #f7f7f7;
+  padding: 18px;
+}
+
+.articles-empty p {
+  margin: 0;
+  border: 1px solid #a7a7a7;
+  background: #ffffff;
+  padding: 14px;
+  color: #555555;
+  font-size: 14px;
 }
 
 .admin-room {
@@ -1016,12 +1029,6 @@ video {
     grid-template-columns: repeat(2, 31px) 1fr repeat(2, 31px);
     gap: 3px;
     padding: 4px;
-  }
-
-  .program-caption {
-    padding: 7px 6px;
-    font-size: 19px;
-    line-height: 1.08;
   }
 
   .stream-status {

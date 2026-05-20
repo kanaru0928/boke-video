@@ -1,4 +1,4 @@
-import { Bot, MonitorPlay, Settings } from "lucide-react";
+import { Bot, MonitorPlay, Newspaper, Settings } from "lucide-react";
 import { useEffect } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import type { Room } from "./room_api";
@@ -29,10 +29,10 @@ export function RoomListPage({ config }: RoomListPageProps) {
   return (
     <section className="rooms-shell">
       <header className="topbar">
-        <div className="site-mark">
+        <a className="site-mark" href="/">
           <span className="site-mark-main">Boke Video</span>
           <span className="site-mark-sub">ROOMS</span>
-        </div>
+        </a>
         <nav className="topnav" aria-label="メニュー">
           <a href="/admin">管理</a>
         </nav>
@@ -57,6 +57,15 @@ export function RoomListPage({ config }: RoomListPageProps) {
             ))}
           </section>
         )}
+      </section>
+      <section className="articles-board">
+        <div className="admin-titlebar">
+          <Newspaper aria-hidden="true" size={18} />
+          <h1>記事</h1>
+        </div>
+        <div className="articles-empty">
+          <p>準備中</p>
+        </div>
       </section>
     </section>
   );
