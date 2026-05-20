@@ -1,7 +1,8 @@
 import { type RefObject, useEffect, useRef, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import { WebRtcPlayer } from "../player/webrtc_player";
-import { buildWhepUrl, streamStatusMessage } from "./watch_stream";
+import { fetchStreamAccess } from "./stream_access_api";
+import { streamStatusMessage } from "./watch_stream";
 
 type UseStreamPlayerResult = {
   streamMessage: string;
@@ -58,9 +59,13 @@ export function useStreamPlayer(
         if (videoRef.current === null) {
           return;
         }
+        const streamAccess = await fetchStreamAccess(config, roomId);
+        if (streamAccess === null) {
+          throw new Error("stream access was not issued");
+        }
         await playerRef.current?.attach(
           videoRef.current,
-          buildWhepUrl(config.streamBaseUrl, roomId),
+          streamAccess.whepUrl,
           () => {
             if (canceled) {
               return;

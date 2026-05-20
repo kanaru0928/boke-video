@@ -57,16 +57,17 @@ WebRTC Media ServerはOracle上で動かします。第一候補はOvenMediaEngi
 
 ## ブラウザ再生
 
-フロントエンドはWHEPでWebRTC Media Serverへ接続します。
+フロントエンドはGoバックエンドから署名済みWHEP URLを取得し、そのURLでWebRTC Media Serverへ接続します。
 
 ```text
 https://rtc.example.com/live/main/whep
 ```
 
-環境変数は次です。
+Goバックエンドは次の環境変数から署名済みWHEP URLを発行します。
 
 ```text
-VITE_STREAM_BASE_URL=https://rtc.example.com
+STREAM_PUBLIC_BASE_URL=https://rtc.example.com
+STREAM_SIGNING_SECRET=replace-with-strong-secret
 ```
 
 ブラウザはWHEPのHTTPシグナリングで接続を開始し、mediaはOracle VCNで開けたUDPポートへ流れます。

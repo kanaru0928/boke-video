@@ -86,7 +86,6 @@ cloudflared tunnel --config /etc/cloudflared/boke-video.yml run
 
 ```text
 VITE_API_BASE_URL=https://stream.example.com
-VITE_STREAM_BASE_URL=https://rtc.example.com
 VITE_COMMENT_WS_URL=wss://stream.example.com
 ```
 

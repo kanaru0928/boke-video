@@ -63,6 +63,8 @@ SQLiteはWALを有効にします。初期規模100人では外部DBを追加し
 ```text
 LISTEN_ADDR=127.0.0.1:8080
 DATABASE_PATH=/var/lib/boke-video/boke-video.sqlite3
+STREAM_PUBLIC_BASE_URL=https://rtc.example.com
+STREAM_SIGNING_SECRET=replace-with-strong-secret
 ```
 
 CORSとCloudflare Access関連の設定値は`docs/cloudflare.md`を参照します。
