@@ -75,7 +75,7 @@ func (s *Signer) SignedPlaybackURL(roomID string) (string, error) {
 
 	signedURL := *s.baseURL
 	signedURL.Scheme = playbackScheme(signedURL.Scheme)
-	signedURL.Path = "/live/" + url.PathEscape(roomID)
+	signedURL.Path = "/live/" + url.PathEscape(roomID) + "/master"
 	query := signedURL.Query()
 	query.Set("policy", policyValue)
 	signedURL.RawQuery = query.Encode()

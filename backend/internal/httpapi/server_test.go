@@ -111,7 +111,7 @@ func TestServerCreatesSignedStreamAccess(t *testing.T) {
 	if parsed.PlaybackURL == "" {
 		t.Fatal("playbackUrl is empty")
 	}
-	if !strings.HasPrefix(parsed.PlaybackURL, "wss://rtc.example.com:443/live/"+roomID+"?") {
+	if !strings.HasPrefix(parsed.PlaybackURL, "wss://rtc.example.com:443/live/"+roomID+"/master?") {
 		t.Fatalf("playbackUrl = %q", parsed.PlaybackURL)
 	}
 	if !strings.Contains(parsed.PlaybackURL, "policy=") {

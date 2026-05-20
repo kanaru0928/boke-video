@@ -56,12 +56,34 @@
               <OutputStreamName>${OriginStreamName}</OutputStreamName>
               <Encodes>
                 <Video>
+                  <Name>video_bypass</Name>
                   <Bypass>true</Bypass>
                 </Video>
                 <Audio>
+                  <Name>audio_bypass</Name>
                   <Bypass>true</Bypass>
                 </Audio>
               </Encodes>
+              <Playlist>
+                <Name>master</Name>
+                <FileName>master</FileName>
+                <Options>
+                  <WebRtcAutoAbr>true</WebRtcAutoAbr>
+                  <HLSChunklistPathDepth>0</HLSChunklistPathDepth>
+                  <EnableTsPackaging>true</EnableTsPackaging>
+                </Options>
+                <RenditionTemplate>
+                  <Name>${Height}p</Name>
+                  <VideoTemplate>
+                    <EncodingType>bypassed</EncodingType>
+                    <VariantName>video_bypass</VariantName>
+                  </VideoTemplate>
+                  <AudioTemplate>
+                    <EncodingType>bypassed</EncodingType>
+                    <VariantName>audio_bypass</VariantName>
+                  </AudioTemplate>
+                </RenditionTemplate>
+              </Playlist>
             </OutputProfile>
           </OutputProfiles>
           <Providers>
@@ -72,7 +94,11 @@
             </WebRTC>
           </Providers>
           <Publishers>
-            <WebRTC />
+            <WebRTC>
+              <Rtx>true</Rtx>
+              <Ulpfec>true</Ulpfec>
+              <JitterBuffer>true</JitterBuffer>
+            </WebRTC>
           </Publishers>
         </Application>
       </Applications>

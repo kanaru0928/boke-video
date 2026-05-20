@@ -41,7 +41,7 @@ func TestSignerBuildsOvenMediaEngineSignedPlaybackURL(t *testing.T) {
 	if parsedURL.Scheme != "wss" {
 		t.Fatalf("scheme = %q", parsedURL.Scheme)
 	}
-	if parsedURL.Path != "/live/main" {
+	if parsedURL.Path != "/live/main/master" {
 		t.Fatalf("path = %q", parsedURL.Path)
 	}
 

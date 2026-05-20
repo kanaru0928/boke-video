@@ -5,7 +5,8 @@ describe("isStreamAccess", () => {
   it("署名済み再生URLを含むレスポンスを受け入れる", () => {
     expect(
       isStreamAccess({
-        playbackUrl: "wss://rtc.example.com:443/live/main?policy=p&signature=s",
+        playbackUrl:
+          "wss://rtc.example.com:443/live/main/master?policy=p&signature=s",
       }),
     ).toBe(true);
   });

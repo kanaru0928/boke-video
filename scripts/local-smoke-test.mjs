@@ -48,6 +48,7 @@ assert(
   typeof streamAccessResult.body.playbackUrl === "string" &&
     streamAccessResult.body.playbackUrl.startsWith("ws") &&
     streamAccessResult.body.playbackUrl.includes("/live/") &&
+    streamAccessResult.body.playbackUrl.includes("/master") &&
     streamAccessResult.body.playbackUrl.includes("policy=") &&
     streamAccessResult.body.playbackUrl.includes("signature="),
   "stream access did not include a signed playback URL",
