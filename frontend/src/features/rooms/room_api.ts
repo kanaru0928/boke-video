@@ -13,8 +13,30 @@ export type Room = {
   createdAt: string;
 };
 
+export type CreatedRoom = Room & {
+  whipBearerToken: string;
+};
+
+type IngestToken = {
+  whipBearerToken: string;
+};
+
 export async function fetchRooms(config: AppConfig): Promise<Room[]> {
   const response = await fetch(`${config.apiBaseUrl}/api/rooms`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    return [];
+  }
+  const parsed: unknown = await response.json();
+  if (!Array.isArray(parsed)) {
+    return [];
+  }
+  return parsed.filter(isRoom);
+}
+
+export async function fetchAdminRooms(config: AppConfig): Promise<Room[]> {
+  const response = await fetch(`${config.apiBaseUrl}/api/admin/rooms`, {
     credentials: "include",
   });
   if (!response.ok) {
@@ -30,7 +52,7 @@ export async function fetchRooms(config: AppConfig): Promise<Room[]> {
 export async function createRoom(
   config: AppConfig,
   title: string,
-): Promise<Room | null> {
+): Promise<CreatedRoom | null> {
   const response = await fetch(`${config.apiBaseUrl}/api/admin/rooms`, {
     method: "POST",
     credentials: "include",
@@ -39,7 +61,7 @@ export async function createRoom(
     },
     body: JSON.stringify({ title }),
   });
-  return parseRoomResponse(response);
+  return parseCreatedRoomResponse(response);
 }
 
 export async function updateRoomTitle(
@@ -59,6 +81,34 @@ export async function updateRoomTitle(
     },
   );
   return parseRoomResponse(response);
+}
+
+export async function deleteRoom(
+  config: AppConfig,
+  roomId: string,
+): Promise<boolean> {
+  const response = await fetch(
+    `${config.apiBaseUrl}/api/admin/rooms/${encodeURIComponent(roomId)}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    },
+  );
+  return response.ok;
+}
+
+export async function rotateRoomIngestToken(
+  config: AppConfig,
+  roomId: string,
+): Promise<IngestToken | null> {
+  const response = await fetch(
+    `${config.apiBaseUrl}/api/admin/rooms/${encodeURIComponent(roomId)}/ingest-token`,
+    {
+      method: "POST",
+      credentials: "include",
+    },
+  );
+  return parseIngestTokenResponse(response);
 }
 
 export async function deleteComment(
@@ -107,6 +157,22 @@ export function isRoom(value: unknown): value is Room {
   );
 }
 
+function isCreatedRoom(value: unknown): value is CreatedRoom {
+  if (!isRoom(value)) {
+    return false;
+  }
+  const room = value as Record<string, unknown>;
+  return typeof room.whipBearerToken === "string";
+}
+
+function isIngestToken(value: unknown): value is IngestToken {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const token = value as Record<string, unknown>;
+  return typeof token.whipBearerToken === "string";
+}
+
 export function isCommentMessage(value: unknown): value is CommentMessage {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -147,6 +213,32 @@ async function parseRoomResponse(response: Response): Promise<Room | null> {
   }
   const parsed: unknown = await response.json();
   if (!isRoom(parsed)) {
+    return null;
+  }
+  return parsed;
+}
+
+async function parseCreatedRoomResponse(
+  response: Response,
+): Promise<CreatedRoom | null> {
+  if (!response.ok) {
+    return null;
+  }
+  const parsed: unknown = await response.json();
+  if (!isCreatedRoom(parsed)) {
+    return null;
+  }
+  return parsed;
+}
+
+async function parseIngestTokenResponse(
+  response: Response,
+): Promise<IngestToken | null> {
+  if (!response.ok) {
+    return null;
+  }
+  const parsed: unknown = await response.json();
+  if (!isIngestToken(parsed)) {
     return null;
   }
   return parsed;
