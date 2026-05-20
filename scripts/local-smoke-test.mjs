@@ -37,6 +37,21 @@ assert(
 );
 const roomId = roomResult.body.id;
 
+const streamAccessResult = await request(`/api/rooms/${roomId}/stream-access`, {
+  method: "POST",
+});
+assert(
+  streamAccessResult.response.status === 201,
+  `stream access failed: ${streamAccessResult.response.status}`,
+);
+assert(
+  typeof streamAccessResult.body.whepUrl === "string" &&
+    streamAccessResult.body.whepUrl.includes("/live/") &&
+    streamAccessResult.body.whepUrl.includes("policy=") &&
+    streamAccessResult.body.whepUrl.includes("signature="),
+  "stream access did not include a signed WHEP URL",
+);
+
 const commentResult = await request(`/api/rooms/${roomId}/comments`, {
   method: "POST",
   body: JSON.stringify({

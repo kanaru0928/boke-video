@@ -17,6 +17,7 @@
 | ファイル | 用途 |
 | --- | --- |
 | `deploy/cloudflared/boke-video.yml.example` | Cloudflare Tunnel設定例 |
+| `deploy/ovenmediaengine/Server.xml.example` | OvenMediaEngine設定例 |
 | `deploy/systemd/*.service` | systemdユニット例 |
 
 ## フロントエンド
@@ -33,7 +34,7 @@ Cloudflare AccessとTunnelの手順は`docs/cloudflare.md`です。
 
 ## 映像配信
 
-WebRTC Media ServerをOracle上に配置します。設定値は`docs/streaming.md`を正本にします。
+OvenMediaEngineをOracle上に配置します。設定値は`docs/streaming.md`を正本にします。
 
 ## systemd
 
@@ -42,7 +43,7 @@ systemdで次を管理します。
 ```text
 boke-video.service
 cloudflared-boke-video.service
-webrtc-media.service
+ovenmediaengine.service
 ```
 
 配置例は`deploy/systemd/`にあります。
@@ -53,5 +54,5 @@ webrtc-media.service
 curl -fsS http://127.0.0.1:8080/healthz
 sudo systemctl status boke-video.service
 sudo systemctl status cloudflared-boke-video.service
-sudo systemctl status webrtc-media.service
+sudo systemctl status ovenmediaengine.service
 ```

@@ -101,7 +101,7 @@ ALLOWED_ORIGINS=https://video.example.com
 curl -fsS http://127.0.0.1:8080/healthz
 sudo systemctl status boke-video.service
 sudo systemctl status cloudflared-boke-video.service
-sudo systemctl status webrtc-media.service
+sudo systemctl status ovenmediaengine.service
 ```
 
 ブラウザでは`https://video.example.com`へアクセスし、Cloudflare Accessログイン後に視聴画面が表示されることを確認します。

@@ -70,6 +70,8 @@ STREAM_PUBLIC_BASE_URL=https://rtc.example.com
 STREAM_SIGNING_SECRET=replace-with-strong-secret
 ```
 
+`STREAM_SIGNING_SECRET`はOvenMediaEngineの`SignedPolicy`の`SecretKey`と同じ値にします。
+
 ブラウザはWHEPのHTTPシグナリングで接続を開始し、mediaはOracle VCNで開けたUDPポートへ流れます。
 
 ## 遅延目標

@@ -14,8 +14,6 @@
     "go",
     "gofmt",
     "scripts/local-backend.sh",
-    "scripts/local-dev.sh",
-    "scripts/local-frontend.sh",
-    "scripts/start-local-obs-stream.sh"
+    "scripts/local-frontend.sh"
   ]
 }

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Server version="8">
+  <Name>Boke Video</Name>
+  <IP>*</IP>
+  <Bind>
+    <Providers>
+      <WebRTC>
+        <Signalling>
+          <TLSPort>443</TLSPort>
+          <WorkerCount>1</WorkerCount>
+        </Signalling>
+        <IceCandidates>
+          <IceCandidate>*:10000-10005/udp</IceCandidate>
+        </IceCandidates>
+      </WebRTC>
+    </Providers>
+    <Publishers>
+      <WebRTC>
+        <Signalling>
+          <TLSPort>443</TLSPort>
+          <WorkerCount>1</WorkerCount>
+        </Signalling>
+        <IceCandidates>
+          <IceCandidate>*:10000-10005/udp</IceCandidate>
+        </IceCandidates>
+      </WebRTC>
+    </Publishers>
+  </Bind>
+  <VirtualHosts>
+    <VirtualHost>
+      <Name>default</Name>
+      <Host>
+        <Names>
+          <Name>ingest.example.com</Name>
+          <Name>rtc.example.com</Name>
+        </Names>
+      </Host>
+      <SignedPolicy>
+        <PolicyQueryKeyName>policy</PolicyQueryKeyName>
+        <SignatureQueryKeyName>signature</SignatureQueryKeyName>
+        <SecretKey>replace-with-strong-secret</SecretKey>
+        <Enables>
+          <Publishers>webrtc</Publishers>
+        </Enables>
+      </SignedPolicy>
+      <Applications>
+        <Application>
+          <Name>live</Name>
+          <Type>live</Type>
+          <Providers>
+            <WebRTC />
+          </Providers>
+          <Publishers>
+            <WebRTC />
+          </Publishers>
+        </Application>
+      </Applications>
+    </VirtualHost>
+  </VirtualHosts>
+</Server>
