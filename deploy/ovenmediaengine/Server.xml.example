@@ -12,7 +12,7 @@
           <WorkerCount>1</WorkerCount>
         </Signalling>
         <IceCandidates>
-          <IceCandidate>*:10000-10005/udp</IceCandidate>
+          <IceCandidate>${PublicIP}:10000-10005/udp</IceCandidate>
         </IceCandidates>
       </WebRTC>
     </Providers>
@@ -24,7 +24,7 @@
           <WorkerCount>1</WorkerCount>
         </Signalling>
         <IceCandidates>
-          <IceCandidate>*:10000-10005/udp</IceCandidate>
+          <IceCandidate>${PublicIP}:10000-10005/udp</IceCandidate>
         </IceCandidates>
       </WebRTC>
     </Publishers>

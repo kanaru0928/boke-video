@@ -102,6 +102,8 @@ ingest.example.com  配信者OBS用
 rtc.example.com     視聴者ブラウザ用
 ```
 
+OvenMediaEngineのICE候補には、配信者と視聴者が到達できるグローバルIPを明示します。`*`はDocker bridge、VPN、内部NICなどの到達不能な候補を配るため、本番設定では使いません。
+
 ## 認証
 
 WHIP入力は配信者用Bearer Tokenで保護します。OBSにはWHIP URLとBearer Tokenを設定します。
