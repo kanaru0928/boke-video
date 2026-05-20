@@ -20,8 +20,6 @@ mkdir -p "${CONF_DIR}" "${LOG_DIR}"
 cp "${ROOT_DIR}/deploy/ovenmediaengine/Server.xml.example" "${CONF_DIR}/Server.xml"
 perl -0pi -e 's/<Name>ingest\.example\.com<\/Name>\n          <Name>rtc\.example\.com<\/Name>/<Name>127.0.0.1<\/Name>\n          <Name>localhost<\/Name>\n          <Name>ingest.example.com<\/Name>\n          <Name>rtc.example.com<\/Name>/' "${CONF_DIR}/Server.xml"
 perl -0pi -e 's/\*:10000-10005\/udp/127.0.0.1:10000-10005\/udp/g' "${CONF_DIR}/Server.xml"
-perl -0pi -e 's/\*:10000-10005\/tcp/127.0.0.1:10000-10005\/tcp/g' "${CONF_DIR}/Server.xml"
-perl -0pi -e 's/<DefaultTransport>udp<\/DefaultTransport>/<DefaultTransport>tcp<\/DefaultTransport>/g' "${CONF_DIR}/Server.xml"
 perl -0pi -e 's/replace-with-strong-secret/local-stream-signing-secret/g' "${CONF_DIR}/Server.xml"
 
 if [ ! -f "${CONF_DIR}/Logger.xml" ]; then
@@ -38,6 +36,5 @@ exec docker run --name "${CONTAINER_NAME}" --rm \
   -v "${CONF_DIR}:/opt/ovenmediaengine/bin/origin_conf" \
   -v "${LOG_DIR}:/var/log/ovenmediaengine" \
   -p 3333:3333 \
-  -p 10000-10005:10000-10005/tcp \
   -p 10000-10005:10000-10005/udp \
   "${IMAGE_NAME}"
