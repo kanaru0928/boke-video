@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"boke-video/backend/internal/ingestauth"
 	"boke-video/backend/internal/repository"
 )
 
@@ -48,13 +49,19 @@ func main() {
 		log.Fatal(err)
 	}
 
+	ingestToken, err := ingestauth.NewToken()
+	if err != nil {
+		log.Fatal(err)
+	}
 	err = db.CreateRoom(ctx, repository.Room{
-		ID:        roomID,
-		Title:     roomTitle,
-		CreatedAt: time.Now().UTC(),
+		ID:              roomID,
+		Title:           roomTitle,
+		OwnerSub:        "local-dev",
+		IngestTokenHash: ingestauth.HashToken(ingestToken),
+		CreatedAt:       time.Now().UTC(),
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Print(roomID)
+	fmt.Printf("%s %s", roomID, ingestToken)
 }

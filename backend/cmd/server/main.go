@@ -15,6 +15,7 @@ import (
 	"boke-video/backend/internal/httpapi"
 	"boke-video/backend/internal/repository"
 	"boke-video/backend/internal/streamaccess"
+	"boke-video/backend/internal/whipproxy"
 )
 
 func main() {
@@ -58,6 +59,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	whipProxy, err := whipproxy.New(cfg.WhipUpstreamBaseURL)
+	if err != nil {
+		logger.Error("configure whip proxy", "error", err)
+		os.Exit(1)
+	}
+
 	handler := httpapi.NewServer(httpapi.ServerConfig{
 		Logger:         logger,
 		Repository:     db,
@@ -65,6 +72,7 @@ func main() {
 		CommentHub:     commentHub,
 		AllowedOrigins: cfg.AllowedOrigins,
 		StreamAccess:   streamAccess,
+		WhipProxy:      whipProxy,
 	})
 
 	server := &http.Server{

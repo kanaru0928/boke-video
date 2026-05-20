@@ -16,6 +16,7 @@ type Config struct {
 	AccessCertsURL      string
 	StreamPublicBaseURL string
 	StreamSigningSecret string
+	WhipUpstreamBaseURL string
 }
 
 func Load() (Config, error) {
@@ -29,6 +30,7 @@ func Load() (Config, error) {
 		AccessCertsURL:      os.Getenv("ACCESS_CERTS_URL"),
 		StreamPublicBaseURL: strings.TrimSpace(os.Getenv("STREAM_PUBLIC_BASE_URL")),
 		StreamSigningSecret: os.Getenv("STREAM_SIGNING_SECRET"),
+		WhipUpstreamBaseURL: strings.TrimSpace(os.Getenv("WHIP_UPSTREAM_BASE_URL")),
 	}
 
 	if cfg.AccessEnabled {
@@ -47,6 +49,9 @@ func Load() (Config, error) {
 	}
 	if strings.TrimSpace(cfg.StreamSigningSecret) == "" {
 		return Config{}, errors.New("STREAM_SIGNING_SECRET is required")
+	}
+	if cfg.WhipUpstreamBaseURL == "" {
+		return Config{}, errors.New("WHIP_UPSTREAM_BASE_URL is required")
 	}
 
 	return cfg, nil

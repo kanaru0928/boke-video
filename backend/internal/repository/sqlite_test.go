@@ -22,9 +22,11 @@ func TestSQLiteStoresRoomAndComment(t *testing.T) {
 	}
 
 	room := Room{
-		ID:        "room-1",
-		Title:     "テスト配信",
-		CreatedAt: time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
+		ID:              "room-1",
+		Title:           "テスト配信",
+		OwnerSub:        "owner-1",
+		IngestTokenHash: "token-hash",
+		CreatedAt:       time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
 	}
 	if err := db.CreateRoom(ctx, room); err != nil {
 		t.Fatalf("CreateRoom returned error: %v", err)
@@ -59,5 +61,15 @@ func TestSQLiteStoresRoomAndComment(t *testing.T) {
 	}
 	if comments[0].FontSize != stored.FontSize {
 		t.Fatalf("comment font size = %q", comments[0].FontSize)
+	}
+
+	if err := db.UpdateRoomTitle(ctx, room.ID, "owner-2", "別タイトル"); err == nil {
+		t.Fatal("UpdateRoomTitle accepted another owner")
+	}
+	if err := db.DeleteComment(ctx, stored.ID, "owner-2"); err == nil {
+		t.Fatal("DeleteComment accepted another owner")
+	}
+	if err := db.DeleteComment(ctx, stored.ID, room.OwnerSub); err != nil {
+		t.Fatalf("DeleteComment returned error: %v", err)
 	}
 }

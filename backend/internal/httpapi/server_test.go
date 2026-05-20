@@ -14,8 +14,10 @@ import (
 
 	"boke-video/backend/internal/access"
 	"boke-video/backend/internal/comment"
+	"boke-video/backend/internal/ingestauth"
 	"boke-video/backend/internal/repository"
 	"boke-video/backend/internal/streamaccess"
+	"boke-video/backend/internal/whipproxy"
 )
 
 func TestServerStoresCommentAppearance(t *testing.T) {
@@ -67,6 +69,29 @@ func TestServerCreatesRoomWithRequestedID(t *testing.T) {
 	}
 	if room.ID != "obs-local" {
 		t.Fatalf("room.ID = %q", room.ID)
+	}
+}
+
+func TestServerReturnsWhipBearerTokenWhenCreatingRoom(t *testing.T) {
+	server := newTestServer(t)
+
+	response := performRequest(server, http.MethodPost, "/api/admin/rooms", `{"title":"OBS"}`)
+	if response.Code != http.StatusCreated {
+		t.Fatalf("create room status = %d, body = %s", response.Code, response.Body.String())
+	}
+
+	var parsed struct {
+		ID              string `json:"id"`
+		WhipBearerToken string `json:"whipBearerToken"`
+	}
+	if err := json.NewDecoder(response.Body).Decode(&parsed); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if parsed.ID == "" {
+		t.Fatal("id is empty")
+	}
+	if parsed.WhipBearerToken == "" {
+		t.Fatal("whipBearerToken is empty")
 	}
 }
 
@@ -128,6 +153,122 @@ func TestServerRejectsStreamAccessForMissingRoom(t *testing.T) {
 	response := performRequest(server, http.MethodPost, "/api/rooms/missing/stream-access", "")
 	if response.Code != http.StatusNotFound {
 		t.Fatalf("stream access status = %d, body = %s", response.Code, response.Body.String())
+	}
+}
+
+func TestServerRejectsAdminMutationForAnotherOwner(t *testing.T) {
+	server := newTestServer(t)
+	roomID := "other-room"
+	err := server.repository.CreateRoom(context.Background(), repository.Room{
+		ID:              roomID,
+		Title:           "他人の配信",
+		OwnerSub:        "other-owner",
+		IngestTokenHash: ingestauth.HashToken("token"),
+		CreatedAt:       time.Now().UTC(),
+	})
+	if err != nil {
+		t.Fatalf("CreateRoom returned error: %v", err)
+	}
+	err = server.repository.CreateComment(context.Background(), comment.StoredComment{
+		ID:        "other-comment",
+		RoomID:    roomID,
+		AuthorSub: "viewer",
+		Body:      "こんにちは",
+		Direction: comment.DirectionRightToLeft,
+		Color:     "#ffffff",
+		FontSize:  comment.FontSizeMedium,
+		SentAt:    time.Now().UTC(),
+	})
+	if err != nil {
+		t.Fatalf("CreateComment returned error: %v", err)
+	}
+
+	updateResponse := performRequest(server, http.MethodPatch, "/api/admin/rooms/"+roomID, `{"title":"変更"}`)
+	if updateResponse.Code != http.StatusNotFound {
+		t.Fatalf("update status = %d, body = %s", updateResponse.Code, updateResponse.Body.String())
+	}
+
+	deleteCommentResponse := performRequest(server, http.MethodDelete, "/api/admin/comments/other-comment", "")
+	if deleteCommentResponse.Code != http.StatusNotFound {
+		t.Fatalf("delete comment status = %d, body = %s", deleteCommentResponse.Code, deleteCommentResponse.Body.String())
+	}
+
+	rotateTokenResponse := performRequest(server, http.MethodPost, "/api/admin/rooms/"+roomID+"/ingest-token", "")
+	if rotateTokenResponse.Code != http.StatusNotFound {
+		t.Fatalf("rotate token status = %d, body = %s", rotateTokenResponse.Code, rotateTokenResponse.Body.String())
+	}
+}
+
+func TestServerProxiesWhipOnlyWithRoomBearerToken(t *testing.T) {
+	upstreamCalled := false
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		upstreamCalled = true
+		if r.Header.Get("Authorization") != "" {
+			t.Fatalf("authorization header reached upstream")
+		}
+		w.WriteHeader(http.StatusCreated)
+	}))
+	defer upstream.Close()
+
+	server := newTestServer(t)
+	proxy, err := whipproxy.New(upstream.URL)
+	if err != nil {
+		t.Fatalf("New returned error: %v", err)
+	}
+	server.whipProxy = proxy
+
+	createResponse := performRequest(server, http.MethodPost, "/api/admin/rooms", `{"id":"obs-room","title":"OBS"}`)
+	if createResponse.Code != http.StatusCreated {
+		t.Fatalf("create room status = %d, body = %s", createResponse.Code, createResponse.Body.String())
+	}
+	var created struct {
+		WhipBearerToken string `json:"whipBearerToken"`
+	}
+	if err := json.NewDecoder(createResponse.Body).Decode(&created); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+
+	unauthorized := performRequest(server, http.MethodPost, "/live/obs-room?direction=whip", "")
+	if unauthorized.Code != http.StatusUnauthorized {
+		t.Fatalf("unauthorized status = %d, body = %s", unauthorized.Code, unauthorized.Body.String())
+	}
+
+	request := httptest.NewRequest(http.MethodPost, "/live/obs-room?direction=whip", nil)
+	request.Header.Set("Authorization", "Bearer "+created.WhipBearerToken)
+	recorder := httptest.NewRecorder()
+	server.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusCreated {
+		t.Fatalf("proxy status = %d, body = %s", recorder.Code, recorder.Body.String())
+	}
+	if !upstreamCalled {
+		t.Fatal("upstream was not called")
+	}
+}
+
+func TestServerRotatesWhipBearerTokenForOwner(t *testing.T) {
+	server := newTestServer(t)
+	roomID := createTestRoom(t, server, "配信")
+
+	response := performRequest(server, http.MethodPost, "/api/admin/rooms/"+roomID+"/ingest-token", "")
+	if response.Code != http.StatusCreated {
+		t.Fatalf("rotate token status = %d, body = %s", response.Code, response.Body.String())
+	}
+	var parsed struct {
+		WhipBearerToken string `json:"whipBearerToken"`
+	}
+	if err := json.NewDecoder(response.Body).Decode(&parsed); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if parsed.WhipBearerToken == "" {
+		t.Fatal("whipBearerToken is empty")
+	}
+	room, err := server.repository.GetRoom(context.Background(), roomID)
+	if err != nil {
+		t.Fatalf("GetRoom returned error: %v", err)
+	}
+	if !ingestauth.VerifyAuthorizationHeader("Bearer "+parsed.WhipBearerToken, room.IngestTokenHash) {
+		t.Fatal("rotated token does not match stored hash")
 	}
 }
 

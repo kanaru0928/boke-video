@@ -17,8 +17,10 @@ import (
 
 	"boke-video/backend/internal/access"
 	"boke-video/backend/internal/comment"
+	"boke-video/backend/internal/ingestauth"
 	"boke-video/backend/internal/repository"
 	"boke-video/backend/internal/streamaccess"
+	"boke-video/backend/internal/whipproxy"
 
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
@@ -31,6 +33,7 @@ type ServerConfig struct {
 	CommentHub     *comment.Hub
 	AllowedOrigins []string
 	StreamAccess   *streamaccess.Signer
+	WhipProxy      *whipproxy.Proxy
 }
 
 type Server struct {
@@ -40,6 +43,7 @@ type Server struct {
 	commentHub     *comment.Hub
 	allowedOrigins []string
 	streamAccess   *streamaccess.Signer
+	whipProxy      *whipproxy.Proxy
 	limiter        *rateLimiter
 }
 
@@ -51,6 +55,7 @@ func NewServer(cfg ServerConfig) *Server {
 		commentHub:     cfg.CommentHub,
 		allowedOrigins: cfg.AllowedOrigins,
 		streamAccess:   cfg.StreamAccess,
+		whipProxy:      cfg.WhipProxy,
 		limiter:        newRateLimiter(time.Second),
 	}
 }
@@ -67,6 +72,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	case r.Method == http.MethodGet && r.URL.Path == "/api/rooms":
 		s.handleListRooms(w, r)
+	case r.Method == http.MethodGet && r.URL.Path == "/api/admin/rooms":
+		s.handleListOwnedRooms(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/api/admin/rooms":
 		s.handleCreateRoom(w, r)
 	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/comments"):
@@ -81,8 +88,14 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.handleCommentWebSocket(w, r)
 	case r.Method == http.MethodPatch && strings.HasPrefix(r.URL.Path, "/api/admin/rooms/"):
 		s.handleUpdateRoom(w, r)
+	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/admin/rooms/") && strings.HasSuffix(r.URL.Path, "/ingest-token"):
+		s.handleRotateRoomIngestToken(w, r)
+	case r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/api/admin/rooms/"):
+		s.handleDeleteRoom(w, r)
 	case r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/api/admin/comments/"):
 		s.handleDeleteComment(w, r)
+	case strings.HasPrefix(r.URL.Path, "/live/"):
+		s.handleWhipProxy(w, r)
 	default:
 		writeError(w, http.StatusNotFound, "not found")
 	}
@@ -113,6 +126,19 @@ func (s *Server) handleListRooms(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, rooms)
 }
 
+func (s *Server) handleListOwnedRooms(w http.ResponseWriter, r *http.Request) {
+	principal, ok := s.requirePrincipal(w, r)
+	if !ok {
+		return
+	}
+	rooms, err := s.repository.ListRoomsByOwner(r.Context(), principal.Subject)
+	if err != nil {
+		s.writeServerError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, rooms)
+}
+
 func (s *Server) handleGetRoom(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.requirePrincipal(w, r); !ok {
 		return
@@ -127,7 +153,8 @@ func (s *Server) handleGetRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
-	if _, ok := s.requirePrincipal(w, r); !ok {
+	principal, ok := s.requirePrincipal(w, r)
+	if !ok {
 		return
 	}
 	var req struct {
@@ -153,16 +180,31 @@ func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		roomID = newID()
 	}
 
+	ingestToken, err := ingestauth.NewToken()
+	if err != nil {
+		s.writeServerError(w, err)
+		return
+	}
 	room := repository.Room{
-		ID:        roomID,
-		Title:     req.Title,
-		CreatedAt: time.Now().UTC(),
+		ID:              roomID,
+		Title:           req.Title,
+		OwnerSub:        principal.Subject,
+		IngestTokenHash: ingestauth.HashToken(ingestToken),
+		CreatedAt:       time.Now().UTC(),
 	}
 	if err := s.repository.CreateRoom(r.Context(), room); err != nil {
 		writeRepositoryError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, room)
+	writeJSON(w, http.StatusCreated, createRoomResponse{
+		Room:            room,
+		WhipBearerToken: ingestToken,
+	})
+}
+
+type createRoomResponse struct {
+	repository.Room
+	WhipBearerToken string `json:"whipBearerToken"`
 }
 
 var roomIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,80}$`)
@@ -172,7 +214,8 @@ func validRoomID(roomID string) bool {
 }
 
 func (s *Server) handleUpdateRoom(w http.ResponseWriter, r *http.Request) {
-	if _, ok := s.requirePrincipal(w, r); !ok {
+	principal, ok := s.requirePrincipal(w, r)
+	if !ok {
 		return
 	}
 	roomID := strings.TrimPrefix(r.URL.Path, "/api/admin/rooms/")
@@ -188,7 +231,7 @@ func (s *Server) handleUpdateRoom(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "title must be 1 to 80 characters")
 		return
 	}
-	if err := s.repository.UpdateRoomTitle(r.Context(), roomID, req.Title); err != nil {
+	if err := s.repository.UpdateRoomTitle(r.Context(), roomID, principal.Subject, req.Title); err != nil {
 		writeRepositoryError(w, err)
 		return
 	}
@@ -200,16 +243,73 @@ func (s *Server) handleUpdateRoom(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, room)
 }
 
-func (s *Server) handleDeleteComment(w http.ResponseWriter, r *http.Request) {
-	if _, ok := s.requirePrincipal(w, r); !ok {
+func (s *Server) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
+	principal, ok := s.requirePrincipal(w, r)
+	if !ok {
 		return
 	}
-	commentID := strings.TrimPrefix(r.URL.Path, "/api/admin/comments/")
-	if err := s.repository.DeleteComment(r.Context(), commentID); err != nil {
+	roomID := strings.TrimPrefix(r.URL.Path, "/api/admin/rooms/")
+	if err := s.repository.DeleteRoom(r.Context(), roomID, principal.Subject); err != nil {
 		writeRepositoryError(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) handleRotateRoomIngestToken(w http.ResponseWriter, r *http.Request) {
+	principal, ok := s.requirePrincipal(w, r)
+	if !ok {
+		return
+	}
+	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/admin/rooms/"), "/ingest-token")
+	ingestToken, err := ingestauth.NewToken()
+	if err != nil {
+		s.writeServerError(w, err)
+		return
+	}
+	if err := s.repository.UpdateRoomIngestTokenHash(r.Context(), roomID, principal.Subject, ingestauth.HashToken(ingestToken)); err != nil {
+		writeRepositoryError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, ingestTokenResponse{WhipBearerToken: ingestToken})
+}
+
+type ingestTokenResponse struct {
+	WhipBearerToken string `json:"whipBearerToken"`
+}
+
+func (s *Server) handleDeleteComment(w http.ResponseWriter, r *http.Request) {
+	principal, ok := s.requirePrincipal(w, r)
+	if !ok {
+		return
+	}
+	commentID := strings.TrimPrefix(r.URL.Path, "/api/admin/comments/")
+	if err := s.repository.DeleteComment(r.Context(), commentID, principal.Subject); err != nil {
+		writeRepositoryError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) handleWhipProxy(w http.ResponseWriter, r *http.Request) {
+	if s.whipProxy == nil {
+		writeError(w, http.StatusNotFound, "not found")
+		return
+	}
+	roomID := strings.Trim(strings.TrimPrefix(r.URL.Path, "/live/"), "/")
+	if index := strings.Index(roomID, "/"); index >= 0 {
+		roomID = roomID[:index]
+	}
+	room, err := s.repository.GetRoom(r.Context(), roomID)
+	if err != nil {
+		writeRepositoryError(w, err)
+		return
+	}
+	if !ingestauth.VerifyAuthorizationHeader(r.Header.Get("Authorization"), room.IngestTokenHash) {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	s.whipProxy.ServeHTTP(w, r)
 }
 
 func (s *Server) handleListComments(w http.ResponseWriter, r *http.Request) {
