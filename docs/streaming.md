@@ -16,13 +16,15 @@ Goバックエンドは映像を中継しません。映像の受信と視聴者
 
 ## OBS入力
 
-OBSはWHIPでWebRTC Media Serverへ配信します。
+OBSはWHIPでWebRTC Media Serverへ配信します。ローカルと本番でOBSに入れるパス構造は同じです。
 
 | 項目 | 値 |
 | --- | --- |
 | サービス | `WHIP` |
-| サーバー | `http://127.0.0.1:3333/live/<roomId>?direction=whip` |
-| 認証 | ローカルでは空 |
+| ローカルサーバー | `http://127.0.0.1:3333/live/<roomId>?direction=whip` |
+| 本番サーバー | `https://ingest.example.com/live/<roomId>?direction=whip` |
+| ローカル認証 | 空 |
+| 本番認証 | 配信者用Bearer Token |
 
 OBSはWHIP Simulcastで複数レイヤーを送信します。WebRTC Media Serverはコーデック変換を行わず、OvenMediaEngineのPlaylistで視聴者へ配信します。
 
@@ -40,6 +42,8 @@ OBSはWHIP Simulcastで複数レイヤーを送信します。WebRTC Media Serve
 
 H.264はWebRTCブラウザで広く扱えるため、iPhone、Android、macOS、Windows、Linuxの最新ブラウザを対象にできます。
 
+OBSのサイマルキャストは3レイヤーを使用します。OvenMediaEngineは各レイヤーを`video_bypass`として受け、`master` Playlistで視聴者へ配信します。
+
 ## WebRTC Media Server
 
 WebRTC Media ServerはOracle上で動かします。第一候補はOvenMediaEngineです。
@@ -54,12 +58,20 @@ WebRTC Media ServerはOracle上で動かします。第一候補はOvenMediaEngi
 
 映像変換は行いません。
 
+OvenMediaEngineのWebRTC Publisherでは、UDP向けの再送と前方誤り訂正として`Rtx`と`Ulpfec`を有効にします。`JitterBuffer`は有効にしません。`JitterBuffer`はA/V同期の均等出力用であり、低遅延の既定構成には入れません。
+
 ## ブラウザ再生
 
 フロントエンドはGoバックエンドから署名済み再生URLを取得し、そのURLでWebRTC Media Serverへ接続します。OvenMediaEngineの再生URLはSimulcast Playlistの`master`を使います。
 
 ```text
 ws://127.0.0.1:3333/live/main/master
+```
+
+本番では次の形式になります。
+
+```text
+wss://rtc.example.com/live/main/master
 ```
 
 Goバックエンドは次の環境変数から署名済み再生URLを発行します。
@@ -103,6 +115,29 @@ rtc.example.com     視聴者ブラウザ用
 ```
 
 OvenMediaEngineのICE候補には、配信者と視聴者が到達できるグローバルIPを明示します。`*`はDocker bridge、VPN、内部NICなどの到達不能な候補を配るため、本番設定では使いません。
+
+## ローカルデバッグ
+
+ローカルでは次の2つを別シェルで起動します。
+
+```sh
+pnpm demo:media
+pnpm dev
+```
+
+`pnpm demo:media`はDocker Desktop上のOvenMediaEngineを起動します。OBSから見るmedia経路はmacOSからDocker DesktopのLinux VMを経由するため、本番OracleのUDP直接受信とは同一ではありません。
+
+ローカルで確認する項目は次です。
+
+- OBSの配信状態が開始になる
+- OvenMediaEngineログに`Stream has been prepared`が出る
+- OvenMediaEngineログに`WebRTC Stream has been created`が出る
+- ブラウザで`http://127.0.0.1:5173/?room=<roomId>`を開くと映像が出る
+- WebRTC Publisherログが`Rtx(true) Ulpfec(true) JitterBuffer(false)`になる
+
+設定変更後は`pnpm demo:media`を再起動し、OBSも配信停止してから再開します。OvenMediaEngineは`Server.xml`を起動時に読み込みます。
+
+ローカルで`RtpVideoJitterBuffer`の`Invalid frame`が多発する場合、受信側でRTPフレームを完全に組み立てられていません。まずOBSのBフレームが0、キーフレーム間隔が1秒、サイマルキャスト合計レイヤー数が3であることを確認します。そのうえでDocker Desktop経路のUDP転送に依存する問題か、Oracle上のOvenMediaEngineでも再現する問題かを切り分けます。
 
 ## 認証
 

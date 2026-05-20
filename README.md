@@ -17,7 +17,7 @@ docs/      仕様
 
 | ファイル | 内容 |
 | --- | --- |
-| `docs/streaming.md` | OBS WHIP入力、WebRTC Media Server、WHEP視聴 |
+| `docs/streaming.md` | OBS WHIP入力、OvenMediaEngine、WebRTC視聴 |
 | `docs/comments.md` | コメント仕様 |
 | `docs/auth-and-security.md` | Cloudflare Access、管理者判定、セキュリティ |
 | `docs/cloudflare.md` | Cloudflare Access、Tunnel、Oracle VCN |
@@ -33,7 +33,9 @@ pnpm demo:media
 pnpm dev
 ```
 
-`pnpm demo:media`はOvenMediaEngineをDockerで起動し、`127.0.0.1:3333`でOBSのWHIP入力を受けます。OBSのサーバーには`http://127.0.0.1:3333/live/<roomId>?direction=whip`を入れ、Bearer Tokenは空にします。
+`pnpm demo:media`はOvenMediaEngineをDockerで起動し、`127.0.0.1:3333`でOBSのWHIP入力とブラウザのWebRTC視聴を受けます。OBSのサーバーには`http://127.0.0.1:3333/live/<roomId>?direction=whip`を入れ、Bearer Tokenは空にします。
+
+ブラウザは`http://127.0.0.1:5173/?room=<roomId>`を開きます。再生URLはGoバックエンドが`ws://127.0.0.1:3333/live/<roomId>/master`として発行するため、手入力しません。
 
 ## 検証
 

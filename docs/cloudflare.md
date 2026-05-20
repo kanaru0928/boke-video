@@ -21,6 +21,8 @@ rtc.example.com
     -> WebRTC Media Server
 ```
 
+`ingest.example.com`と`rtc.example.com`はCloudflare AccessやCloudflare Tunnelを経由しません。WebRTC mediaはOracle VCNで開けたUDPポートへ直接流します。
+
 GoバックエンドはCloudflare Accessが付与する`Cf-Access-Jwt-Assertion`を検証します。映像配信の詳細は`docs/streaming.md`を正本にします。
 
 ## ホスト名
