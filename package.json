@@ -8,6 +8,7 @@
     "dev": "scripts/local-dev.sh",
     "demo:backend": "scripts/local-backend.sh",
     "demo:frontend": "scripts/local-frontend.sh",
+    "demo:media": "scripts/local-media.sh",
     "demo:browser-smoke": "node scripts/local-browser-smoke-test.mjs",
     "demo:smoke": "node scripts/local-smoke-test.mjs",
     "deploy:frontend": "pnpm --dir frontend run deploy",

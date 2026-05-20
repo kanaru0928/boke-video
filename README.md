@@ -29,8 +29,11 @@ docs/      仕様
 
 ```sh
 pnpm install
+pnpm demo:media
 pnpm dev
 ```
+
+`pnpm demo:media`はOvenMediaEngineをDockerで起動し、`127.0.0.1:3333`でOBSのWHIP入力を受けます。OBSのサーバーには`http://127.0.0.1:3333/live/<roomId>?direction=whip`を入れ、Bearer Tokenは空にします。
 
 ## 検証
 
