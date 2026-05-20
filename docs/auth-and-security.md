@@ -24,12 +24,10 @@ GoバックエンドはCloudflare Accessがオリジンへ付与する`Cf-Access
 
 ## OBS入力
 
-OBS入力はCloudflare Accessで保護しません。WHIP認証、オリジン側のファイアウォール、MediaMTX設定で守ります。視聴用WHEPもCloudflare Accessではなく、MediaMTX到達元のネットワーク制限で守ります。
-
-OBS入力の接続仕様は`docs/streaming.md`を参照します。
+OBS入力はCloudflare Accessで保護しません。映像配信の認証仕様は`docs/streaming.md`を正本にします。
 
 ## CORSとCSP
 
 Goバックエンドは`ALLOWED_ORIGINS`に含まれるWorkersのフロントエンドドメインだけをCORSで許可します。
 
-Content Security Policyは、自分の配信元からのスクリプト、HTTPS/WSS接続、同一オリジンまたはblobのmediaだけを許可します。
+Content Security Policyは、自分の配信元からのスクリプト、HTTPS/WSS接続、同一オリジンまたはblobのmediaだけを許可します。WebRTC接続先はフロントエンドの接続設定に合わせて許可します。

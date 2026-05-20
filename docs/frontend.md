@@ -8,7 +8,7 @@ Cloudflare Workersで静的アセットとして配信します。
 
 ## 責務
 
-- MediaMTXのWHEP映像をWebRTCで再生する
+- WebRTC Media ServerのWHEP映像を再生する
 - コメント入力UIを表示する
 - コメントWebSocketへ接続する
 - 受信コメントを映像上へ描画する
@@ -19,11 +19,11 @@ Cloudflare Workersで静的アセットとして配信します。
 
 - 画面表示はReactコンポーネントに置きます。
 - WebSocket、WHEPプレイヤー、ルーム取得などの副作用はカスタムフックに置きます。
-- コメントの方向ラベル、WHEP接続URLの組み立てなどの純粋な変換処理は関数として分離します。
+- コメントの方向ラベル、WHEP接続URL、視聴トークンの扱いなどの純粋な変換処理は関数として分離します。
 
 ## 設定
 
-API、WHEP、WebSocketの接続先はビルド時のVite環境変数で設定します。Cloudflare AccessとTunnelを含む設定値は`docs/cloudflare.md`を参照します。
+API、WHEP、WebSocketの接続先はビルド時のVite環境変数で設定します。Cloudflare Access、Tunnel、Oracle VCNを含む設定値は`docs/cloudflare.md`を参照します。
 
 ## デプロイ
 

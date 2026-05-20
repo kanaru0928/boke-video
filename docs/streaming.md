@@ -2,74 +2,120 @@
 
 ## 方針
 
-低遅延を優先するため、ブラウザ再生はMediaMTXのWebRTC/WHEPを使います。Goバックエンドは映像を中継しません。
+最新OBSと最新ブラウザを前提に、映像配信はWebRTCで統一します。
 
 ```text
 OBS
-  -> MediaMTX
-  -> WebRTC/WHEP
+  -> WHIP/WebRTC
+  -> WebRTC Media Server
+  -> WHEP/WebRTC
   -> ブラウザ
 ```
 
-コメントとAPIはGoバックエンド、映像はMediaMTXに分けます。
+Goバックエンドは映像を中継しません。映像の受信、視聴者への配信、Simulcastレイヤー選択はWebRTC Media Serverが担当します。
 
 ## OBS入力
 
-OBSはMediaMTXへWHIPで配信します。
+OBSはWHIPでWebRTC Media Serverへ配信します。
 
 | 項目 | 値 |
 | --- | --- |
 | サービス | `WHIP` |
-| サーバー | `https://media.example.com/live/main/whip` |
+| サーバー | `https://ingest.example.com/live/main/whip` |
+| 認証 | Bearer Token |
 
-OBS側はBフレームを0にし、キーフレーム間隔を0.5秒にします。720p/30fpsでは映像ビットレートを1.5Mbpsから2Mbpsにします。音声はOpusを使います。
+OBSはWebRTC Simulcastを使います。複数画質はOBSから同時に送信します。WebRTC Media Serverはレイヤーを選択して配信し、コーデック変換は行いません。
 
-ローカルでは`pnpm dev:obs:local`の起動ログに出る`OBS_WHIP_SERVER`を使います。
+初期設定は次を基準にします。
 
-認証ありの確認では、起動ログの`OBS_BEARER_TOKEN`をOBSのBearer Tokenへ入れます。MediaMTX公式ドキュメントでは、OBSのBearer Tokenには`user:password`の形式でWHIP認証情報を渡せます。
+| 項目 | 値 |
+| --- | --- |
+| 映像コーデック | H.264 |
+| 音声コーデック | Opus |
+| FPS | 30 |
+| キーフレーム間隔 | 1秒 |
+| Bフレーム | 0 |
+| レート制御 | CBR |
+| 品質レイヤー | 1080p、720p、360p |
 
-## MediaMTX
+H.264はWebRTCブラウザで広く扱えるため、iPhone、Android、macOS、Windows、Linuxの最新ブラウザを対象にできます。
 
-本番設定例は`deploy/mediamtx.yml`です。
+## WebRTC Media Server
 
-- WebRTC/WHEPは`:8889`で待ち受けます。
-- WebRTC mediaは`:8189/udp`を使います。
-- WHIP/WHEP以外の配信プロトコルは無効化します。
-- `publisher`ユーザーに`live/*`へのpublish権限を与えます。
-- 視聴者のreadはMediaMTXで許可し、公開範囲はファイアウォールで制限します。
+WebRTC Media ServerはOracle上で動かします。第一候補はOvenMediaEngineです。
 
-MediaMTX公式ドキュメントでは、ブラウザは`/whep`のURLでWebRTCストリームを読めます。OBSはWHIPでMediaMTXへpublishできます。
+必須要件は次です。
+
+- WHIP入力を受けられる
+- WHEP出力を提供できる
+- Simulcastを扱える
+- 視聴者100人未満を1台で扱える
+- WebRTC media用UDPポートを固定または狭い範囲に制限できる
+- WHIPとWHEPの認証を外部トークンで制御できる
+
+映像変換は原則として行いません。画質切り替えはOBSのSimulcastレイヤーをWebRTC Media Serverが選択して実現します。
 
 ## ブラウザ再生
 
-フロントエンドは次のURLへWHEP接続します。
+フロントエンドはWHEPでWebRTC Media Serverへ接続します。
 
 ```text
-https://media.example.com/live/main/whep
+https://rtc.example.com/live/main/whep
 ```
 
 環境変数は次です。
 
 ```text
-VITE_STREAM_BASE_URL=https://media.example.com
+VITE_STREAM_BASE_URL=https://rtc.example.com
 ```
 
-ローカルでは`http://127.0.0.1:8889`を使います。
+ブラウザはWHEPのHTTPシグナリングで接続を開始し、mediaはOracle VCNで開けたUDPポートへ流れます。
+
+## 遅延目標
+
+目標遅延は次です。
+
+| 状態 | 遅延 |
+| --- | ---: |
+| 通常時 | 0.5秒から1.5秒 |
+| 回線品質が低い視聴者を含む実運用 | 1秒から3秒 |
+
+5秒未満を目標とするHTTP系の超低遅延配信ではなく、WebRTCで1秒台を狙います。
+
+## Oracle VCN
+
+Cloudflare TunnelはWebRTC media経路には使いません。WebRTC mediaはOracle VCNで直接到達可能にします。
+
+公開するポートはWebRTC Media Serverの設定に合わせて最小化します。
+
+```text
+443/tcp          WHIP/WHEPのHTTPSシグナリング
+10000-10005/udp  WebRTC media
+```
+
+実際のUDP範囲は採用するWebRTC Media Serverの設定値を正本にします。配信者用WHIPと視聴者用WHEPはホスト名を分けます。
+
+```text
+ingest.example.com  配信者OBS用
+rtc.example.com     視聴者ブラウザ用
+```
+
+## 認証
+
+WHIP入力は配信者用Bearer Tokenで保護します。OBSにはWHIP URLとBearer Tokenを設定します。
+
+WHEP視聴は、Cloudflare Accessで視聴画面へ入ったユーザーに対してGoバックエンドが短寿命トークンを発行し、そのトークンをWHEPシグナリングへ渡します。
+
+UDP media自体をCloudflare Accessで保護しません。認証済みのWHIP/WHEPシグナリングから成立したWebRTC接続だけがmediaを送受信します。
 
 ## 100人視聴時の負荷
 
-WebRTCは視聴者ごとにMediaMTXから映像を送ります。サーバーCPUは映像変換をしない構成なので抑えられますが、上り帯域は視聴者数に比例します。
+WebRTC Media Serverは視聴者ごとにmediaを送信します。上り帯域は視聴者数に比例します。
 
-| 映像ビットレート | 同時100人の上り帯域 |
+| 視聴レイヤー | 同時100人の上り帯域 |
 | --- | ---: |
-| 800kbps | 約80Mbps |
-| 1.5Mbps | 約150Mbps |
-| 3Mbps | 約300Mbps |
+| 360p 500kbps | 約50Mbps |
+| 720p 1.5Mbps | 約150Mbps |
+| 1080p 3Mbps | 約300Mbps |
 
-100人を1台で扱う場合は、720p/30fps、1.5Mbps以下を初期値にします。視聴者数や回線が増える場合は、MediaMTXのread replicaを追加します。
-
-## Cloudflareとの関係
-
-Cloudflare TunnelはAPIとWebSocket用です。低遅延映像のmedia経路をCloudflare Tunnelへ入れません。
-
-本番で外部視聴させる場合は、MediaMTXのWHEP用HTTPポートとWebRTC用UDPポートを到達可能にします。UDPを開けられない環境ではTURNを使いますが、その場合も遅延と帯域負荷は増えます。
+全員が高画質を視聴する前提ではなく、Simulcastレイヤー選択で視聴者の回線に合わせます。

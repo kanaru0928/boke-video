@@ -7,7 +7,7 @@
 ```text
 backend/   Goバックエンド
 frontend/  ViteとTypeScriptのフロントエンド
-deploy/    systemd、cloudflared、MediaMTXの配置サンプル
+deploy/    systemd、cloudflaredの配置サンプル
 docs/      仕様
 ```
 
@@ -17,10 +17,10 @@ docs/      仕様
 
 | ファイル | 内容 |
 | --- | --- |
-| `docs/streaming.md` | OBS入力、MediaMTX、WebRTC/WHEP |
+| `docs/streaming.md` | OBS WHIP入力、WebRTC Media Server、WHEP視聴 |
 | `docs/comments.md` | コメント仕様 |
 | `docs/auth-and-security.md` | Cloudflare Access、管理者判定、セキュリティ |
-| `docs/cloudflare.md` | Cloudflare Access、Tunnel、ローカルデバッグ |
+| `docs/cloudflare.md` | Cloudflare Access、Tunnel、Oracle VCN |
 | `docs/backend.md` | Goバックエンド、API、SQLite、環境変数 |
 | `docs/frontend.md` | フロントエンド、Workers |
 | `docs/deployment.md` | デプロイ手順 |
@@ -29,11 +29,7 @@ docs/      仕様
 
 ```sh
 pnpm install
-pnpm dev:obs:local
 ```
-
-`pnpm dev:obs:local`はローカルOBS入力を使う開発用です。
-Cloudflare AccessとTunnelを使うデバッグ手順は`docs/cloudflare.md`にまとめています。
 
 ## 検証
 
