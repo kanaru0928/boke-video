@@ -31,16 +31,22 @@ rtc.example.com
 
 GoバックエンドはCloudflare Accessが付与する`Cf-Access-Jwt-Assertion`を検証します。映像配信の詳細は`docs/streaming.md`を正本にします。
 
-## ホスト名
+## サブドメインとDNS
 
-| 用途 | 例 | 向き先 |
-| --- | --- | --- |
-| フロントエンド | `https://video.example.com` | Cloudflare Workers |
-| API、WebSocket | `https://stream.example.com` | Cloudflare Tunnel経由のGoバックエンド |
-| OBS入力 | `https://ingest.example.com` | GoバックエンドのWHIP認証入口 |
-| 視聴者向け映像 | `https://rtc.example.com` | WebRTC Media Server |
+| ホスト名 | 用途 | Cloudflare設定 | DNS |
+| --- | --- | --- | --- |
+| `video.example.com` | フロントエンド | Workers Custom Domain | Custom Domain作成時にCloudflareが作成 |
+| `stream.example.com` | API、コメントWebSocket | Cloudflare Tunnel | `<tunnel-id>.cfargotunnel.com`へのCNAME |
+| `ingest.example.com` | OBS WHIP入力 | Cloudflare proxyを使わない | OracleのグローバルIPへのDNS-only A/AAAA |
+| `rtc.example.com` | 視聴者向けWebRTC | Cloudflare proxyを使わない | OracleのグローバルIPへのDNS-only A/AAAA |
 
 Cloudflare Tunnelで扱うのは`stream.example.com`だけです。`ingest.example.com`はOracle上のTLS入口からGoバックエンドへ到達させます。`rtc.example.com`はOracle VCNでWebRTC Media Serverへ到達させます。
+
+`video.example.com`はCloudflare WorkersのCustom Domainとして設定します。Workers RoutesではなくCustom Domainを使い、`video.example.com`全体をフロントエンドWorkerへ向けます。
+
+`stream.example.com`はTunnelの公開ホスト名です。Cloudflare TunnelのDNS routeで`stream.example.com`を作成し、CNAMEを`<tunnel-id>.cfargotunnel.com`へ向けます。
+
+`ingest.example.com`と`rtc.example.com`はWebRTC mediaの都合でCloudflare proxyを通しません。DNS-onlyにするとOracleのIPが公開されるため、Oracle VCNのSecurity ListまたはNetwork Security GroupとOS firewallで公開ポートを最小化します。`3333/tcp`はDNSから到達させず、公開するのは`443/tcp`と`10000-10005/udp`だけです。
 
 ## Access Application
 
@@ -124,9 +130,13 @@ sudo systemctl status ovenmediaengine.service
 
 ## 参考
 
+- Cloudflare Workers Custom Domains: https://developers.cloudflare.com/workers/configuration/routing/custom-domains/
 - Cloudflare Tunnel locally-managed tunnel: https://developers.cloudflare.com/tunnel/advanced/local-management/create-local-tunnel/
 - Cloudflare Tunnel configuration file: https://developers.cloudflare.com/tunnel/advanced/local-management/configuration-file/
 - Cloudflare Tunnel protocols: https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/routing-to-tunnel/protocols/
+- Cloudflare Tunnel routing and DNS records: https://developers.cloudflare.com/tunnel/routing/
+- Cloudflare DNS proxy status: https://developers.cloudflare.com/dns/manage-dns-records/reference/proxied-dns-records/
+- Cloudflare exposed origin IP addresses: https://developers.cloudflare.com/dns/manage-dns-records/troubleshooting/exposed-ip-address/
 - Cloudflare Access JWT validation: https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/
 - Cloudflare Access application: https://developers.cloudflare.com/learning-paths/clientless-access/access-application/create-access-app/
 - Cloudflare Access application paths: https://developers.cloudflare.com/cloudflare-one/access-controls/policies/app-paths/

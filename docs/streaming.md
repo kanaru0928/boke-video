@@ -7,16 +7,17 @@
 ```text
 OBS
   -> WHIP/WebRTC
+  -> GoバックエンドのWHIP認証入口
   -> WebRTC Media Server
   -> OvenMediaEngine WebRTC
   -> ブラウザ
 ```
 
-Goバックエンドは映像を中継しません。映像の受信と視聴者への配信はWebRTC Media Serverが担当します。
+GoバックエンドはWHIPシグナリングのBearer Tokenを検証してOvenMediaEngineへ転送します。WebRTC mediaの受信と視聴者への配信はWebRTC Media Serverが担当します。
 
 ## OBS入力
 
-OBSはWHIPでWebRTC Media Serverへ配信します。ローカルと本番でOBSに入れるパス構造は同じです。
+OBSはWHIPでGoバックエンドのWHIP認証入口へ接続します。ローカルと本番でOBSに入れるパス構造は同じです。
 
 | 項目 | 値 |
 | --- | --- |
