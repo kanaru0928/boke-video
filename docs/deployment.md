@@ -62,7 +62,7 @@ Caddyの実ホスト名は`/etc/boke-video/caddy.env`で指定します。system
 
 Cloudflare Accessは`bokevideo.example.com`と`stream.example.com`を保護します。Goバックエンドは`Cf-Access-Jwt-Assertion`を検証し、署名、`aud`、`iss`、`exp`、`sub`を必須にします。
 
-コメント表示名はユーザー設定で保存した`displayName`だけを使用します。表示名が未設定の場合はコメント投稿を拒否し、メールアドレス、Access JWTの`name`、`sub`へのフォールバックはしません。メールアドレスは保存しません。
+コメント表示名はユーザー設定で保存した`displayName`だけを使用します。プロフィール未作成時はUUIDv4を初期表示名として生成して保存します。メールアドレス、Access JWTの`name`、`sub`へのフォールバックはしません。メールアドレスは保存しません。
 
 管理画面と管理APIへ到達できるユーザーはCloudflare Accessの既存ポリシーで制限します。アプリケーション独自の管理者ロールは持ちません。動画枠の更新、削除、コメント削除、WHIP Token再発行は、動画枠を作成したJWTの`sub`だけに許可します。
 

@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -23,6 +24,8 @@ import (
 	"boke-video/backend/internal/streammonitor"
 	"boke-video/backend/internal/whipproxy"
 )
+
+var uuidV4Pattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
 
 func TestServerStoresCommentAppearance(t *testing.T) {
 	server := newTestServer(t)
@@ -67,7 +70,7 @@ func TestServerStoresCommentAppearance(t *testing.T) {
 	}
 }
 
-func TestServerRejectsCommentWithoutDisplayName(t *testing.T) {
+func TestServerCreatesInitialDisplayNameForComment(t *testing.T) {
 	server := newTestServer(t)
 
 	roomID := createTestRoom(t, server, "配信")
@@ -77,11 +80,53 @@ func TestServerRejectsCommentWithoutDisplayName(t *testing.T) {
 		"color": "#ffffff",
 		"fontSize": "medium"
 	}`)
-	if response.Code != http.StatusBadRequest {
+	if response.Code != http.StatusCreated {
 		t.Fatalf("create comment status = %d, body = %s", response.Code, response.Body.String())
 	}
-	if !strings.Contains(response.Body.String(), "display name is required") {
-		t.Fatalf("create comment body = %s", response.Body.String())
+	var message comment.Message
+	if err := json.NewDecoder(response.Body).Decode(&message); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if !uuidV4Pattern.MatchString(message.Author.DisplayName) {
+		t.Fatalf("message author display name = %q", message.Author.DisplayName)
+	}
+	profile, err := server.repository.GetUserProfile(context.Background(), "local-dev")
+	if err != nil {
+		t.Fatalf("GetUserProfile returned error: %v", err)
+	}
+	if profile.DisplayName != message.Author.DisplayName {
+		t.Fatalf("profile.DisplayName = %q", profile.DisplayName)
+	}
+}
+
+func TestServerCreatesInitialUserProfile(t *testing.T) {
+	server := newTestServer(t)
+
+	response := performRequest(server, http.MethodGet, "/api/me", "")
+	if response.Code != http.StatusOK {
+		t.Fatalf("get profile status = %d, body = %s", response.Code, response.Body.String())
+	}
+	var profile repository.UserProfile
+	if err := json.NewDecoder(response.Body).Decode(&profile); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if profile.Subject != "local-dev" {
+		t.Fatalf("profile.Subject = %q", profile.Subject)
+	}
+	if !uuidV4Pattern.MatchString(profile.DisplayName) {
+		t.Fatalf("profile.DisplayName = %q", profile.DisplayName)
+	}
+
+	secondResponse := performRequest(server, http.MethodGet, "/api/me", "")
+	if secondResponse.Code != http.StatusOK {
+		t.Fatalf("second get profile status = %d, body = %s", secondResponse.Code, secondResponse.Body.String())
+	}
+	var secondProfile repository.UserProfile
+	if err := json.NewDecoder(secondResponse.Body).Decode(&secondProfile); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if secondProfile.DisplayName != profile.DisplayName {
+		t.Fatalf("secondProfile.DisplayName = %q", secondProfile.DisplayName)
 	}
 }
 

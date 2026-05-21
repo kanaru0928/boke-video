@@ -6,7 +6,7 @@
 
 Cloudflare Accessは`bokevideo.example.com`と`stream.example.com`を保護します。Goバックエンドは`Cf-Access-Jwt-Assertion`の署名、`aud`、`iss`、`exp`、`sub`を検証します。
 
-コメント表示名はユーザー設定で保存した`displayName`だけを使用します。表示名が未設定の場合はコメント投稿を拒否し、メールアドレス、Access JWTの`name`、`sub`へのフォールバックはしません。メールアドレスは保存しません。
+コメント表示名はユーザー設定で保存した`displayName`だけを使用します。プロフィール未作成時はUUIDv4を初期表示名として生成して保存します。メールアドレス、Access JWTの`name`、`sub`へのフォールバックはしません。メールアドレスは保存しません。
 
 アプリケーション独自のログイン、セッション、パスワード管理、認証用アカウント管理、管理者ロールは持ちません。ユーザー設定はCloudflare Access JWTの`sub`に紐づく表示名だけを保存します。
 

@@ -1,12 +1,15 @@
 package httpapi
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"net/http"
 	"strings"
 
 	"boke-video/backend/internal/repository"
+
+	"github.com/google/uuid"
 )
 
 type updateUserProfileRequest struct {
@@ -18,17 +21,9 @@ func (s *Server) handleGetMe(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	profile, err := s.repository.GetUserProfile(r.Context(), principal.Subject)
+	profile, err := s.getOrCreateUserProfile(r.Context(), principal.Subject)
 	if err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			s.writeServerError(w, err)
-			return
-		}
-		writeJSON(w, http.StatusOK, repository.UserProfile{
-			Subject:     principal.Subject,
-			DisplayName: "",
-			UpdatedAt:   s.now().UTC(),
-		})
+		s.writeServerError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, profile)
@@ -59,4 +54,23 @@ func (s *Server) handleUpdateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, profile)
+}
+
+func (s *Server) getOrCreateUserProfile(ctx context.Context, subject string) (repository.UserProfile, error) {
+	profile, err := s.repository.GetUserProfile(ctx, subject)
+	if err == nil {
+		return profile, nil
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return repository.UserProfile{}, err
+	}
+	profile = repository.UserProfile{
+		Subject:     subject,
+		DisplayName: uuid.NewString(),
+		UpdatedAt:   s.now().UTC(),
+	}
+	if err := s.repository.UpsertUserProfile(ctx, profile); err != nil {
+		return repository.UserProfile{}, err
+	}
+	return profile, nil
 }

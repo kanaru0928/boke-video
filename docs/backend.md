@@ -100,7 +100,7 @@ CREATE INDEX room_visits_room_id_last_visited_at_index
 
 SQLiteはWALを有効にします。初期規模100人では外部DBを追加しません。
 
-保存するユーザー識別子はCloudflare Access JWTの`sub`だけです。配信ルーム所有者は`owner_sub`、コメント投稿者は`author_sub`、来場者は`visitor_sub`として保存します。ユーザー設定で保存した表示名は`user_profiles.display_name`へ保存します。コメント投稿時は`user_profiles.display_name`だけを`author_display_name`へ保存します。表示名が未設定の場合はコメント投稿を拒否し、メールアドレス、Access JWTの`name`、`sub`へフォールバックしません。認証情報、パスワード、メールアドレス、WHIP Bearer Tokenの平文は保存しません。WHIP Bearer Tokenはハッシュだけを保存します。
+保存するユーザー識別子はCloudflare Access JWTの`sub`だけです。配信ルーム所有者は`owner_sub`、コメント投稿者は`author_sub`、来場者は`visitor_sub`として保存します。ユーザー設定で保存した表示名は`user_profiles.display_name`へ保存します。プロフィール未作成時はUUIDv4を初期表示名として生成し、`user_profiles.display_name`へ保存します。コメント投稿時は`user_profiles.display_name`だけを`author_display_name`へ保存します。メールアドレス、Access JWTの`name`、`sub`へフォールバックしません。認証情報、パスワード、メールアドレス、WHIP Bearer Tokenの平文は保存しません。WHIP Bearer Tokenはハッシュだけを保存します。
 
 `stream_status`は`waiting`、`live`、`ended`のいずれかです。公開枠一覧は`live`だけを返します。OvenMediaEngineでストリームが見えなくなっても`stream_last_seen_at`から`STREAM_END_GRACE_SECONDS`秒以内は`live`を維持し、短い通信断で枠を消しません。猶予を超えた枠は`ended`にして公開枠一覧から外します。
 
