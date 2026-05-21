@@ -2,10 +2,10 @@ pre-commit:
   parallel: true
   commands:
     biome:
-      run: pnpm biome check .
+      run: pnpm --dir frontend run biome
     knip:
       run: pnpm knip
-    frontend-typecheck:
+    typecheck:
       run: pnpm --dir frontend run typecheck
     frontend-test:
       run: pnpm --dir frontend run test
