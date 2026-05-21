@@ -112,6 +112,7 @@ SQLiteはWALを有効にします。初期規模100人では外部DBを追加し
 LISTEN_ADDR=127.0.0.1:8080
 DATABASE_PATH=/var/lib/boke-video/boke-video.sqlite3
 STREAM_PUBLIC_BASE_URL=https://rtc.example.com
+STREAM_SIGNING_BASE_URL=http://rtc.example.com:3333
 STREAM_SIGNING_SECRET=replace-with-strong-secret
 WHIP_UPSTREAM_BASE_URL=http://127.0.0.1:3333
 OME_API_BASE_URL=http://127.0.0.1:8081

@@ -110,6 +110,8 @@ VITE_INGEST_BASE_URL=https://ingest.example.com
 
 `STREAM_SIGNING_SECRET`、`OME_API_ACCESS_TOKEN`、`CLOUDFLARE_TUNNEL_TOKEN`はフロントエンドのビルドに不要です。Workers Buildsへ入れません。
 
+Goバックエンドは視聴者へ`wss://rtc.example.com/...`を返しますが、OvenMediaEngineはCaddyから受け取る内部WebSocket URLでSignedPolicyを検証します。そのため、生成される`deploy/backend/backend.env`には`STREAM_PUBLIC_BASE_URL=https://rtc.example.com`と`STREAM_SIGNING_BASE_URL=http://rtc.example.com:3333`を両方書きます。
+
 ## 環境変数
 
 本番の入力は`.env.production`へ集約します。

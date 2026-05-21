@@ -12,9 +12,10 @@ import (
 
 func TestSignerBuildsOvenMediaEngineSignedPlaybackURL(t *testing.T) {
 	signer, err := NewSigner(Config{
-		BaseURL: "https://rtc.example.com",
-		Secret:  "secret",
-		TTL:     time.Minute,
+		PublicBaseURL:  "https://rtc.example.com",
+		SigningBaseURL: "http://rtc.example.com:3333",
+		Secret:         "secret",
+		TTL:            time.Minute,
 		Now: func() time.Time {
 			return time.Unix(1000, 0).UTC()
 		},
@@ -35,7 +36,7 @@ func TestSignerBuildsOvenMediaEngineSignedPlaybackURL(t *testing.T) {
 	if parsedURL.String() != signedURL {
 		t.Fatalf("signed URL is not normalized: %q", signedURL)
 	}
-	if parsedURL.Host != "rtc.example.com:443" {
+	if parsedURL.Host != "rtc.example.com" {
 		t.Fatalf("host = %q", parsedURL.Host)
 	}
 	if parsedURL.Scheme != "wss" {
@@ -71,16 +72,18 @@ func TestSignerBuildsOvenMediaEngineSignedPlaybackURL(t *testing.T) {
 
 	query.Del("signature")
 	parsedURL.RawQuery = query.Encode()
-	if signature != expectedSignature("secret", parsedURL.String()) {
-		t.Fatalf("signature = %q, signed input = %q", signature, parsedURL.String())
+	signingURL := "ws://rtc.example.com:3333/live/main/master?policy=" + policyValue
+	if signature != expectedSignature("secret", signingURL) {
+		t.Fatalf("signature = %q, signed input = %q", signature, signingURL)
 	}
 }
 
 func TestSignerBuildsPlaybackAccessVariants(t *testing.T) {
 	signer, err := NewSigner(Config{
-		BaseURL: "https://rtc.example.com",
-		Secret:  "secret",
-		TTL:     time.Minute,
+		PublicBaseURL:  "https://rtc.example.com",
+		SigningBaseURL: "http://rtc.example.com:3333",
+		Secret:         "secret",
+		TTL:            time.Minute,
 		Now: func() time.Time {
 			return time.Unix(1000, 0).UTC()
 		},
@@ -129,8 +132,9 @@ func TestSignerBuildsPlaybackAccessVariants(t *testing.T) {
 
 func TestSignerRejectsMissingSecret(t *testing.T) {
 	_, err := NewSigner(Config{
-		BaseURL: "https://rtc.example.com",
-		TTL:     time.Minute,
+		PublicBaseURL:  "https://rtc.example.com",
+		SigningBaseURL: "http://rtc.example.com:3333",
+		TTL:            time.Minute,
 	})
 	if err == nil {
 		t.Fatal("NewSigner returned nil error")

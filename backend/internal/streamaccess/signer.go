@@ -13,17 +13,19 @@ import (
 )
 
 type Signer struct {
-	baseURL *url.URL
-	secret  []byte
-	ttl     time.Duration
-	now     func() time.Time
+	publicBaseURL  *url.URL
+	signingBaseURL *url.URL
+	secret         []byte
+	ttl            time.Duration
+	now            func() time.Time
 }
 
 type Config struct {
-	BaseURL string
-	Secret  string
-	TTL     time.Duration
-	Now     func() time.Time
+	PublicBaseURL  string
+	SigningBaseURL string
+	Secret         string
+	TTL            time.Duration
+	Now            func() time.Time
 }
 
 type policy struct {
@@ -48,16 +50,15 @@ type PlaybackPlaylist struct {
 }
 
 func NewSigner(cfg Config) (*Signer, error) {
-	baseURL, err := url.Parse(strings.TrimSpace(cfg.BaseURL))
+	publicBaseURL, err := parseBaseURL(cfg.PublicBaseURL, "stream public base url")
 	if err != nil {
 		return nil, err
 	}
-	if baseURL.Scheme != "https" && baseURL.Scheme != "http" {
-		return nil, errors.New("stream base url must use http or https")
+	signingBaseURL, err := parseBaseURL(cfg.SigningBaseURL, "stream signing base url")
+	if err != nil {
+		return nil, err
 	}
-	if baseURL.Host == "" {
-		return nil, errors.New("stream base url must include host")
-	}
+
 	secret := strings.TrimSpace(cfg.Secret)
 	if secret == "" {
 		return nil, errors.New("stream signing secret is required")
@@ -71,17 +72,36 @@ func NewSigner(cfg Config) (*Signer, error) {
 		now = time.Now
 	}
 
-	baseURL.Path = ""
-	baseURL.RawQuery = ""
-	baseURL.Fragment = ""
-	baseURL.Host = hostWithPort(baseURL)
+	publicBaseURL.Path = ""
+	publicBaseURL.RawQuery = ""
+	publicBaseURL.Fragment = ""
+
+	signingBaseURL.Path = ""
+	signingBaseURL.RawQuery = ""
+	signingBaseURL.Fragment = ""
+	signingBaseURL.Host = hostWithPort(signingBaseURL)
 
 	return &Signer{
-		baseURL: baseURL,
-		secret:  []byte(secret),
-		ttl:     ttl,
-		now:     now,
+		publicBaseURL:  publicBaseURL,
+		signingBaseURL: signingBaseURL,
+		secret:         []byte(secret),
+		ttl:            ttl,
+		now:            now,
 	}, nil
+}
+
+func parseBaseURL(value string, label string) (*url.URL, error) {
+	baseURL, err := url.Parse(strings.TrimSpace(value))
+	if err != nil {
+		return nil, err
+	}
+	if baseURL.Scheme != "https" && baseURL.Scheme != "http" {
+		return nil, errors.New(label + " must use http or https")
+	}
+	if baseURL.Host == "" {
+		return nil, errors.New(label + " must include host")
+	}
+	return baseURL, nil
 }
 
 func (s *Signer) SignedPlaybackURL(roomID string) (string, error) {
@@ -136,20 +156,25 @@ func (s *Signer) signedPlaybackURL(roomID string, playlistName string) (string, 
 		return "", err
 	}
 
-	signedURL := *s.baseURL
-	signedURL.Scheme = playbackScheme(signedURL.Scheme)
-	signedURL.Path = "/live/" + url.PathEscape(roomID)
+	publicURL := *s.publicBaseURL
+	publicURL.Scheme = playbackScheme(publicURL.Scheme)
+	publicURL.Path = "/live/" + url.PathEscape(roomID)
 	if playlistName != "" {
-		signedURL.Path += "/" + url.PathEscape(playlistName)
+		publicURL.Path += "/" + url.PathEscape(playlistName)
 	}
-	query := signedURL.Query()
+	query := publicURL.Query()
 	query.Set("policy", policyValue)
-	signedURL.RawQuery = query.Encode()
+	publicURL.RawQuery = query.Encode()
 
-	signature := sign(s.secret, signedURL.String())
+	signingURL := *s.signingBaseURL
+	signingURL.Scheme = playbackScheme(signingURL.Scheme)
+	signingURL.Path = publicURL.Path
+	signingURL.RawQuery = publicURL.RawQuery
+
+	signature := sign(s.secret, signingURL.String())
 	query.Set("signature", signature)
-	signedURL.RawQuery = query.Encode()
-	return signedURL.String(), nil
+	publicURL.RawQuery = query.Encode()
+	return publicURL.String(), nil
 }
 
 func playbackScheme(scheme string) string {

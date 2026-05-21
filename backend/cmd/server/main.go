@@ -51,9 +51,10 @@ func main() {
 	go commentHub.Run(context.Background())
 
 	streamAccess, err := streamaccess.NewSigner(streamaccess.Config{
-		BaseURL: cfg.StreamPublicBaseURL,
-		Secret:  cfg.StreamSigningSecret,
-		TTL:     time.Minute,
+		PublicBaseURL:  cfg.StreamPublicBaseURL,
+		SigningBaseURL: cfg.StreamSigningBaseURL,
+		Secret:         cfg.StreamSigningSecret,
+		TTL:            time.Minute,
 	})
 	if err != nil {
 		logger.Error("configure stream access", "error", err)

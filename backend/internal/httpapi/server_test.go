@@ -348,7 +348,7 @@ func TestServerCreatesSignedStreamAccess(t *testing.T) {
 	if parsed.PlaybackURL == "" {
 		t.Fatal("playbackUrl is empty")
 	}
-	if !strings.HasPrefix(parsed.PlaybackURL, "wss://rtc.example.com:443/live/"+roomID+"/master?") {
+	if !strings.HasPrefix(parsed.PlaybackURL, "wss://rtc.example.com/live/"+roomID+"/master?") {
 		t.Fatalf("playbackUrl = %q", parsed.PlaybackURL)
 	}
 	if !strings.Contains(parsed.PlaybackURL, "policy=") {
@@ -364,7 +364,7 @@ func TestServerCreatesSignedStreamAccess(t *testing.T) {
 	if variant.ID != "layer-1" || variant.Label != "360p" {
 		t.Fatalf("playback variant = %#v", variant)
 	}
-	if !strings.HasPrefix(variant.PlaybackURL, "wss://rtc.example.com:443/live/"+roomID+"/layer-1?") {
+	if !strings.HasPrefix(variant.PlaybackURL, "wss://rtc.example.com/live/"+roomID+"/layer-1?") {
 		t.Fatalf("variant playbackUrl = %q", variant.PlaybackURL)
 	}
 	if !strings.Contains(variant.PlaybackURL, "policy=") {
@@ -745,9 +745,10 @@ func newTestServer(t *testing.T) *Server {
 	}
 
 	streamAccess, err := streamaccess.NewSigner(streamaccess.Config{
-		BaseURL: "https://rtc.example.com",
-		Secret:  "secret",
-		TTL:     time.Minute,
+		PublicBaseURL:  "https://rtc.example.com",
+		SigningBaseURL: "http://rtc.example.com:3333",
+		Secret:         "secret",
+		TTL:            time.Minute,
 		Now: func() time.Time {
 			return time.Unix(1000, 0).UTC()
 		},
