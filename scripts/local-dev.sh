@@ -18,7 +18,29 @@ wait_for_url() {
   exit 1
 }
 
+wait_for_port() {
+  port="$1"
+  label="$2"
+  remaining=60
+  while [ "${remaining}" -gt 0 ]; do
+    if lsof -tiTCP:"${port}" -sTCP:LISTEN >/dev/null; then
+      return
+    fi
+    if [ -n "${MEDIA_PID:-}" ] && ! kill -0 "${MEDIA_PID}" 2>/dev/null; then
+      echo "${label} stopped before opening port ${port}" >&2
+      exit 1
+    fi
+    remaining=$((remaining - 1))
+    sleep 1
+  done
+  echo "${label} did not open port ${port}" >&2
+  exit 1
+}
+
 cleanup() {
+  if [ -n "${MEDIA_PID:-}" ]; then
+    kill "${MEDIA_PID}" 2>/dev/null || true
+  fi
   if [ -n "${BACKEND_PID:-}" ]; then
     kill "${BACKEND_PID}" 2>/dev/null || true
   fi
@@ -39,6 +61,17 @@ if lsof -tiTCP:5173 -sTCP:LISTEN >/dev/null; then
 fi
 
 command -v curl >/dev/null
+
+MEDIA_PID=""
+if lsof -tiTCP:3333 -sTCP:LISTEN >/dev/null || lsof -tiTCP:8081 -sTCP:LISTEN >/dev/null || lsof -tiTCP:20080 -sTCP:LISTEN >/dev/null; then
+  echo "media: using existing OvenMediaEngine ports"
+else
+  "${ROOT_DIR}/scripts/local-media.sh" &
+  MEDIA_PID="$!"
+fi
+wait_for_port 3333 "media"
+wait_for_port 8081 "media api"
+wait_for_port 20080 "media thumbnail"
 
 "${ROOT_DIR}/scripts/local-backend.sh" &
 BACKEND_PID="$!"
