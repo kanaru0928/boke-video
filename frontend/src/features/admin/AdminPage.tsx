@@ -34,14 +34,6 @@ export function AdminPage({ config }: AdminPageProps) {
     rotateIngestTokenByRoomId,
     updateRoomTitleById,
   } = useAdminRooms(config);
-  const latestTokenRoomId = Object.keys(whipTokensByRoomId).at(-1) ?? null;
-  const selectedObsRoom = latestTokenRoomId
-    ? (rooms.find((room) => room.id === latestTokenRoomId) ?? null)
-    : (rooms[0] ?? null);
-  const selectedObsToken =
-    selectedObsRoom === null
-      ? null
-      : (whipTokensByRoomId[selectedObsRoom.id] ?? null);
 
   const submitRoom = async (
     event: FormEvent<HTMLFormElement>,
@@ -110,14 +102,7 @@ export function AdminPage({ config }: AdminPageProps) {
   return (
     <section className={appShellClassName}>
       <AppHeader section="ADMIN" links={[{ href: "/", label: "枠一覧" }]} />
-      <ObsSettings
-        serverUrl={
-          selectedObsRoom === null
-            ? null
-            : buildWhipIngestUrl(config, selectedObsRoom.id)
-        }
-        bearerToken={selectedObsToken}
-      />
+      <ObsSettings />
       <Board icon={MonitorPlay} title="番組管理">
         <form
           className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] gap-[5px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2"
@@ -148,6 +133,7 @@ export function AdminPage({ config }: AdminPageProps) {
               onRotateIngestToken={rotateIngestToken}
               onUpdateTitle={updateRoomTitleById}
               room={room}
+              serverUrl={buildWhipIngestUrl(config, room.id)}
               whipBearerToken={whipTokensByRoomId[room.id] ?? null}
             />
           ))}

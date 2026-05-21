@@ -18,6 +18,7 @@ type AdminRoomProps = {
   onRotateIngestToken: (roomId: string) => Promise<void>;
   onUpdateTitle: (roomId: string, title: string) => Promise<void>;
   room: Room;
+  serverUrl: string;
   whipBearerToken: string | null;
 };
 
@@ -29,6 +30,7 @@ export function AdminRoom({
   onRotateIngestToken,
   onUpdateTitle,
   room,
+  serverUrl,
   whipBearerToken,
 }: AdminRoomProps) {
   const [title, setTitle] = useState(room.title);
@@ -50,16 +52,20 @@ export function AdminRoom({
         <p className="m-0 [overflow-wrap:anywhere] font-[Arial,sans-serif] text-xs text-[#666666]">
           {room.id}
         </p>
-        {whipBearerToken !== null ? (
-          <p className="m-0 [overflow-wrap:anywhere] font-mono text-xs">
-            {whipBearerToken}
-          </p>
-        ) : null}
+        <dl className="grid gap-[4px] border border-[#c9c9c9] bg-[#f7f7f7] p-[6px]">
+          <AdminRoomSetting label="サーバー" value={serverUrl} />
+          <AdminRoomSetting
+            label="Bearer Token"
+            value={whipBearerToken ?? "作成時または再発行時に表示します"}
+          />
+        </dl>
       </div>
       <div className="flex flex-wrap justify-end gap-[5px] max-[860px]:justify-start">
         <a
           className={buttonClassName()}
           href={`/watch?room=${encodeURIComponent(room.id)}`}
+          rel="noreferrer"
+          target="_blank"
         >
           <ExternalLink aria-hidden="true" size={17} />
           開く
@@ -118,5 +124,21 @@ export function AdminRoom({
         </section>
       ) : null}
     </article>
+  );
+}
+
+type AdminRoomSettingProps = {
+  label: string;
+  value: string;
+};
+
+function AdminRoomSetting({ label, value }: AdminRoomSettingProps) {
+  return (
+    <div className="grid grid-cols-[110px_minmax(0,1fr)] gap-2 max-[520px]:grid-cols-1 max-[520px]:gap-1">
+      <dt className="font-extrabold">{label}</dt>
+      <dd className="m-0 [overflow-wrap:anywhere] font-[Arial,sans-serif] text-xs">
+        {value}
+      </dd>
+    </div>
   );
 }

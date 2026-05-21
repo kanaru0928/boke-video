@@ -1,24 +1,13 @@
 import { RadioTower } from "lucide-react";
 import { Board } from "../../shared/ui/Board";
 
-type ObsSettingsProps = {
-  serverUrl: string | null;
-  bearerToken: string | null;
-};
-
-export function ObsSettings({ serverUrl, bearerToken }: ObsSettingsProps) {
+export function ObsSettings() {
   return (
     <Board icon={RadioTower} title="OBS設定">
       <section className="grid gap-[6px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2">
         <ObsSettingRow label="サービス" value="WHIP" />
-        <ObsSettingRow
-          label="サーバー"
-          value={serverUrl ?? "枠を作成すると表示します"}
-        />
-        <ObsSettingRow
-          label="Bearer Token"
-          value={bearerToken ?? "作成時または再発行時に表示します"}
-        />
+        <ObsSettingRow label="サーバー" value="各配信枠のサーバーを入力" />
+        <ObsSettingRow label="Bearer Token" value="各配信枠のTokenを入力" />
       </section>
     </Board>
   );
