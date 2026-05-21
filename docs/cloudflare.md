@@ -31,7 +31,7 @@ Access Applicationはdeny by defaultにします。
 | バックエンド | `stream.example.com` | 既存ポリシー |
 | 管理画面用API | `stream.example.com/api/admin/*` | 既存ポリシー |
 
-GoバックエンドはAccess JWTの署名、`aud`、`iss`、`exp`、`sub`を検証します。`sub`は動画枠所有者の判定に使います。
+GoバックエンドはAccess JWTの署名、`aud`、`iss`、`exp`、`sub`を検証します。`sub`は動画枠所有者の判定に使います。コメント表示名はAccess JWTの`name`だけを使用し、メールアドレスや`sub`へのフォールバックはしません。メールアドレスは保存しません。
 
 ## Tunnel
 

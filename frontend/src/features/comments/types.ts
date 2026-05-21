@@ -22,7 +22,6 @@ export type CommentMessage = {
 
 export type CommentAuthor = {
   subject: string;
-  email: string;
   displayName: string;
 };
 

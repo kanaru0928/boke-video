@@ -42,7 +42,6 @@ type Message struct {
 
 type Author struct {
 	Subject     string `json:"subject"`
-	Email       string `json:"email"`
 	DisplayName string `json:"displayName"`
 }
 
@@ -50,7 +49,6 @@ type StoredComment struct {
 	ID                string
 	RoomID            string
 	AuthorSub         string
-	AuthorEmail       string
 	AuthorDisplayName string
 	Body              string
 	Direction         Direction

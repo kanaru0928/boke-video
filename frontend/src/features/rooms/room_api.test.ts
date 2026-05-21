@@ -55,7 +55,6 @@ describe("isCommentMessage", () => {
         roomId: "room-1",
         author: {
           subject: "user-1",
-          email: "user-1@example.test",
           displayName: "user-1",
         },
         body: "こんにちは",

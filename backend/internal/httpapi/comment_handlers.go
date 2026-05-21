@@ -137,7 +137,6 @@ func (s *Server) createCommentFromRequest(ctx context.Context, roomID string, pr
 		ID:                newID(),
 		RoomID:            roomID,
 		AuthorSub:         principal.Subject,
-		AuthorEmail:       principal.Email,
 		AuthorDisplayName: principal.DisplayName(),
 		Body:              validReq.Body,
 		Direction:         validReq.Direction,
@@ -159,7 +158,6 @@ func storedToMessage(stored comment.StoredComment) comment.Message {
 		CommentID: stored.ID,
 		Author: comment.Author{
 			Subject:     stored.AuthorSub,
-			Email:       stored.AuthorEmail,
 			DisplayName: stored.AuthorDisplayName,
 		},
 		Body:      stored.Body,

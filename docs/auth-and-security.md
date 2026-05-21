@@ -6,6 +6,8 @@
 
 Cloudflare Accessは`bokevideo.example.com`と`stream.example.com`を保護します。Goバックエンドは`Cf-Access-Jwt-Assertion`の署名、`aud`、`iss`、`exp`、`sub`を検証します。
 
+コメント表示名はAccess JWTの`name`だけを使用します。メールアドレスや`sub`へのフォールバックはしません。メールアドレスは保存しません。
+
 アプリケーション独自のログイン、セッション、パスワード管理、アカウント管理、管理者ロールは持ちません。
 
 ## 所有者判定

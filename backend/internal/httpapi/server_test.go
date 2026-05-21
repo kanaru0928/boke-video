@@ -61,9 +61,6 @@ func TestServerStoresCommentAppearance(t *testing.T) {
 	if messages[0].Author.Subject != "local-dev" {
 		t.Fatalf("message author subject = %q", messages[0].Author.Subject)
 	}
-	if messages[0].Author.Email != "local-dev@example.test" {
-		t.Fatalf("message author email = %q", messages[0].Author.Email)
-	}
 	if messages[0].Author.DisplayName != "local-dev" {
 		t.Fatalf("message author display name = %q", messages[0].Author.DisplayName)
 	}
@@ -319,7 +316,6 @@ func TestServerRejectsAdminMutationForAnotherOwner(t *testing.T) {
 		ID:                "other-comment",
 		RoomID:            roomID,
 		AuthorSub:         "viewer",
-		AuthorEmail:       "viewer@example.test",
 		AuthorDisplayName: "viewer",
 		Body:              "こんにちは",
 		Direction:         comment.DirectionRightToLeft,

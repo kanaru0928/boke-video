@@ -64,6 +64,7 @@ CREATE TABLE comments (
   id TEXT PRIMARY KEY,
   room_id TEXT NOT NULL,
   author_sub TEXT NOT NULL,
+  author_display_name TEXT NOT NULL,
   body TEXT NOT NULL,
   direction TEXT NOT NULL,
   color TEXT NOT NULL,
@@ -91,7 +92,7 @@ CREATE INDEX room_visits_room_id_last_visited_at_index
 
 SQLiteはWALを有効にします。初期規模100人では外部DBを追加しません。
 
-保存するユーザー識別子はCloudflare Access JWTの`sub`だけです。認証情報、パスワード、メールアドレス、WHIP Bearer Tokenの平文は保存しません。配信ルーム所有者は`owner_sub`、コメント投稿者は`author_sub`、来場者は`visitor_sub`として保存します。WHIP Bearer Tokenはハッシュだけを保存します。
+保存するユーザー識別子はCloudflare Access JWTの`sub`だけです。配信ルーム所有者は`owner_sub`、コメント投稿者は`author_sub`、来場者は`visitor_sub`として保存します。コメント表示名はCloudflare Access JWTの`name`だけを投稿時に`author_display_name`へ保存します。`name`が空でもメールアドレスや`sub`へフォールバックしません。認証情報、パスワード、メールアドレス、WHIP Bearer Tokenの平文は保存しません。WHIP Bearer Tokenはハッシュだけを保存します。
 
 `stream_status`は`waiting`、`live`、`ended`のいずれかです。公開枠一覧は`live`だけを返します。OvenMediaEngineでストリームが見えなくなっても`stream_last_seen_at`から`STREAM_END_GRACE_SECONDS`秒以内は`live`を維持し、短い通信断で枠を消しません。猶予を超えた枠は`ended`にして公開枠一覧から外します。
 

@@ -30,9 +30,7 @@ function isCommentAuthor(value: unknown): boolean {
   }
   const author = value as Record<string, unknown>;
   return (
-    typeof author.subject === "string" &&
-    typeof author.email === "string" &&
-    typeof author.displayName === "string"
+    typeof author.subject === "string" && typeof author.displayName === "string"
   );
 }
 

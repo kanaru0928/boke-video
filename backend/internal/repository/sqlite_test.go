@@ -40,7 +40,6 @@ func TestSQLiteStoresRoomAndComment(t *testing.T) {
 		ID:                "comment-1",
 		RoomID:            room.ID,
 		AuthorSub:         "user-1",
-		AuthorEmail:       "user-1@example.test",
 		AuthorDisplayName: "user-1",
 		Body:              "こんにちは",
 		Direction:         comment.DirectionRightToLeft,
@@ -64,9 +63,6 @@ func TestSQLiteStoresRoomAndComment(t *testing.T) {
 	}
 	if comments[0].AuthorSub != stored.AuthorSub {
 		t.Fatalf("comment author sub = %q", comments[0].AuthorSub)
-	}
-	if comments[0].AuthorEmail != stored.AuthorEmail {
-		t.Fatalf("comment author email = %q", comments[0].AuthorEmail)
 	}
 	if comments[0].AuthorDisplayName != stored.AuthorDisplayName {
 		t.Fatalf("comment author display name = %q", comments[0].AuthorDisplayName)
