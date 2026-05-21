@@ -11,6 +11,7 @@ import {
 import { streamStatusMessage } from "./watch_stream";
 
 type UseStreamPlayerResult = {
+  isStreamLoading: boolean;
   playbackQualities: PlaybackQualityOption[];
   streamMessage: string;
 };
@@ -28,6 +29,7 @@ export function useStreamPlayer(
   const [playbackQualities, setPlaybackQualities] = useState<
     PlaybackQualityOption[]
   >([]);
+  const [isStreamLoading, setIsStreamLoading] = useState(false);
   const [streamMessage, setStreamMessage] = useState(
     streamStatusMessage(streamStatus),
   );
@@ -65,12 +67,14 @@ export function useStreamPlayer(
     const attachStreamWhenReady = async (): Promise<void> => {
       if (roomId === "") {
         setPlaybackQualities([]);
+        setIsStreamLoading(false);
         setStreamMessage(streamStatusMessage(streamStatus));
         return;
       }
       if (streamStatus === "ended") {
         detachStream();
         setPlaybackQualities([]);
+        setIsStreamLoading(false);
         setStreamMessage(streamStatusMessage(streamStatus));
         return;
       }
@@ -83,11 +87,16 @@ export function useStreamPlayer(
 
       try {
         if (videoRef.current === null) {
+          setIsStreamLoading(false);
           return;
         }
+        setIsStreamLoading(true);
         const streamAccess = await fetchStreamAccess(config, roomId);
         if (streamAccess === null) {
           throw new Error("stream access was not issued");
+        }
+        if (canceled) {
+          return;
         }
         const qualityOptions = playbackQualityOptions(
           streamAccess.playbackUrl,
@@ -115,6 +124,7 @@ export function useStreamPlayer(
         }
         attachedRoomIdRef.current = roomId;
         attachedQualityIdRef.current = quality.id;
+        setIsStreamLoading(false);
         setStreamMessage("");
         return;
       } catch {
@@ -123,6 +133,7 @@ export function useStreamPlayer(
         }
         detachStream();
         setPlaybackQualities([]);
+        setIsStreamLoading(false);
         setStreamMessage(streamStatusMessage(streamStatus));
         scheduleReconnect();
       }
@@ -136,5 +147,5 @@ export function useStreamPlayer(
     };
   }, [config, roomId, selectedQualityId, streamStatus, videoRef]);
 
-  return { playbackQualities, streamMessage };
+  return { isStreamLoading, playbackQualities, streamMessage };
 }

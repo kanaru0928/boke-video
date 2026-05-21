@@ -42,6 +42,21 @@ export const streamStatusClassName = cn(
   "[text-shadow:2px_2px_0_#000000,-1px_-1px_0_#000000] max-[520px]:text-[23px]",
 );
 
+export const streamLoadingClassName = cn(
+  "pointer-events-none absolute inset-0 z-20 grid place-items-center p-5 text-center text-white",
+  "[text-shadow:2px_2px_0_#000000,-1px_-1px_0_#000000]",
+);
+
+export const streamLoadingPanelClassName = cn(
+  "grid place-items-center gap-2 rounded-sm border border-[#6d6d6d] bg-[rgb(0_0_0_/_72%)] px-5 py-4",
+  "shadow-[2px_2px_0_rgb(0_0_0_/_65%),inset_1px_1px_0_rgb(255_255_255_/_18%)]",
+);
+
+export const streamLoadingIconClassName =
+  "size-9 animate-spin text-[#4ab8ff] max-[520px]:size-8";
+
+export const streamLoadingTextClassName = "text-sm font-extrabold leading-none";
+
 export const playerControlsClassName = cn(
   "pointer-events-none absolute inset-x-0 bottom-0 z-20 flex min-h-[45px] items-center justify-between gap-2 opacity-0",
   "border-t border-t-[rgb(255_255_255_/_28%)] bg-[linear-gradient(rgb(0_0_0_/_10%),rgb(0_0_0_/_72%))] px-[10px] py-[6px] text-white",
@@ -59,27 +74,27 @@ export const liveBadgeClassName =
   "font-[Arial,sans-serif] text-[13px] font-extrabold tracking-normal text-[#ff134f] [text-shadow:1px_1px_0_#000000]";
 
 export const settingsChipClassName = cn(
-  "absolute right-0 bottom-[42px] z-30 w-[260px] border border-[#e00000] bg-[#050505] p-[6px] text-xs text-white",
-  "shadow-[2px_2px_0_rgb(0_0_0_/_55%)] max-[520px]:right-[-38px] max-[520px]:w-[230px]",
+  "absolute right-0 bottom-[46px] z-30 w-[312px] max-w-[calc(100vw-24px)] border border-[#666666] bg-[#050505] p-[7px] text-xs text-white",
+  "shadow-[2px_2px_0_rgb(0_0_0_/_65%),inset_1px_1px_0_rgb(255_255_255_/_18%)] max-[520px]:right-[-42px] max-[520px]:w-[268px]",
 );
 
 export const settingsChipHeadingClassName =
-  "m-0 border-b border-[#555555] pb-[5px] font-extrabold";
+  "m-0 border-b border-[#666666] pb-[6px] text-sm font-extrabold [text-shadow:1px_1px_0_#000000]";
 
 export const settingsChipRowClassName = cn(
-  "m-0 grid grid-cols-[74px_minmax(0,1fr)] items-center gap-[6px] border-0 border-b border-[#333333] px-0 py-[6px]",
-  "[&_legend]:contents [&_legend]:font-extrabold [&_legend]:text-white",
+  "m-0 grid grid-cols-[70px_minmax(0,1fr)] items-start gap-[7px] border-0 border-b border-[#333333] px-0 py-[7px] last:border-b-0",
+  "[&_legend]:contents [&_legend]:pt-[4px] [&_legend]:font-extrabold [&_legend]:text-white",
 );
 
 export const settingsChipSegmentClassName =
-  "grid min-w-0 grid-flow-col auto-cols-fr gap-[4px]";
+  "flex min-w-0 flex-wrap justify-end gap-[4px]";
 
 export const settingsChipSegmentInputClassName =
   "peer pointer-events-none absolute m-0 h-px w-px opacity-0";
 
 export const settingsChipSegmentTextClassName = cn(
-  "grid min-h-[22px] cursor-pointer select-none grid-flow-col place-items-center justify-center gap-1 rounded-[10px] border border-[#333333]",
-  "bg-[linear-gradient(#4d4d4d,#1b1b1b)] px-[8px] py-[3px] text-[11px] leading-none text-[#eeeeee]",
+  "grid min-h-[26px] cursor-pointer select-none grid-flow-col place-items-center justify-center gap-1 whitespace-nowrap rounded-[13px] border border-[#3f3f3f]",
+  "bg-[linear-gradient(#4d4d4d,#1b1b1b)] px-[9px] py-[4px] text-[11px] leading-none text-[#eeeeee]",
   "peer-checked:border-[#7fbdff] peer-checked:bg-[linear-gradient(#4dc7ff,#006fd8)] peer-checked:font-extrabold peer-checked:text-white",
   "peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-[#ffffff]",
 );

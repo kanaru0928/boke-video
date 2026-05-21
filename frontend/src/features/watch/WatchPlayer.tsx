@@ -1,4 +1,5 @@
 import {
+  LoaderCircle,
   Maximize,
   Pause,
   Play,
@@ -20,6 +21,10 @@ import {
   playerControlsClassName,
   playTimeClassName,
   stageClassName,
+  streamLoadingClassName,
+  streamLoadingIconClassName,
+  streamLoadingPanelClassName,
+  streamLoadingTextClassName,
   streamStatusClassName,
   videoElementClassName,
 } from "./watchStyles";
@@ -34,6 +39,7 @@ type WatchPlayerProps = {
   elapsedSeconds: number;
   isMuted: boolean;
   isPaused: boolean;
+  isStreamLoading: boolean;
   onToggleFullscreen: () => void;
   onToggleMuted: () => void;
   onTogglePlayback: () => void;
@@ -58,6 +64,7 @@ export function WatchPlayer({
   elapsedSeconds,
   isMuted,
   isPaused,
+  isStreamLoading,
   onToggleFullscreen,
   onToggleMuted,
   onTogglePlayback,
@@ -94,7 +101,17 @@ export function WatchPlayer({
         ref={commentsLayerRef}
         className={cn(commentsLayerClassName, !commentsVisible && "hidden")}
       />
-      {streamMessage !== "" ? (
+      {isStreamLoading ? (
+        <div className={streamLoadingClassName}>
+          <div className={streamLoadingPanelClassName}>
+            <LoaderCircle
+              aria-hidden="true"
+              className={streamLoadingIconClassName}
+            />
+            <span className={streamLoadingTextClassName}>読み込み中</span>
+          </div>
+        </div>
+      ) : streamMessage !== "" ? (
         <div className={streamStatusClassName}>{streamMessage}</div>
       ) : null}
       <div className={playerControlsClassName}>

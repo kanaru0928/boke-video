@@ -60,7 +60,7 @@ export function WatchPage({ config }: WatchPageProps) {
     selectedRoomId,
     renderAndRecordComment,
   );
-  const { playbackQualities, streamMessage } = useStreamPlayer(
+  const { isStreamLoading, playbackQualities, streamMessage } = useStreamPlayer(
     config,
     selectedRoomId,
     streamStatus,
@@ -174,6 +174,7 @@ export function WatchPage({ config }: WatchPageProps) {
             elapsedSeconds={elapsedSeconds}
             isMuted={isMuted}
             isPaused={isPaused}
+            isStreamLoading={isStreamLoading}
             playbackQualities={playbackQualities}
             selectedQualityId={selectedQualityId}
             onCommentsVisibleChange={setCommentsVisible}
