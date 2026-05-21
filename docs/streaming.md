@@ -28,9 +28,9 @@ GoバックエンドはWHIPシグナリングを認証して転送します。We
 
 ## OvenMediaEngine
 
-OvenMediaEngineはコーデック変換を行いません。OBSのSimulcast3レイヤーを`video_bypass`として受け、`master` Playlistで視聴者へ配信します。
+OvenMediaEngineはコーデック変換を行いません。OBSのSimulcast3レイヤーを`video_bypass`として受け、`master` Playlistで自動ABR配信します。個別画質は`layer-1`、`layer-2`、`layer-3`のPlaylistで配信し、GoバックエンドはOvenMediaEngineのStream APIで実在するPlaylistだけを署名して返します。
 
-WebRTC Publisherは`Rtx`と`Ulpfec`を有効にし、`JitterBuffer`は有効にしません。視聴URLはGoバックエンドが短寿命のSignedPolicy URLとして発行します。
+WebRTC Publisherは`TransportCC`で帯域推定し、`JitterBuffer`を有効にします。`Rtx`と`Ulpfec`はローカルのOBS WHIP SimulcastでRTP履歴探索ログが増え続けるため無効にします。視聴URLはGoバックエンドが短寿命のSignedPolicy URLとして発行します。
 
 ```text
 ローカル: ws://127.0.0.1:3333/live/<roomId>/master
@@ -66,4 +66,4 @@ OBSには管理画面で作成した動画枠のWHIP URLとBearer Tokenを入れ
 - OvenMediaEngineログに`Stream has been prepared`が出る
 - OvenMediaEngineログに`WebRTC Stream has been created`が出る
 - ブラウザで`http://127.0.0.1:5173/watch?room=<roomId>`を開くと映像が出る
-- WebRTC Publisherログが`Rtx(true) Ulpfec(true) JitterBuffer(false)`になる
+- WebRTC Publisherログが`Rtx(false) Ulpfec(false) JitterBuffer(true)`になる

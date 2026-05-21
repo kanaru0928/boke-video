@@ -105,6 +105,48 @@
                   </AudioTemplate>
                 </RenditionTemplate>
               </Playlist>
+              <Playlist>
+                <Name>simulcast-layer-1</Name>
+                <FileName>layer-1</FileName>
+                <Options>
+                  <WebRtcAutoAbr>false</WebRtcAutoAbr>
+                </Options>
+                <Rendition>
+                  <Name>layer-1</Name>
+                  <Video>video_bypass</Video>
+                  <VideoIndexHint>0</VideoIndexHint>
+                  <Audio>audio_bypass</Audio>
+                  <AudioIndexHint>0</AudioIndexHint>
+                </Rendition>
+              </Playlist>
+              <Playlist>
+                <Name>simulcast-layer-2</Name>
+                <FileName>layer-2</FileName>
+                <Options>
+                  <WebRtcAutoAbr>false</WebRtcAutoAbr>
+                </Options>
+                <Rendition>
+                  <Name>layer-2</Name>
+                  <Video>video_bypass</Video>
+                  <VideoIndexHint>1</VideoIndexHint>
+                  <Audio>audio_bypass</Audio>
+                  <AudioIndexHint>0</AudioIndexHint>
+                </Rendition>
+              </Playlist>
+              <Playlist>
+                <Name>simulcast-layer-3</Name>
+                <FileName>layer-3</FileName>
+                <Options>
+                  <WebRtcAutoAbr>false</WebRtcAutoAbr>
+                </Options>
+                <Rendition>
+                  <Name>layer-3</Name>
+                  <Video>video_bypass</Video>
+                  <VideoIndexHint>2</VideoIndexHint>
+                  <Audio>audio_bypass</Audio>
+                  <AudioIndexHint>0</AudioIndexHint>
+                </Rendition>
+              </Playlist>
             </OutputProfile>
           </OutputProfiles>
           <Providers>
@@ -116,8 +158,10 @@
           </Providers>
           <Publishers>
             <WebRTC>
-              <Rtx>true</Rtx>
-              <Ulpfec>true</Ulpfec>
+              <BandwidthEstimation>TransportCC</BandwidthEstimation>
+              <Rtx>false</Rtx>
+              <Ulpfec>false</Ulpfec>
+              <JitterBuffer>true</JitterBuffer>
             </WebRTC>
             <Thumbnail>
               <CrossDomains>

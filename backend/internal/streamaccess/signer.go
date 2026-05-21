@@ -41,6 +41,12 @@ type PlaybackAccess struct {
 	PlaybackVariants []PlaybackVariant `json:"playbackVariants"`
 }
 
+type PlaybackPlaylist struct {
+	Name       string
+	FileName   string
+	Renditions []string
+}
+
 func NewSigner(cfg Config) (*Signer, error) {
 	baseURL, err := url.Parse(strings.TrimSpace(cfg.BaseURL))
 	if err != nil {
@@ -82,25 +88,46 @@ func (s *Signer) SignedPlaybackURL(roomID string) (string, error) {
 	return s.signedPlaybackURL(roomID, "master")
 }
 
-func (s *Signer) SignedPlaybackAccess(roomID string) (PlaybackAccess, error) {
+func (s *Signer) SignedPlaybackAccess(roomID string, playlists []PlaybackPlaylist) (PlaybackAccess, error) {
 	autoURL, err := s.signedPlaybackURL(roomID, "master")
 	if err != nil {
 		return PlaybackAccess{}, err
 	}
-	sourceURL, err := s.signedPlaybackURL(roomID, "")
-	if err != nil {
-		return PlaybackAccess{}, err
+	variants := make([]PlaybackVariant, 0, len(playlists))
+	seen := map[string]struct{}{"master": {}}
+	for _, playlist := range playlists {
+		fileName := strings.TrimSpace(playlist.FileName)
+		if fileName == "" {
+			continue
+		}
+		if _, ok := seen[fileName]; ok {
+			continue
+		}
+		seen[fileName] = struct{}{}
+		playbackURL, err := s.signedPlaybackURL(roomID, fileName)
+		if err != nil {
+			return PlaybackAccess{}, err
+		}
+		variants = append(variants, PlaybackVariant{
+			ID:          fileName,
+			Label:       playbackLabel(playlist),
+			PlaybackURL: playbackURL,
+		})
 	}
 	return PlaybackAccess{
-		PlaybackURL: autoURL,
-		PlaybackVariants: []PlaybackVariant{
-			{
-				ID:          "source",
-				Label:       "元画質",
-				PlaybackURL: sourceURL,
-			},
-		},
+		PlaybackURL:      autoURL,
+		PlaybackVariants: variants,
 	}, nil
+}
+
+func playbackLabel(playlist PlaybackPlaylist) string {
+	if len(playlist.Renditions) == 1 && strings.TrimSpace(playlist.Renditions[0]) != "" {
+		return strings.TrimSpace(playlist.Renditions[0])
+	}
+	if strings.TrimSpace(playlist.Name) != "" {
+		return strings.TrimSpace(playlist.Name)
+	}
+	return playlist.FileName
 }
 
 func (s *Signer) signedPlaybackURL(roomID string, playlistName string) (string, error) {

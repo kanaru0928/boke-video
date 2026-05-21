@@ -90,6 +90,59 @@ func TestOvenMediaEngineClientTreatsMissingStreamAsInactive(t *testing.T) {
 	}
 }
 
+func TestOvenMediaEngineClientListsPlaybackPlaylists(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/vhosts/default/apps/live/streams/room-1" {
+			t.Fatalf("path = %q", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{
+			"statusCode": 200,
+			"message": "OK",
+			"response": {
+				"outputs": [
+					{
+						"playlists": [
+							{
+								"name": "master",
+								"fileName": "master",
+								"renditions": [{"name": "360p"}, {"name": "720p"}]
+							},
+							{
+								"name": "layer 1",
+								"fileName": "layer-1",
+								"renditions": [{"name": "360p"}]
+							},
+							{
+								"name": "pending",
+								"fileName": "layer-3",
+								"renditions": []
+							}
+						]
+					}
+				]
+			}
+		}`))
+	}))
+	defer server.Close()
+
+	client := newTestClient(t, server.URL)
+	playlists, err := client.PlaybackPlaylists(context.Background(), "room-1")
+	if err != nil {
+		t.Fatalf("PlaybackPlaylists returned error: %v", err)
+	}
+	if len(playlists) != 2 {
+		t.Fatalf("len(playlists) = %d", len(playlists))
+	}
+	if playlists[0].FileName != "master" || playlists[0].Renditions[1] != "720p" {
+		t.Fatalf("playlists[0] = %#v", playlists[0])
+	}
+	if playlists[1].FileName != "layer-1" || playlists[1].Renditions[0] != "360p" {
+		t.Fatalf("playlists[1] = %#v", playlists[1])
+	}
+}
+
 func TestOvenMediaEngineClientFetchesThumbnail(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/live/room-1/thumb.jpg" {

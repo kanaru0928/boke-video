@@ -630,6 +630,7 @@ func (s *Server) roomStatsResponseFromStats(stats repository.RoomStats) roomStat
 
 type streamMonitor interface {
 	ListStreams(ctx context.Context) (map[string]streammonitor.StreamSnapshot, error)
+	PlaybackPlaylists(ctx context.Context, streamName string) ([]streammonitor.PlaybackPlaylist, error)
 	FetchThumbnail(ctx context.Context, streamName string) (streammonitor.Thumbnail, error)
 }
 

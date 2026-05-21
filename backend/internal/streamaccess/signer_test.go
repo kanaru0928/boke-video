@@ -89,7 +89,18 @@ func TestSignerBuildsPlaybackAccessVariants(t *testing.T) {
 		t.Fatalf("NewSigner returned error: %v", err)
 	}
 
-	access, err := signer.SignedPlaybackAccess("main")
+	access, err := signer.SignedPlaybackAccess("main", []PlaybackPlaylist{
+		{
+			Name:       "layer 1",
+			FileName:   "layer-1",
+			Renditions: []string{"360p"},
+		},
+		{
+			Name:       "layer 2",
+			FileName:   "layer-2",
+			Renditions: []string{"720p"},
+		},
+	})
 	if err != nil {
 		t.Fatalf("SignedPlaybackAccess returned error: %v", err)
 	}
@@ -97,21 +108,21 @@ func TestSignerBuildsPlaybackAccessVariants(t *testing.T) {
 	if access.PlaybackURL == "" {
 		t.Fatal("playback URL is empty")
 	}
-	if len(access.PlaybackVariants) != 1 {
+	if len(access.PlaybackVariants) != 2 {
 		t.Fatalf("playback variants length = %d", len(access.PlaybackVariants))
 	}
 	variant := access.PlaybackVariants[0]
-	if variant.ID != "source" {
+	if variant.ID != "layer-1" {
 		t.Fatalf("variant ID = %q", variant.ID)
 	}
-	if variant.Label != "元画質" {
+	if variant.Label != "360p" {
 		t.Fatalf("variant label = %q", variant.Label)
 	}
 	parsedURL, err := url.Parse(variant.PlaybackURL)
 	if err != nil {
 		t.Fatalf("Parse returned error: %v", err)
 	}
-	if parsedURL.Path != "/live/main" {
+	if parsedURL.Path != "/live/main/layer-1" {
 		t.Fatalf("variant path = %q", parsedURL.Path)
 	}
 }

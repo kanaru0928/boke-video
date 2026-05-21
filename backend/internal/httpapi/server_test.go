@@ -226,6 +226,20 @@ func TestServerRejectsUnsafeRoomID(t *testing.T) {
 func TestServerCreatesSignedStreamAccess(t *testing.T) {
 	server := newTestServer(t)
 	roomID := createTestRoom(t, server, "配信")
+	server.streamMonitor = &fakeStreamMonitor{
+		playlists: []streammonitor.PlaybackPlaylist{
+			{
+				Name:       "master",
+				FileName:   "master",
+				Renditions: []string{"360p", "720p"},
+			},
+			{
+				Name:       "layer 1",
+				FileName:   "layer-1",
+				Renditions: []string{"360p"},
+			},
+		},
+	}
 
 	response := performRequest(server, http.MethodPost, "/api/rooms/"+roomID+"/stream-access", "")
 	if response.Code != http.StatusCreated {
@@ -259,10 +273,10 @@ func TestServerCreatesSignedStreamAccess(t *testing.T) {
 		t.Fatalf("playbackVariants length = %d", len(parsed.PlaybackVariants))
 	}
 	variant := parsed.PlaybackVariants[0]
-	if variant.ID != "source" || variant.Label != "元画質" {
+	if variant.ID != "layer-1" || variant.Label != "360p" {
 		t.Fatalf("playback variant = %#v", variant)
 	}
-	if !strings.HasPrefix(variant.PlaybackURL, "wss://rtc.example.com:443/live/"+roomID+"?") {
+	if !strings.HasPrefix(variant.PlaybackURL, "wss://rtc.example.com:443/live/"+roomID+"/layer-1?") {
 		t.Fatalf("variant playbackUrl = %q", variant.PlaybackURL)
 	}
 	if !strings.Contains(variant.PlaybackURL, "policy=") {
@@ -652,6 +666,7 @@ func performRequest(server *Server, method string, path string, body string) *ht
 type fakeStreamMonitor struct {
 	snapshot             streammonitor.StreamSnapshot
 	snapshots            map[string]streammonitor.StreamSnapshot
+	playlists            []streammonitor.PlaybackPlaylist
 	inspectErr           error
 	thumbnailContentType string
 	thumbnailBody        string
@@ -666,6 +681,10 @@ func (f *fakeStreamMonitor) ListStreams(ctx context.Context) (map[string]streamm
 		return f.snapshots, nil
 	}
 	return map[string]streammonitor.StreamSnapshot{}, nil
+}
+
+func (f *fakeStreamMonitor) PlaybackPlaylists(ctx context.Context, streamName string) ([]streammonitor.PlaybackPlaylist, error) {
+	return f.playlists, nil
 }
 
 func (f *fakeStreamMonitor) FetchThumbnail(ctx context.Context, streamName string) (streammonitor.Thumbnail, error) {

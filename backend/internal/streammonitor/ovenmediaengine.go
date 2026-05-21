@@ -41,6 +41,12 @@ type StreamSnapshot struct {
 	StartedAt *time.Time
 }
 
+type PlaybackPlaylist struct {
+	Name       string
+	FileName   string
+	Renditions []string
+}
+
 type Thumbnail struct {
 	ContentType string
 	Body        io.ReadCloser
@@ -122,6 +128,53 @@ func (c *OvenMediaEngineClient) ListStreams(ctx context.Context) (map[string]Str
 	return streams, nil
 }
 
+func (c *OvenMediaEngineClient) PlaybackPlaylists(ctx context.Context, streamName string) ([]PlaybackPlaylist, error) {
+	endpoint := c.apiEndpoint("v1", "vhosts", c.vhostName, "apps", c.appName, "streams", streamName)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	c.authorize(req)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, ErrStreamNotFound
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("get stream: %s", resp.Status)
+	}
+
+	var parsed streamDetailResponse
+	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+		return nil, err
+	}
+	playlists := []PlaybackPlaylist{}
+	for _, output := range parsed.Response.Outputs {
+		for _, playlist := range output.Playlists {
+			renditionNames := make([]string, 0, len(playlist.Renditions))
+			for _, rendition := range playlist.Renditions {
+				if strings.TrimSpace(rendition.Name) != "" {
+					renditionNames = append(renditionNames, strings.TrimSpace(rendition.Name))
+				}
+			}
+			if strings.TrimSpace(playlist.FileName) == "" || len(renditionNames) == 0 {
+				continue
+			}
+			playlists = append(playlists, PlaybackPlaylist{
+				Name:       strings.TrimSpace(playlist.Name),
+				FileName:   strings.TrimSpace(playlist.FileName),
+				Renditions: renditionNames,
+			})
+		}
+	}
+	return playlists, nil
+}
+
 func (c *OvenMediaEngineClient) FetchThumbnail(ctx context.Context, streamName string) (Thumbnail, error) {
 	endpoint := *c.thumbnailBaseURL
 	endpoint.Path = joinURLPath(endpoint.Path, c.appName, streamName, "thumb."+c.thumbnailCodec)
@@ -169,6 +222,20 @@ func (c *OvenMediaEngineClient) authorize(req *http.Request) {
 
 type streamListResponse struct {
 	Response []string `json:"response"`
+}
+
+type streamDetailResponse struct {
+	Response struct {
+		Outputs []struct {
+			Playlists []struct {
+				Name       string `json:"name"`
+				FileName   string `json:"fileName"`
+				Renditions []struct {
+					Name string `json:"name"`
+				} `json:"renditions"`
+			} `json:"playlists"`
+		} `json:"outputs"`
+	} `json:"response"`
 }
 
 func parseBaseURL(rawValue string) (*url.URL, error) {
