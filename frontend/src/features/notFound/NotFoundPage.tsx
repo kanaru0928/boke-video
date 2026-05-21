@@ -13,17 +13,17 @@ export function NotFoundPage() {
         icon={SearchX}
         title="404"
       >
-        <div className="grid min-h-[260px] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border border-t-0 border-[#a7a7a7] bg-white p-4 max-[520px]:grid-cols-1 max-[520px]:justify-items-start max-[520px]:p-3">
-          <div className="grid gap-2">
+        <div className="grid min-h-[260px] content-center justify-items-center gap-4 border border-t-0 border-[#a7a7a7] bg-white p-4 text-center max-[520px]:p-3">
+          <div className="grid justify-items-center gap-2">
             <p className="m-0 text-base font-extrabold">
               ページが見つかりません
             </p>
-            <a className={buttonClassName()} href="/">
+            <a className={buttonClassName({ className: "w-fit" })} href="/">
               枠一覧へ戻る
             </a>
           </div>
           <Mascot
-            className="justify-self-end max-[520px]:justify-self-center"
+            className="justify-self-center"
             mood="notFound"
             title="目がバツ印のマスコット"
           />
