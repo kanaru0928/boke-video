@@ -63,12 +63,8 @@ fi
 command -v curl >/dev/null
 
 MEDIA_PID=""
-if lsof -tiTCP:3333 -sTCP:LISTEN >/dev/null || lsof -tiTCP:8081 -sTCP:LISTEN >/dev/null || lsof -tiTCP:20080 -sTCP:LISTEN >/dev/null; then
-  echo "media: using existing OvenMediaEngine ports"
-else
-  "${ROOT_DIR}/scripts/local-media.sh" &
-  MEDIA_PID="$!"
-fi
+"${ROOT_DIR}/scripts/local-media.sh" &
+MEDIA_PID="$!"
 wait_for_port 3333 "media"
 wait_for_port 8081 "media api"
 wait_for_port 20080 "media thumbnail"
