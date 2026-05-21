@@ -61,7 +61,6 @@ export class OvenMediaEnginePlayer {
 
     video.srcObject = mediaStream;
     video.autoplay = true;
-    video.muted = true;
     video.playsInline = true;
 
     await connection.setRemoteDescription(offer.sdp);
