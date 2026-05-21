@@ -7,8 +7,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -20,14 +22,15 @@ import (
 	"boke-video/backend/internal/ingestauth"
 	"boke-video/backend/internal/repository"
 	"boke-video/backend/internal/streamaccess"
+	"boke-video/backend/internal/streammonitor"
 	"boke-video/backend/internal/whipproxy"
 
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
 )
 
-const roomThumbnailRefreshSeconds = 30
-const roomThumbnailUnavailable = "n/a"
+const roomThumbnailRefreshSeconds = 15
+const defaultStreamEndGrace = 90 * time.Second
 
 type ServerConfig struct {
 	Logger         *slog.Logger
@@ -36,6 +39,8 @@ type ServerConfig struct {
 	CommentHub     *comment.Hub
 	AllowedOrigins []string
 	StreamAccess   *streamaccess.Signer
+	StreamMonitor  streamMonitor
+	StreamEndGrace time.Duration
 	WhipProxy      *whipproxy.Proxy
 	Now            func() time.Time
 }
@@ -47,6 +52,8 @@ type Server struct {
 	commentHub     *comment.Hub
 	allowedOrigins []string
 	streamAccess   *streamaccess.Signer
+	streamMonitor  streamMonitor
+	streamEndGrace time.Duration
 	whipProxy      *whipproxy.Proxy
 	limiter        *rateLimiter
 	now            func() time.Time
@@ -57,6 +64,10 @@ func NewServer(cfg ServerConfig) *Server {
 	if now == nil {
 		now = time.Now
 	}
+	streamEndGrace := cfg.StreamEndGrace
+	if streamEndGrace == 0 {
+		streamEndGrace = defaultStreamEndGrace
+	}
 	return &Server{
 		logger:         cfg.Logger,
 		repository:     cfg.Repository,
@@ -64,6 +75,8 @@ func NewServer(cfg ServerConfig) *Server {
 		commentHub:     cfg.CommentHub,
 		allowedOrigins: cfg.AllowedOrigins,
 		streamAccess:   cfg.StreamAccess,
+		streamMonitor:  cfg.StreamMonitor,
+		streamEndGrace: streamEndGrace,
 		whipProxy:      cfg.WhipProxy,
 		limiter:        newRateLimiter(time.Second),
 		now:            now,
@@ -94,6 +107,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.handleCreateRoomVisit(w, r)
 	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/stream-access"):
 		s.handleCreateStreamAccess(w, r)
+	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/thumbnail"):
+		s.handleGetRoomThumbnail(w, r)
 	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/rooms/"):
 		s.handleGetRoom(w, r)
 	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/rooms/") && strings.HasSuffix(r.URL.Path, "/comments"):
@@ -137,6 +152,15 @@ func (s *Server) handleListRooms(w http.ResponseWriter, r *http.Request) {
 		s.writeServerError(w, err)
 		return
 	}
+	if _, err := s.reconcileRooms(r.Context(), rooms); err != nil {
+		s.writeServerError(w, err)
+		return
+	}
+	rooms, err = s.repository.ListPublicRooms(r.Context())
+	if err != nil {
+		s.writeServerError(w, err)
+		return
+	}
 	writeJSON(w, http.StatusOK, rooms)
 }
 
@@ -161,6 +185,11 @@ func (s *Server) handleGetRoom(w http.ResponseWriter, r *http.Request) {
 	room, err := s.repository.GetRoom(r.Context(), roomID)
 	if err != nil {
 		writeRepositoryError(w, err)
+		return
+	}
+	room, err = s.reconcileRoom(r.Context(), room)
+	if err != nil {
+		s.writeServerError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, room)
@@ -203,9 +232,10 @@ func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 	room := repository.Room{
 		ID:                      roomID,
 		Title:                   req.Title,
-		ThumbnailURL:            roomThumbnailUnavailable,
+		ThumbnailURL:            "",
 		ThumbnailUpdatedAt:      now,
 		ThumbnailRefreshSeconds: roomThumbnailRefreshSeconds,
+		StreamStatus:            "waiting",
 		OwnerSub:                principal.Subject,
 		IngestTokenHash:         ingestauth.HashToken(ingestToken),
 		CreatedAt:               now,
@@ -363,12 +393,62 @@ func (s *Server) handleGetRoomStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/rooms/"), "/stats")
+	room, err := s.repository.GetRoom(r.Context(), roomID)
+	if err != nil {
+		writeRepositoryError(w, err)
+		return
+	}
+	if _, err := s.reconcileRoom(r.Context(), room); err != nil {
+		s.writeServerError(w, err)
+		return
+	}
 	stats, err := s.repository.GetRoomStats(r.Context(), roomID)
 	if err != nil {
 		writeRepositoryError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, s.roomStatsResponseFromStats(stats))
+}
+
+func (s *Server) handleGetRoomThumbnail(w http.ResponseWriter, r *http.Request) {
+	if _, ok := s.requirePrincipal(w, r); !ok {
+		return
+	}
+	if s.streamMonitor == nil {
+		writeError(w, http.StatusServiceUnavailable, "stream monitor is not configured")
+		return
+	}
+	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/rooms/"), "/thumbnail")
+	room, err := s.repository.GetRoom(r.Context(), roomID)
+	if err != nil {
+		writeRepositoryError(w, err)
+		return
+	}
+	room, err = s.reconcileRoom(r.Context(), room)
+	if err != nil {
+		s.writeServerError(w, err)
+		return
+	}
+	if room.StreamStatus != "live" {
+		writeError(w, http.StatusNotFound, "thumbnail is not available")
+		return
+	}
+	thumbnail, err := s.streamMonitor.FetchThumbnail(r.Context(), roomID)
+	if err != nil {
+		if errors.Is(err, streammonitor.ErrStreamNotFound) {
+			writeError(w, http.StatusNotFound, "thumbnail is not available")
+			return
+		}
+		s.logger.Warn("fetch thumbnail", "room_id", roomID, "error", err)
+		writeError(w, http.StatusBadGateway, "thumbnail upstream failed")
+		return
+	}
+	defer thumbnail.Body.Close()
+
+	w.Header().Set("Content-Type", thumbnail.ContentType)
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(http.StatusOK)
+	_, _ = io.Copy(w, thumbnail.Body)
 }
 
 func (s *Server) handleCreateRoomVisit(w http.ResponseWriter, r *http.Request) {
@@ -521,22 +601,143 @@ func storedToMessage(stored comment.StoredComment) comment.Message {
 }
 
 type roomStatsResponse struct {
-	RoomID         string    `json:"roomId"`
-	VisitorCount   int       `json:"visitorCount"`
-	CommentCount   int       `json:"commentCount"`
-	StartedAt      time.Time `json:"startedAt"`
-	ElapsedSeconds int       `json:"elapsedSeconds"`
+	RoomID         string     `json:"roomId"`
+	VisitorCount   int        `json:"visitorCount"`
+	CommentCount   int        `json:"commentCount"`
+	StreamStatus   string     `json:"streamStatus"`
+	StartedAt      *time.Time `json:"startedAt"`
+	ElapsedSeconds int        `json:"elapsedSeconds"`
 }
 
 func (s *Server) roomStatsResponseFromStats(stats repository.RoomStats) roomStatsResponse {
-	elapsedSeconds := max(int(s.now().UTC().Sub(stats.StartedAt).Seconds()), 0)
+	elapsedSeconds := s.elapsedSeconds(stats)
 	return roomStatsResponse{
 		RoomID:         stats.RoomID,
 		VisitorCount:   stats.VisitorCount,
 		CommentCount:   stats.CommentCount,
+		StreamStatus:   stats.StreamStatus,
 		StartedAt:      stats.StartedAt,
 		ElapsedSeconds: elapsedSeconds,
 	}
+}
+
+type streamMonitor interface {
+	InspectStream(ctx context.Context, streamName string) (streammonitor.StreamSnapshot, error)
+	FetchThumbnail(ctx context.Context, streamName string) (streammonitor.Thumbnail, error)
+}
+
+func (s *Server) reconcileRooms(ctx context.Context, rooms []repository.Room) ([]repository.Room, error) {
+	reconciled := make([]repository.Room, 0, len(rooms))
+	for _, room := range rooms {
+		updatedRoom, err := s.reconcileRoom(ctx, room)
+		if err != nil {
+			return nil, err
+		}
+		reconciled = append(reconciled, updatedRoom)
+	}
+	return reconciled, nil
+}
+
+func (s *Server) reconcileRoom(ctx context.Context, room repository.Room) (repository.Room, error) {
+	if s.streamMonitor == nil {
+		return room, nil
+	}
+	snapshot, err := s.streamMonitor.InspectStream(ctx, room.ID)
+	if err != nil {
+		s.logger.Warn("inspect stream", "room_id", room.ID, "error", err)
+		return room, nil
+	}
+	now := s.now().UTC()
+	nextState := repository.RoomStreamState{
+		StreamStatus:            room.StreamStatus,
+		StreamStartedAt:         room.StreamStartedAt,
+		StreamLastSeenAt:        room.StreamLastSeenAt,
+		StreamEndedAt:           room.StreamEndedAt,
+		ThumbnailURL:            room.ThumbnailURL,
+		ThumbnailUpdatedAt:      room.ThumbnailUpdatedAt,
+		ThumbnailRefreshSeconds: room.ThumbnailRefreshSeconds,
+	}
+
+	if snapshot.Active {
+		startedAt := now
+		if snapshot.StartedAt != nil {
+			startedAt = snapshot.StartedAt.UTC()
+		}
+		nextState.StreamStatus = "live"
+		nextState.StreamStartedAt = &startedAt
+		nextState.StreamLastSeenAt = &now
+		nextState.StreamEndedAt = nil
+		nextState.ThumbnailURL = thumbnailEndpoint(room.ID)
+		if shouldRefreshThumbnailTimestamp(room, now) {
+			nextState.ThumbnailUpdatedAt = now
+		}
+		nextState.ThumbnailRefreshSeconds = roomThumbnailRefreshSeconds
+	} else if room.StreamStatus == "live" {
+		lastSeenAt := now
+		if room.StreamLastSeenAt != nil {
+			lastSeenAt = room.StreamLastSeenAt.UTC()
+		}
+		if now.Sub(lastSeenAt) > s.streamEndGrace {
+			endedAt := lastSeenAt.Add(s.streamEndGrace)
+			nextState.StreamStatus = "ended"
+			nextState.StreamLastSeenAt = &lastSeenAt
+			nextState.StreamEndedAt = &endedAt
+			nextState.ThumbnailURL = ""
+			nextState.ThumbnailUpdatedAt = now
+		}
+	}
+
+	if !roomStreamStateChanged(room, nextState) {
+		return room, nil
+	}
+	if err := s.repository.UpdateRoomStreamState(ctx, room.ID, nextState); err != nil {
+		return repository.Room{}, err
+	}
+	updated, err := s.repository.GetRoom(ctx, room.ID)
+	if err != nil {
+		return repository.Room{}, err
+	}
+	return updated, nil
+}
+
+func (s *Server) elapsedSeconds(stats repository.RoomStats) int {
+	if stats.StartedAt == nil {
+		return 0
+	}
+	endAt := s.now().UTC()
+	if stats.StreamStatus == "ended" && stats.EndedAt != nil {
+		endAt = stats.EndedAt.UTC()
+	}
+	return max(int(endAt.Sub(stats.StartedAt.UTC()).Seconds()), 0)
+}
+
+func shouldRefreshThumbnailTimestamp(room repository.Room, now time.Time) bool {
+	if room.ThumbnailURL == "" {
+		return true
+	}
+	refreshInterval := time.Duration(max(room.ThumbnailRefreshSeconds, 1)) * time.Second
+	return now.Sub(room.ThumbnailUpdatedAt) >= refreshInterval
+}
+
+func thumbnailEndpoint(roomID string) string {
+	return "/api/rooms/" + url.PathEscape(roomID) + "/thumbnail"
+}
+
+func roomStreamStateChanged(room repository.Room, state repository.RoomStreamState) bool {
+	return room.StreamStatus != state.StreamStatus ||
+		!timePointersEqual(room.StreamStartedAt, state.StreamStartedAt) ||
+		!timePointersEqual(room.StreamLastSeenAt, state.StreamLastSeenAt) ||
+		!timePointersEqual(room.StreamEndedAt, state.StreamEndedAt) ||
+		room.ThumbnailURL != state.ThumbnailURL ||
+		!room.ThumbnailUpdatedAt.Equal(state.ThumbnailUpdatedAt) ||
+		room.ThumbnailRefreshSeconds != state.ThumbnailRefreshSeconds
+}
+
+func timePointersEqual(left *time.Time, right *time.Time) bool {
+	if left == nil || right == nil {
+		return left == nil && right == nil
+	}
+	return left.Equal(*right)
 }
 
 func decodeJSON(r *http.Request, dest any) error {

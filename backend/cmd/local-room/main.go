@@ -57,9 +57,10 @@ func main() {
 	err = db.CreateRoom(ctx, repository.Room{
 		ID:                      roomID,
 		Title:                   roomTitle,
-		ThumbnailURL:            "n/a",
+		ThumbnailURL:            "",
 		ThumbnailUpdatedAt:      now,
-		ThumbnailRefreshSeconds: 30,
+		ThumbnailRefreshSeconds: 15,
+		StreamStatus:            "waiting",
 		OwnerSub:                "local-dev",
 		IngestTokenHash:         ingestauth.HashToken(ingestToken),
 		CreatedAt:               now,

@@ -18,21 +18,37 @@ type SQLite struct {
 }
 
 type Room struct {
-	ID                      string    `json:"id"`
-	Title                   string    `json:"title"`
-	ThumbnailURL            string    `json:"thumbnailUrl"`
-	ThumbnailUpdatedAt      time.Time `json:"thumbnailUpdatedAt"`
-	ThumbnailRefreshSeconds int       `json:"thumbnailRefreshSeconds"`
-	CreatedAt               time.Time `json:"createdAt"`
-	OwnerSub                string    `json:"-"`
-	IngestTokenHash         string    `json:"-"`
+	ID                      string     `json:"id"`
+	Title                   string     `json:"title"`
+	ThumbnailURL            string     `json:"thumbnailUrl"`
+	ThumbnailUpdatedAt      time.Time  `json:"thumbnailUpdatedAt"`
+	ThumbnailRefreshSeconds int        `json:"thumbnailRefreshSeconds"`
+	StreamStatus            string     `json:"streamStatus"`
+	StreamStartedAt         *time.Time `json:"streamStartedAt"`
+	StreamLastSeenAt        *time.Time `json:"streamLastSeenAt"`
+	StreamEndedAt           *time.Time `json:"streamEndedAt"`
+	CreatedAt               time.Time  `json:"createdAt"`
+	OwnerSub                string     `json:"-"`
+	IngestTokenHash         string     `json:"-"`
 }
 
 type RoomStats struct {
-	RoomID       string    `json:"roomId"`
-	VisitorCount int       `json:"visitorCount"`
-	CommentCount int       `json:"commentCount"`
-	StartedAt    time.Time `json:"startedAt"`
+	RoomID       string     `json:"roomId"`
+	VisitorCount int        `json:"visitorCount"`
+	CommentCount int        `json:"commentCount"`
+	StreamStatus string     `json:"streamStatus"`
+	StartedAt    *time.Time `json:"startedAt"`
+	EndedAt      *time.Time `json:"endedAt"`
+}
+
+type RoomStreamState struct {
+	StreamStatus            string
+	StreamStartedAt         *time.Time
+	StreamLastSeenAt        *time.Time
+	StreamEndedAt           *time.Time
+	ThumbnailURL            string
+	ThumbnailUpdatedAt      time.Time
+	ThumbnailRefreshSeconds int
 }
 
 var ErrAlreadyExists = errors.New("already exists")
@@ -60,13 +76,21 @@ func (s *SQLite) Migrate(ctx context.Context) error {
 			thumbnail_url TEXT NOT NULL,
 			thumbnail_updated_at TEXT NOT NULL,
 			thumbnail_refresh_seconds INTEGER NOT NULL,
+			stream_status TEXT NOT NULL,
+			stream_started_at TEXT,
+			stream_last_seen_at TEXT,
+			stream_ended_at TEXT,
 			owner_sub TEXT NOT NULL DEFAULT '',
 			ingest_token_hash TEXT NOT NULL DEFAULT '',
 			created_at TEXT NOT NULL
 		)`,
-		`ALTER TABLE rooms ADD COLUMN thumbnail_url TEXT NOT NULL DEFAULT 'n/a'`,
+		`ALTER TABLE rooms ADD COLUMN thumbnail_url TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE rooms ADD COLUMN thumbnail_updated_at TEXT NOT NULL DEFAULT '1970-01-01T00:00:00Z'`,
 		`ALTER TABLE rooms ADD COLUMN thumbnail_refresh_seconds INTEGER NOT NULL DEFAULT 30`,
+		`ALTER TABLE rooms ADD COLUMN stream_status TEXT NOT NULL DEFAULT 'waiting'`,
+		`ALTER TABLE rooms ADD COLUMN stream_started_at TEXT`,
+		`ALTER TABLE rooms ADD COLUMN stream_last_seen_at TEXT`,
+		`ALTER TABLE rooms ADD COLUMN stream_ended_at TEXT`,
 		`ALTER TABLE rooms ADD COLUMN owner_sub TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE rooms ADD COLUMN ingest_token_hash TEXT NOT NULL DEFAULT ''`,
 		`CREATE TABLE IF NOT EXISTS comments (
@@ -114,15 +138,23 @@ func (s *SQLite) CreateRoom(ctx context.Context, room Room) error {
 			thumbnail_url,
 			thumbnail_updated_at,
 			thumbnail_refresh_seconds,
+			stream_status,
+			stream_started_at,
+			stream_last_seen_at,
+			stream_ended_at,
 			owner_sub,
 			ingest_token_hash,
 			created_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		room.ID,
 		room.Title,
 		room.ThumbnailURL,
 		room.ThumbnailUpdatedAt.Format(time.RFC3339Nano),
 		room.ThumbnailRefreshSeconds,
+		room.StreamStatus,
+		formatNullableTime(room.StreamStartedAt),
+		formatNullableTime(room.StreamLastSeenAt),
+		formatNullableTime(room.StreamEndedAt),
 		room.OwnerSub,
 		room.IngestTokenHash,
 		room.CreatedAt.Format(time.RFC3339Nano),
@@ -140,6 +172,32 @@ func (s *SQLite) UpdateRoomTitle(ctx context.Context, roomID string, ownerSub st
 
 func (s *SQLite) UpdateRoomIngestTokenHash(ctx context.Context, roomID string, ownerSub string, tokenHash string) error {
 	result, err := s.db.ExecContext(ctx, `UPDATE rooms SET ingest_token_hash = ? WHERE id = ? AND owner_sub = ?`, tokenHash, roomID, ownerSub)
+	if err != nil {
+		return err
+	}
+	return requireAffected(result)
+}
+
+func (s *SQLite) UpdateRoomStreamState(ctx context.Context, roomID string, state RoomStreamState) error {
+	result, err := s.db.ExecContext(ctx,
+		`UPDATE rooms SET
+			stream_status = ?,
+			stream_started_at = ?,
+			stream_last_seen_at = ?,
+			stream_ended_at = ?,
+			thumbnail_url = ?,
+			thumbnail_updated_at = ?,
+			thumbnail_refresh_seconds = ?
+		 WHERE id = ?`,
+		state.StreamStatus,
+		formatNullableTime(state.StreamStartedAt),
+		formatNullableTime(state.StreamLastSeenAt),
+		formatNullableTime(state.StreamEndedAt),
+		state.ThumbnailURL,
+		state.ThumbnailUpdatedAt.Format(time.RFC3339Nano),
+		state.ThumbnailRefreshSeconds,
+		roomID,
+	)
 	if err != nil {
 		return err
 	}
@@ -170,17 +228,22 @@ func (s *SQLite) DeleteRoom(ctx context.Context, roomID string, ownerSub string)
 }
 
 func (s *SQLite) GetRoom(ctx context.Context, roomID string) (Room, error) {
-	row := s.db.QueryRowContext(ctx, `SELECT id, title, thumbnail_url, thumbnail_updated_at, thumbnail_refresh_seconds, owner_sub, ingest_token_hash, created_at FROM rooms WHERE id = ?`, roomID)
+	row := s.db.QueryRowContext(ctx, roomSelectSQL(`WHERE id = ?`), roomID)
 	return scanRoom(row)
 }
 
 func (s *SQLite) ListRooms(ctx context.Context) ([]Room, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT id, title, thumbnail_url, thumbnail_updated_at, thumbnail_refresh_seconds, owner_sub, ingest_token_hash, created_at FROM rooms ORDER BY created_at DESC`)
+	rows, err := s.db.QueryContext(ctx, roomSelectSQL(`ORDER BY created_at DESC`))
+	return scanRooms(rows, err)
+}
+
+func (s *SQLite) ListPublicRooms(ctx context.Context) ([]Room, error) {
+	rows, err := s.db.QueryContext(ctx, roomSelectSQL(`WHERE stream_status = 'live' ORDER BY stream_started_at DESC, created_at DESC`))
 	return scanRooms(rows, err)
 }
 
 func (s *SQLite) ListRoomsByOwner(ctx context.Context, ownerSub string) ([]Room, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT id, title, thumbnail_url, thumbnail_updated_at, thumbnail_refresh_seconds, owner_sub, ingest_token_hash, created_at FROM rooms WHERE owner_sub = ? ORDER BY created_at DESC`, ownerSub)
+	rows, err := s.db.QueryContext(ctx, roomSelectSQL(`WHERE owner_sub = ? ORDER BY created_at DESC`), ownerSub)
 	return scanRooms(rows, err)
 }
 
@@ -279,26 +342,34 @@ func (s *SQLite) GetRoomStats(ctx context.Context, roomID string) (RoomStats, er
 	row := s.db.QueryRowContext(ctx,
 		`SELECT
 			rooms.id,
-			rooms.created_at,
+			rooms.stream_status,
+			rooms.stream_started_at,
+			rooms.stream_ended_at,
 			COUNT(DISTINCT room_visits.visitor_sub),
 			COUNT(DISTINCT comments.id)
 		 FROM rooms
 		 LEFT JOIN room_visits ON room_visits.room_id = rooms.id
 		 LEFT JOIN comments ON comments.room_id = rooms.id
 		 WHERE rooms.id = ?
-		 GROUP BY rooms.id, rooms.created_at`,
+		 GROUP BY rooms.id, rooms.stream_status, rooms.stream_started_at, rooms.stream_ended_at`,
 		roomID,
 	)
 	var stats RoomStats
-	var startedAt string
-	if err := row.Scan(&stats.RoomID, &startedAt, &stats.VisitorCount, &stats.CommentCount); err != nil {
+	var startedAt sql.NullString
+	var endedAt sql.NullString
+	if err := row.Scan(&stats.RoomID, &stats.StreamStatus, &startedAt, &endedAt, &stats.VisitorCount, &stats.CommentCount); err != nil {
 		return RoomStats{}, err
 	}
-	parsedAt, err := time.Parse(time.RFC3339Nano, startedAt)
+	parsedStartedAt, err := parseNullableTime(startedAt)
 	if err != nil {
 		return RoomStats{}, err
 	}
-	stats.StartedAt = parsedAt
+	parsedEndedAt, err := parseNullableTime(endedAt)
+	if err != nil {
+		return RoomStats{}, err
+	}
+	stats.StartedAt = parsedStartedAt
+	stats.EndedAt = parsedEndedAt
 	return stats, nil
 }
 
@@ -310,7 +381,10 @@ func scanRoom(scanner rowScanner) (Room, error) {
 	var room Room
 	var createdAt string
 	var thumbnailUpdatedAt string
-	if err := scanner.Scan(&room.ID, &room.Title, &room.ThumbnailURL, &thumbnailUpdatedAt, &room.ThumbnailRefreshSeconds, &room.OwnerSub, &room.IngestTokenHash, &createdAt); err != nil {
+	var streamStartedAt sql.NullString
+	var streamLastSeenAt sql.NullString
+	var streamEndedAt sql.NullString
+	if err := scanner.Scan(&room.ID, &room.Title, &room.ThumbnailURL, &thumbnailUpdatedAt, &room.ThumbnailRefreshSeconds, &room.StreamStatus, &streamStartedAt, &streamLastSeenAt, &streamEndedAt, &room.OwnerSub, &room.IngestTokenHash, &createdAt); err != nil {
 		return Room{}, err
 	}
 	parsedThumbnailUpdatedAt, err := time.Parse(time.RFC3339Nano, thumbnailUpdatedAt)
@@ -321,9 +395,59 @@ func scanRoom(scanner rowScanner) (Room, error) {
 	if err != nil {
 		return Room{}, err
 	}
+	parsedStreamStartedAt, err := parseNullableTime(streamStartedAt)
+	if err != nil {
+		return Room{}, err
+	}
+	parsedStreamLastSeenAt, err := parseNullableTime(streamLastSeenAt)
+	if err != nil {
+		return Room{}, err
+	}
+	parsedStreamEndedAt, err := parseNullableTime(streamEndedAt)
+	if err != nil {
+		return Room{}, err
+	}
 	room.ThumbnailUpdatedAt = parsedThumbnailUpdatedAt
+	room.StreamStartedAt = parsedStreamStartedAt
+	room.StreamLastSeenAt = parsedStreamLastSeenAt
+	room.StreamEndedAt = parsedStreamEndedAt
 	room.CreatedAt = parsedAt
 	return room, nil
+}
+
+func roomSelectSQL(suffix string) string {
+	return `SELECT
+		id,
+		title,
+		thumbnail_url,
+		thumbnail_updated_at,
+		thumbnail_refresh_seconds,
+		stream_status,
+		stream_started_at,
+		stream_last_seen_at,
+		stream_ended_at,
+		owner_sub,
+		ingest_token_hash,
+		created_at
+	 FROM rooms ` + suffix
+}
+
+func formatNullableTime(value *time.Time) any {
+	if value == nil {
+		return nil
+	}
+	return value.UTC().Format(time.RFC3339Nano)
+}
+
+func parseNullableTime(value sql.NullString) (*time.Time, error) {
+	if !value.Valid || strings.TrimSpace(value.String) == "" {
+		return nil, nil
+	}
+	parsed, err := time.Parse(time.RFC3339Nano, value.String)
+	if err != nil {
+		return nil, err
+	}
+	return &parsed, nil
 }
 
 func scanComment(scanner rowScanner) (comment.StoredComment, error) {

@@ -15,6 +15,7 @@ import (
 	"boke-video/backend/internal/httpapi"
 	"boke-video/backend/internal/repository"
 	"boke-video/backend/internal/streamaccess"
+	"boke-video/backend/internal/streammonitor"
 	"boke-video/backend/internal/whipproxy"
 )
 
@@ -65,6 +66,19 @@ func main() {
 		os.Exit(1)
 	}
 
+	streamMonitor, err := streammonitor.NewOvenMediaEngineClient(streammonitor.OvenMediaEngineConfig{
+		APIBaseURL:       cfg.OMEAPIBaseURL,
+		ThumbnailBaseURL: cfg.OMEThumbnailBaseURL,
+		AccessToken:      cfg.OMEAPIAccessToken,
+		VhostName:        cfg.OMEVhostName,
+		AppName:          cfg.OMEAppName,
+		ThumbnailCodec:   cfg.OMEThumbnailCodec,
+	})
+	if err != nil {
+		logger.Error("configure stream monitor", "error", err)
+		os.Exit(1)
+	}
+
 	handler := httpapi.NewServer(httpapi.ServerConfig{
 		Logger:         logger,
 		Repository:     db,
@@ -72,6 +86,8 @@ func main() {
 		CommentHub:     commentHub,
 		AllowedOrigins: cfg.AllowedOrigins,
 		StreamAccess:   streamAccess,
+		StreamMonitor:  streamMonitor,
+		StreamEndGrace: time.Duration(cfg.StreamEndGraceSeconds) * time.Second,
 		WhipProxy:      whipProxy,
 	})
 

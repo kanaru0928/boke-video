@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -17,6 +19,7 @@ import (
 	"boke-video/backend/internal/ingestauth"
 	"boke-video/backend/internal/repository"
 	"boke-video/backend/internal/streamaccess"
+	"boke-video/backend/internal/streammonitor"
 	"boke-video/backend/internal/whipproxy"
 )
 
@@ -122,11 +125,14 @@ func TestServerCreatesRoomWithRequestedID(t *testing.T) {
 	if room.ID != "obs-local" {
 		t.Fatalf("room.ID = %q", room.ID)
 	}
-	if room.ThumbnailURL != "n/a" {
+	if room.ThumbnailURL != "" {
 		t.Fatalf("room.ThumbnailURL = %q", room.ThumbnailURL)
 	}
-	if room.ThumbnailRefreshSeconds != 30 {
+	if room.ThumbnailRefreshSeconds != 15 {
 		t.Fatalf("room.ThumbnailRefreshSeconds = %d", room.ThumbnailRefreshSeconds)
+	}
+	if room.StreamStatus != "waiting" {
+		t.Fatalf("room.StreamStatus = %q", room.StreamStatus)
 	}
 }
 
@@ -220,9 +226,10 @@ func TestServerRejectsAdminMutationForAnotherOwner(t *testing.T) {
 	err := server.repository.CreateRoom(context.Background(), repository.Room{
 		ID:                      roomID,
 		Title:                   "他人の配信",
-		ThumbnailURL:            "n/a",
+		ThumbnailURL:            "",
 		ThumbnailUpdatedAt:      time.Now().UTC(),
-		ThumbnailRefreshSeconds: 30,
+		ThumbnailRefreshSeconds: 15,
+		StreamStatus:            "waiting",
 		OwnerSub:                "other-owner",
 		IngestTokenHash:         ingestauth.HashToken("token"),
 		CreatedAt:               time.Now().UTC(),
@@ -257,6 +264,132 @@ func TestServerRejectsAdminMutationForAnotherOwner(t *testing.T) {
 	rotateTokenResponse := performRequest(server, http.MethodPost, "/api/admin/rooms/"+roomID+"/ingest-token", "")
 	if rotateTokenResponse.Code != http.StatusNotFound {
 		t.Fatalf("rotate token status = %d, body = %s", rotateTokenResponse.Code, rotateTokenResponse.Body.String())
+	}
+}
+
+func TestServerListsOnlyLiveRoomsAndEndsMissingStreamsAfterGrace(t *testing.T) {
+	server := newTestServer(t)
+	now := time.Unix(2000, 0).UTC()
+	server.now = func() time.Time {
+		return now
+	}
+	startedAt := now.Add(-2 * time.Minute)
+	fakeMonitor := &fakeStreamMonitor{
+		snapshot: streammonitor.StreamSnapshot{
+			Active:    true,
+			StartedAt: &startedAt,
+		},
+	}
+	server.streamMonitor = fakeMonitor
+	server.streamEndGrace = 90 * time.Second
+	roomID := createTestRoom(t, server, "配信")
+
+	listResponse := performRequest(server, http.MethodGet, "/api/rooms", "")
+	if listResponse.Code != http.StatusOK {
+		t.Fatalf("list rooms status = %d, body = %s", listResponse.Code, listResponse.Body.String())
+	}
+	var liveRooms []repository.Room
+	if err := json.NewDecoder(listResponse.Body).Decode(&liveRooms); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if len(liveRooms) != 1 {
+		t.Fatalf("len(liveRooms) = %d", len(liveRooms))
+	}
+	if liveRooms[0].ID != roomID {
+		t.Fatalf("liveRooms[0].ID = %q", liveRooms[0].ID)
+	}
+	if liveRooms[0].ThumbnailURL != "/api/rooms/"+roomID+"/thumbnail" {
+		t.Fatalf("liveRooms[0].ThumbnailURL = %q", liveRooms[0].ThumbnailURL)
+	}
+
+	fakeMonitor.snapshot = streammonitor.StreamSnapshot{Active: false}
+	now = now.Add(89 * time.Second)
+	graceResponse := performRequest(server, http.MethodGet, "/api/rooms", "")
+	if graceResponse.Code != http.StatusOK {
+		t.Fatalf("grace list status = %d, body = %s", graceResponse.Code, graceResponse.Body.String())
+	}
+	var graceRooms []repository.Room
+	if err := json.NewDecoder(graceResponse.Body).Decode(&graceRooms); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if len(graceRooms) != 1 {
+		t.Fatalf("len(graceRooms) = %d", len(graceRooms))
+	}
+
+	now = now.Add(2 * time.Second)
+	endedResponse := performRequest(server, http.MethodGet, "/api/rooms", "")
+	if endedResponse.Code != http.StatusOK {
+		t.Fatalf("ended list status = %d, body = %s", endedResponse.Code, endedResponse.Body.String())
+	}
+	var endedRooms []repository.Room
+	if err := json.NewDecoder(endedResponse.Body).Decode(&endedRooms); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if len(endedRooms) != 0 {
+		t.Fatalf("len(endedRooms) = %d", len(endedRooms))
+	}
+}
+
+func TestServerReturnsStreamElapsedSecondsFromStreamStartedAt(t *testing.T) {
+	server := newTestServer(t)
+	now := time.Unix(2000, 0).UTC()
+	server.now = func() time.Time {
+		return now
+	}
+	startedAt := now.Add(-75 * time.Second)
+	server.streamMonitor = &fakeStreamMonitor{
+		snapshot: streammonitor.StreamSnapshot{
+			Active:    true,
+			StartedAt: &startedAt,
+		},
+	}
+	roomID := createTestRoom(t, server, "配信")
+
+	statsResponse := performRequest(server, http.MethodGet, "/api/rooms/"+roomID+"/stats", "")
+	if statsResponse.Code != http.StatusOK {
+		t.Fatalf("room stats status = %d, body = %s", statsResponse.Code, statsResponse.Body.String())
+	}
+	var stats struct {
+		StreamStatus   string `json:"streamStatus"`
+		ElapsedSeconds int    `json:"elapsedSeconds"`
+	}
+	if err := json.NewDecoder(statsResponse.Body).Decode(&stats); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if stats.StreamStatus != "live" {
+		t.Fatalf("stats.StreamStatus = %q", stats.StreamStatus)
+	}
+	if stats.ElapsedSeconds != 75 {
+		t.Fatalf("stats.ElapsedSeconds = %d", stats.ElapsedSeconds)
+	}
+}
+
+func TestServerProxiesRealThumbnailFromStreamMonitor(t *testing.T) {
+	server := newTestServer(t)
+	now := time.Unix(2000, 0).UTC()
+	server.now = func() time.Time {
+		return now
+	}
+	startedAt := now.Add(-time.Minute)
+	server.streamMonitor = &fakeStreamMonitor{
+		snapshot: streammonitor.StreamSnapshot{
+			Active:    true,
+			StartedAt: &startedAt,
+		},
+		thumbnailContentType: "image/jpeg",
+		thumbnailBody:        "jpeg",
+	}
+	roomID := createTestRoom(t, server, "配信")
+
+	response := performRequest(server, http.MethodGet, "/api/rooms/"+roomID+"/thumbnail", "")
+	if response.Code != http.StatusOK {
+		t.Fatalf("thumbnail status = %d, body = %s", response.Code, response.Body.String())
+	}
+	if response.Header().Get("Content-Type") != "image/jpeg" {
+		t.Fatalf("Content-Type = %q", response.Header().Get("Content-Type"))
+	}
+	if response.Body.String() != "jpeg" {
+		t.Fatalf("body = %q", response.Body.String())
 	}
 }
 
@@ -396,4 +529,32 @@ func performRequest(server *Server, method string, path string, body string) *ht
 	recorder := httptest.NewRecorder()
 	server.ServeHTTP(recorder, request)
 	return recorder
+}
+
+type fakeStreamMonitor struct {
+	snapshot             streammonitor.StreamSnapshot
+	inspectErr           error
+	thumbnailContentType string
+	thumbnailBody        string
+	thumbnailErr         error
+}
+
+func (f *fakeStreamMonitor) InspectStream(ctx context.Context, streamName string) (streammonitor.StreamSnapshot, error) {
+	if f.inspectErr != nil {
+		return streammonitor.StreamSnapshot{}, f.inspectErr
+	}
+	return f.snapshot, nil
+}
+
+func (f *fakeStreamMonitor) FetchThumbnail(ctx context.Context, streamName string) (streammonitor.Thumbnail, error) {
+	if f.thumbnailErr != nil {
+		return streammonitor.Thumbnail{}, f.thumbnailErr
+	}
+	if f.thumbnailBody == "" {
+		return streammonitor.Thumbnail{}, errors.New("thumbnail body is empty")
+	}
+	return streammonitor.Thumbnail{
+		ContentType: f.thumbnailContentType,
+		Body:        io.NopCloser(strings.NewReader(f.thumbnailBody)),
+	}, nil
 }

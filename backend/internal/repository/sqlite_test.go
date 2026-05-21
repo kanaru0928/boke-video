@@ -24,9 +24,10 @@ func TestSQLiteStoresRoomAndComment(t *testing.T) {
 	room := Room{
 		ID:                      "room-1",
 		Title:                   "テスト配信",
-		ThumbnailURL:            "n/a",
+		ThumbnailURL:            "",
 		ThumbnailUpdatedAt:      time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
-		ThumbnailRefreshSeconds: 30,
+		ThumbnailRefreshSeconds: 15,
+		StreamStatus:            "waiting",
 		OwnerSub:                "owner-1",
 		IngestTokenHash:         "token-hash",
 		CreatedAt:               time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
@@ -97,8 +98,39 @@ func TestSQLiteStoresRoomAndComment(t *testing.T) {
 	if stats.CommentCount != 1 {
 		t.Fatalf("stats.CommentCount = %d", stats.CommentCount)
 	}
-	if !stats.StartedAt.Equal(room.CreatedAt) {
-		t.Fatalf("stats.StartedAt = %s", stats.StartedAt)
+	if stats.StartedAt != nil {
+		t.Fatalf("stats.StartedAt = %v", stats.StartedAt)
+	}
+
+	streamStartedAt := time.Date(2026, 5, 9, 0, 3, 0, 0, time.UTC)
+	streamLastSeenAt := time.Date(2026, 5, 9, 0, 4, 0, 0, time.UTC)
+	if err := db.UpdateRoomStreamState(ctx, room.ID, RoomStreamState{
+		StreamStatus:            "live",
+		StreamStartedAt:         &streamStartedAt,
+		StreamLastSeenAt:        &streamLastSeenAt,
+		StreamEndedAt:           nil,
+		ThumbnailURL:            "/api/rooms/room-1/thumbnail",
+		ThumbnailUpdatedAt:      streamLastSeenAt,
+		ThumbnailRefreshSeconds: 15,
+	}); err != nil {
+		t.Fatalf("UpdateRoomStreamState returned error: %v", err)
+	}
+	liveRooms, err := db.ListPublicRooms(ctx)
+	if err != nil {
+		t.Fatalf("ListPublicRooms returned error: %v", err)
+	}
+	if len(liveRooms) != 1 {
+		t.Fatalf("len(liveRooms) = %d", len(liveRooms))
+	}
+	liveStats, err := db.GetRoomStats(ctx, room.ID)
+	if err != nil {
+		t.Fatalf("GetRoomStats returned error: %v", err)
+	}
+	if liveStats.StreamStatus != "live" {
+		t.Fatalf("liveStats.StreamStatus = %q", liveStats.StreamStatus)
+	}
+	if liveStats.StartedAt == nil || !liveStats.StartedAt.Equal(streamStartedAt) {
+		t.Fatalf("liveStats.StartedAt = %v", liveStats.StartedAt)
 	}
 
 	if err := db.DeleteComment(ctx, stored.ID, room.OwnerSub); err != nil {
