@@ -41,8 +41,7 @@ export function WatchPage({ config }: WatchPageProps) {
   const [commentsVisible, setCommentsVisible] = useState(true);
   const [selectedQualityId, setSelectedQualityId] = useState(autoQualityId);
   const { rooms } = useRooms(config);
-  const { clearComments, commentsLayerRef, renderComment } =
-    useCommentRenderer();
+  const { commentsLayerRef, renderComment } = useCommentRenderer();
   const {
     comments,
     elapsedSeconds,
@@ -121,13 +120,6 @@ export function WatchPage({ config }: WatchPageProps) {
     event.currentTarget.form?.requestSubmit();
   };
 
-  const switchRoom = (roomId: string): void => {
-    clearComments();
-    setSelectedRoomId(roomId);
-    setSelectedQualityId(autoQualityId);
-    history.replaceState(null, "", `/watch?room=${encodeURIComponent(roomId)}`);
-  };
-
   const togglePlayback = (): void => {
     const video = videoRef.current;
     if (video === null) {
@@ -159,12 +151,7 @@ export function WatchPage({ config }: WatchPageProps) {
           { href: "/admin", label: "管理" },
         ]}
       />
-      <WatchProgramHeader
-        rooms={rooms}
-        selectedRoom={selectedRoom}
-        selectedRoomId={selectedRoomId}
-        onSwitchRoom={switchRoom}
-      />
+      <WatchProgramHeader selectedRoom={selectedRoom} />
       <section className={watchGridClassName}>
         <main className={playerColumnClassName}>
           <WatchPlayer

@@ -12,11 +12,6 @@ export const programKickerClassName =
 export const programTitleClassName =
   "m-0 text-[19px] font-extrabold tracking-normal max-[520px]:text-base";
 
-export const roomSelectClassName = cn(
-  "grid grid-cols-[auto_minmax(0,1fr)] items-center gap-[7px] text-[13px]",
-  "max-[520px]:grid-cols-[30px_minmax(0,1fr)] max-[520px]:gap-1",
-);
-
 export const watchGridClassName =
   "grid grid-cols-[minmax(0,1fr)_350px] gap-2 max-[860px]:grid-cols-1";
 
