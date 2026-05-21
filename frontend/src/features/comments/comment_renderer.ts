@@ -32,6 +32,10 @@ export class CommentRenderer {
     element.className = commentClassName(message.direction, message.fontSize);
     element.textContent = message.body;
     element.style.color = message.color;
+    if (isMovingComment(message.direction)) {
+      element.style.maxWidth = "none";
+      element.style.width = "max-content";
+    }
     const occupiedLane = this.position(element, message.direction);
 
     this.active.add(element);
@@ -96,6 +100,15 @@ export class CommentRenderer {
         return null;
     }
   }
+}
+
+function isMovingComment(direction: CommentMessage["direction"]): boolean {
+  return (
+    direction === "rightToLeft" ||
+    direction === "leftToRight" ||
+    direction === "topToBottom" ||
+    direction === "bottomToTop"
+  );
 }
 
 type OccupiedCommentLane = {

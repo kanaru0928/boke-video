@@ -4,6 +4,7 @@ import {
   type CommentMessage,
   commentColors,
   commentDirections,
+  type PresenceMessage,
 } from "./types";
 
 export function isCommentMessage(value: unknown): value is CommentMessage {
@@ -21,6 +22,21 @@ export function isCommentMessage(value: unknown): value is CommentMessage {
     isCommentColor(message.color) &&
     isCommentFontSize(message.fontSize) &&
     typeof message.sentAt === "string"
+  );
+}
+
+export function isPresenceMessage(value: unknown): value is PresenceMessage {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const message = value as Record<string, unknown>;
+  return (
+    message.type === "presence" &&
+    typeof message.roomId === "string" &&
+    typeof message.currentViewerCount === "number" &&
+    Number.isInteger(message.currentViewerCount) &&
+    typeof message.maxConcurrentViewerCount === "number" &&
+    Number.isInteger(message.maxConcurrentViewerCount)
   );
 }
 

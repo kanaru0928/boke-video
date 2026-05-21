@@ -50,6 +50,7 @@ export function WatchPage({ config }: WatchPageProps) {
     loadOlderComments,
     recordComment,
     stats,
+    updatePresence,
   } = useRoomActivity(config, selectedRoomId);
   const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? null;
   const streamStatus =
@@ -64,6 +65,7 @@ export function WatchPage({ config }: WatchPageProps) {
     config,
     selectedRoomId,
     renderAndRecordComment,
+    updatePresence,
   );
   const { isStreamLoading, playbackQualities, streamMessage } = useStreamPlayer(
     config,

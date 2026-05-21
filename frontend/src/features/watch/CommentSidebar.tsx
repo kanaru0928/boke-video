@@ -100,9 +100,11 @@ export function CommentSidebar({
     <aside className={sidePanelClassName}>
       <div className={counterStripClassName}>
         <span>
-          来場者
+          同接
           <br />
-          {stats?.visitorCount ?? 0}
+          {stats !== null
+            ? `${stats.currentViewerCount} / 最大${stats.maxConcurrentViewerCount}`
+            : "0/0"}
         </span>
         <span>
           コメント

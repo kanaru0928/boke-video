@@ -49,23 +49,27 @@ func (s *Server) handleCreateRoomVisit(w http.ResponseWriter, r *http.Request) {
 }
 
 type roomStatsResponse struct {
-	RoomID         string     `json:"roomId"`
-	VisitorCount   int        `json:"visitorCount"`
-	CommentCount   int        `json:"commentCount"`
-	StreamStatus   string     `json:"streamStatus"`
-	StartedAt      *time.Time `json:"startedAt"`
-	ElapsedSeconds int        `json:"elapsedSeconds"`
+	RoomID                   string     `json:"roomId"`
+	VisitorCount             int        `json:"visitorCount"`
+	CommentCount             int        `json:"commentCount"`
+	CurrentViewerCount       int        `json:"currentViewerCount"`
+	MaxConcurrentViewerCount int        `json:"maxConcurrentViewerCount"`
+	StreamStatus             string     `json:"streamStatus"`
+	StartedAt                *time.Time `json:"startedAt"`
+	ElapsedSeconds           int        `json:"elapsedSeconds"`
 }
 
 func (s *Server) roomStatsResponseFromStats(stats repository.RoomStats) roomStatsResponse {
 	elapsedSeconds := s.elapsedSeconds(stats)
 	return roomStatsResponse{
-		RoomID:         stats.RoomID,
-		VisitorCount:   stats.VisitorCount,
-		CommentCount:   stats.CommentCount,
-		StreamStatus:   stats.StreamStatus,
-		StartedAt:      stats.StartedAt,
-		ElapsedSeconds: elapsedSeconds,
+		RoomID:                   stats.RoomID,
+		VisitorCount:             stats.VisitorCount,
+		CommentCount:             stats.CommentCount,
+		CurrentViewerCount:       s.commentHub.CurrentViewerCount(stats.RoomID),
+		MaxConcurrentViewerCount: s.commentHub.MaxConcurrentViewerCount(stats.RoomID),
+		StreamStatus:             stats.StreamStatus,
+		StartedAt:                stats.StartedAt,
+		ElapsedSeconds:           elapsedSeconds,
 	}
 }
 

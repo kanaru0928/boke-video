@@ -29,6 +29,8 @@ export type RoomStats = {
   roomId: string;
   visitorCount: number;
   commentCount: number;
+  currentViewerCount: number;
+  maxConcurrentViewerCount: number;
   streamStatus: RoomStreamStatus;
   startedAt: string | null;
   elapsedSeconds: number;
@@ -185,6 +187,10 @@ export function isRoomStats(value: unknown): value is RoomStats {
     Number.isInteger(stats.visitorCount) &&
     typeof stats.commentCount === "number" &&
     Number.isInteger(stats.commentCount) &&
+    typeof stats.currentViewerCount === "number" &&
+    Number.isInteger(stats.currentViewerCount) &&
+    typeof stats.maxConcurrentViewerCount === "number" &&
+    Number.isInteger(stats.maxConcurrentViewerCount) &&
     isRoomStreamStatus(stats.streamStatus) &&
     isNullableString(stats.startedAt) &&
     typeof stats.elapsedSeconds === "number" &&

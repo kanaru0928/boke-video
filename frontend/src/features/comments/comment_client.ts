@@ -1,9 +1,13 @@
 import { commentWebSocketEndpoint } from "../../shared/api/endpoints";
 import type { AppConfig } from "../../shared/config/config";
-import { isCommentMessage } from "./comment_message";
-import type { CommentCreateRequest, CommentMessage } from "./types";
+import { isCommentMessage, isPresenceMessage } from "./comment_message";
+import type {
+  CommentCreateRequest,
+  CommentMessage,
+  PresenceMessage,
+} from "./types";
 
-type MessageHandler = (message: CommentMessage) => void;
+type MessageHandler = (message: CommentMessage | PresenceMessage) => void;
 
 export class CommentClient {
   private socket: WebSocket | null = null;
@@ -61,10 +65,12 @@ export class CommentClient {
   }
 }
 
-function parseCommentMessage(raw: string): CommentMessage | null {
+function parseCommentMessage(
+  raw: string,
+): CommentMessage | PresenceMessage | null {
   const parsed: unknown = JSON.parse(raw);
-  if (!isCommentMessage(parsed)) {
-    return null;
+  if (isCommentMessage(parsed) || isPresenceMessage(parsed)) {
+    return parsed;
   }
-  return parsed;
+  return null;
 }

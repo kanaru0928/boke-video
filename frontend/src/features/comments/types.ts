@@ -20,6 +20,13 @@ export type CommentMessage = {
   sentAt: string;
 };
 
+export type PresenceMessage = {
+  type: "presence";
+  roomId: string;
+  currentViewerCount: number;
+  maxConcurrentViewerCount: number;
+};
+
 export type CommentAuthor = {
   subject: string;
   displayName: string;

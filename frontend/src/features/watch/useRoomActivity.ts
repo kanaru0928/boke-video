@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
-import type { CommentMessage } from "../comments/types";
+import type { CommentMessage, PresenceMessage } from "../comments/types";
 import {
   createRoomVisit,
   fetchCommentPage,
@@ -16,6 +16,7 @@ type UseRoomActivityResult = {
   loadOlderComments: () => Promise<void>;
   recordComment: (comment: CommentMessage) => void;
   stats: RoomStats | null;
+  updatePresence: (presence: PresenceMessage) => void;
 };
 
 export function useRoomActivity(
@@ -29,6 +30,7 @@ export function useRoomActivity(
   );
   const [isLoadingOlderComments, setIsLoadingOlderComments] = useState(false);
   const [realtimeCommentCount, setRealtimeCommentCount] = useState(0);
+  const [presence, setPresence] = useState<PresenceMessage | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const stats = useMemo((): RoomStats | null => {
     if (loadedStats === null) {
@@ -37,8 +39,16 @@ export function useRoomActivity(
     return {
       ...loadedStats,
       commentCount: loadedStats.commentCount + realtimeCommentCount,
+      currentViewerCount:
+        presence?.roomId === loadedStats.roomId
+          ? presence.currentViewerCount
+          : loadedStats.currentViewerCount,
+      maxConcurrentViewerCount:
+        presence?.roomId === loadedStats.roomId
+          ? presence.maxConcurrentViewerCount
+          : loadedStats.maxConcurrentViewerCount,
     };
-  }, [loadedStats, realtimeCommentCount]);
+  }, [loadedStats, presence, realtimeCommentCount]);
 
   useEffect(() => {
     let canceled = false;
@@ -49,10 +59,12 @@ export function useRoomActivity(
         setLoadedStats(null);
         setNextCommentCursor(null);
         setRealtimeCommentCount(0);
+        setPresence(null);
         setElapsedSeconds(0);
         return;
       }
 
+      setPresence(null);
       const [commentPage, visitedStats] = await Promise.all([
         fetchCommentPage(config, roomId),
         createRoomVisit(config, roomId),
@@ -117,6 +129,16 @@ export function useRoomActivity(
     setRealtimeCommentCount((current) => current + 1);
   }, []);
 
+  const updatePresence = useCallback(
+    (presence: PresenceMessage): void => {
+      if (presence.roomId !== roomId) {
+        return;
+      }
+      setPresence(presence);
+    },
+    [roomId],
+  );
+
   const loadOlderComments = useCallback(async (): Promise<void> => {
     if (roomId === "" || nextCommentCursor === null || isLoadingOlderComments) {
       return;
@@ -139,5 +161,6 @@ export function useRoomActivity(
     loadOlderComments,
     recordComment,
     stats,
+    updatePresence,
   };
 }

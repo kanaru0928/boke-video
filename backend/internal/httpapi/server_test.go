@@ -185,10 +185,12 @@ func TestServerReturnsRoomStatsFromStoredData(t *testing.T) {
 	}
 
 	var stats struct {
-		RoomID         string `json:"roomId"`
-		VisitorCount   int    `json:"visitorCount"`
-		CommentCount   int    `json:"commentCount"`
-		ElapsedSeconds int    `json:"elapsedSeconds"`
+		RoomID                   string `json:"roomId"`
+		VisitorCount             int    `json:"visitorCount"`
+		CommentCount             int    `json:"commentCount"`
+		CurrentViewerCount       int    `json:"currentViewerCount"`
+		MaxConcurrentViewerCount int    `json:"maxConcurrentViewerCount"`
+		ElapsedSeconds           int    `json:"elapsedSeconds"`
 	}
 	if err := json.NewDecoder(statsResponse.Body).Decode(&stats); err != nil {
 		t.Fatalf("Decode returned error: %v", err)
@@ -201,6 +203,12 @@ func TestServerReturnsRoomStatsFromStoredData(t *testing.T) {
 	}
 	if stats.CommentCount != 1 {
 		t.Fatalf("stats.CommentCount = %d", stats.CommentCount)
+	}
+	if stats.CurrentViewerCount != 0 {
+		t.Fatalf("stats.CurrentViewerCount = %d", stats.CurrentViewerCount)
+	}
+	if stats.MaxConcurrentViewerCount != 0 {
+		t.Fatalf("stats.MaxConcurrentViewerCount = %d", stats.MaxConcurrentViewerCount)
 	}
 	if stats.ElapsedSeconds < 0 {
 		t.Fatalf("stats.ElapsedSeconds = %d", stats.ElapsedSeconds)
