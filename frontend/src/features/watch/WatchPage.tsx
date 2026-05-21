@@ -165,6 +165,9 @@ export function WatchPage({ config }: WatchPageProps) {
             onUpdatePlayerState={updatePlayerState}
             stageRef={stageRef}
             streamMessage={streamMessage}
+            streamStatus={
+              stats?.streamStatus ?? selectedRoom?.streamStatus ?? "waiting"
+            }
             videoRef={videoRef}
           />
           <CommentForm

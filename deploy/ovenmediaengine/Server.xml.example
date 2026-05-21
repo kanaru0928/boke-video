@@ -4,6 +4,11 @@
   <Type>origin</Type>
   <IP>*</IP>
   <Bind>
+    <Managers>
+      <API>
+        <Port>8081</Port>
+      </API>
+    </Managers>
     <Providers>
       <WebRTC>
         <Signalling>
@@ -26,8 +31,21 @@
           <IceCandidate>${PublicIP}:10000-10005/udp</IceCandidate>
         </IceCandidates>
       </WebRTC>
+      <Thumbnail>
+        <Port>20080</Port>
+      </Thumbnail>
     </Publishers>
   </Bind>
+  <Managers>
+    <Host>
+      <Names>
+        <Name>127.0.0.1</Name>
+      </Names>
+    </Host>
+    <API>
+      <AccessToken>replace-with-api-token</AccessToken>
+    </API>
+  </Managers>
   <VirtualHosts>
     <VirtualHost>
       <Name>default</Name>
@@ -62,6 +80,12 @@
                   <Name>audio_bypass</Name>
                   <Bypass>true</Bypass>
                 </Audio>
+                <Image>
+                  <Codec>jpeg</Codec>
+                  <Framerate>1</Framerate>
+                  <Width>640</Width>
+                  <Height>360</Height>
+                </Image>
               </Encodes>
               <Playlist>
                 <Name>master</Name>
@@ -95,6 +119,11 @@
               <Rtx>true</Rtx>
               <Ulpfec>true</Ulpfec>
             </WebRTC>
+            <Thumbnail>
+              <CrossDomains>
+                <Url>*</Url>
+              </CrossDomains>
+            </Thumbnail>
           </Publishers>
         </Application>
       </Applications>

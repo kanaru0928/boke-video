@@ -24,7 +24,7 @@ Cloudflare Workersで静的アセットとして配信します。
 
 ## サムネイル
 
-トップページの枠一覧はバックエンドが返す`thumbnailUrl`を使います。`thumbnailUrl`が`n/a`のときは、サムネイル生成待ちとしてマスコット表示を出します。再取得間隔は各枠の`thumbnailRefreshSeconds`を使い、一覧内で最も短い値に合わせます。
+トップページの枠一覧はバックエンドが返す`thumbnailUrl`を使います。`thumbnailUrl`が空文字のときだけ、サムネイル待ちとしてマスコット表示を出します。再取得間隔は各枠の`thumbnailRefreshSeconds`を使い、一覧内で最も短い値に合わせます。
 
 ## 設定
 

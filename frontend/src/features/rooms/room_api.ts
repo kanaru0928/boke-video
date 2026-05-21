@@ -14,13 +14,20 @@ export type Room = {
   thumbnailUrl: string;
   thumbnailUpdatedAt: string;
   thumbnailRefreshSeconds: number;
+  streamStatus: RoomStreamStatus;
+  streamStartedAt: string | null;
+  streamLastSeenAt: string | null;
+  streamEndedAt: string | null;
 };
+
+export type RoomStreamStatus = "waiting" | "live" | "ended";
 
 export type RoomStats = {
   roomId: string;
   visitorCount: number;
   commentCount: number;
-  startedAt: string;
+  streamStatus: RoomStreamStatus;
+  startedAt: string | null;
   elapsedSeconds: number;
 };
 
@@ -195,7 +202,11 @@ export function isRoom(value: unknown): value is Room {
     typeof room.thumbnailUrl === "string" &&
     typeof room.thumbnailUpdatedAt === "string" &&
     typeof room.thumbnailRefreshSeconds === "number" &&
-    Number.isInteger(room.thumbnailRefreshSeconds)
+    Number.isInteger(room.thumbnailRefreshSeconds) &&
+    isRoomStreamStatus(room.streamStatus) &&
+    isNullableString(room.streamStartedAt) &&
+    isNullableString(room.streamLastSeenAt) &&
+    isNullableString(room.streamEndedAt)
   );
 }
 
@@ -210,10 +221,19 @@ export function isRoomStats(value: unknown): value is RoomStats {
     Number.isInteger(stats.visitorCount) &&
     typeof stats.commentCount === "number" &&
     Number.isInteger(stats.commentCount) &&
-    typeof stats.startedAt === "string" &&
+    isRoomStreamStatus(stats.streamStatus) &&
+    isNullableString(stats.startedAt) &&
     typeof stats.elapsedSeconds === "number" &&
     Number.isInteger(stats.elapsedSeconds)
   );
+}
+
+function isRoomStreamStatus(value: unknown): value is RoomStreamStatus {
+  return value === "waiting" || value === "live" || value === "ended";
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return value === null || typeof value === "string";
 }
 
 function isCreatedRoom(value: unknown): value is CreatedRoom {

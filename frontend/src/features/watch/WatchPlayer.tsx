@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { RefObject } from "react";
 import { buttonClassName } from "../../shared/ui/styles";
+import type { RoomStreamStatus } from "../rooms/room_api";
 import { formatElapsedTime } from "./room_activity";
 import {
   commentsLayerClassName,
@@ -30,6 +31,7 @@ type WatchPlayerProps = {
   onUpdatePlayerState: () => void;
   stageRef: RefObject<HTMLElement | null>;
   streamMessage: string;
+  streamStatus: RoomStreamStatus;
   videoRef: RefObject<HTMLVideoElement | null>;
 };
 
@@ -44,6 +46,7 @@ export function WatchPlayer({
   onUpdatePlayerState,
   stageRef,
   streamMessage,
+  streamStatus,
   videoRef,
 }: WatchPlayerProps) {
   return (
@@ -94,7 +97,9 @@ export function WatchPlayer({
         <span className={playTimeClassName}>
           経過時間　{formatElapsedTime(elapsedSeconds)}
         </span>
-        <span className={liveBadgeClassName}>●LIVE</span>
+        {streamStatus === "live" ? (
+          <span className={liveBadgeClassName}>●LIVE</span>
+        ) : null}
         <button
           aria-label="更新"
           className={buttonClassName({ square: true })}

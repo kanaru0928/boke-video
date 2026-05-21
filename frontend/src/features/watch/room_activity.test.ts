@@ -7,9 +7,10 @@ import {
 } from "./room_activity";
 
 describe("formatElapsedTime", () => {
-  it("秒数を分秒表示にする", () => {
+  it("秒数を時間分秒表示にする", () => {
     expect(formatElapsedTime(0)).toBe("0:00");
     expect(formatElapsedTime(65)).toBe("1:05");
+    expect(formatElapsedTime(80611)).toBe("22:23:31");
     expect(formatElapsedTime(-1)).toBe("0:00");
   });
 });

@@ -90,6 +90,14 @@ ACCESS_CERTS_URL=https://チーム名.cloudflareaccess.com/cdn-cgi/access/certs
 STREAM_PUBLIC_BASE_URL=https://rtc.example.com
 STREAM_SIGNING_SECRET=replace-with-strong-secret
 WHIP_UPSTREAM_BASE_URL=http://127.0.0.1:3333
+
+OME_API_BASE_URL=http://127.0.0.1:8081
+OME_API_ACCESS_TOKEN=replace-with-api-token
+OME_VHOST_NAME=default
+OME_APP_NAME=live
+OME_THUMBNAIL_BASE_URL=http://127.0.0.1:20080
+OME_THUMBNAIL_CODEC=jpg
+STREAM_END_GRACE_SECONDS=90
 ```
 
 フロントエンドのビルド時は次を設定します。

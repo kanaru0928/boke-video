@@ -28,6 +28,10 @@ type Config struct {
 }
 
 func Load() (Config, error) {
+	streamEndGraceSeconds, err := envInt("STREAM_END_GRACE_SECONDS", 90)
+	if err != nil {
+		return Config{}, err
+	}
 	cfg := Config{
 		ListenAddr:            env("LISTEN_ADDR", ":8080"),
 		DatabasePath:          env("DATABASE_PATH", "boke-video.sqlite3"),
@@ -45,7 +49,7 @@ func Load() (Config, error) {
 		OMEAppName:            env("OME_APP_NAME", "live"),
 		OMEThumbnailBaseURL:   strings.TrimSpace(os.Getenv("OME_THUMBNAIL_BASE_URL")),
 		OMEThumbnailCodec:     env("OME_THUMBNAIL_CODEC", "jpg"),
-		StreamEndGraceSeconds: envInt("STREAM_END_GRACE_SECONDS", 90),
+		StreamEndGraceSeconds: streamEndGraceSeconds,
 	}
 
 	if cfg.AccessEnabled {
@@ -104,14 +108,14 @@ func env(key string, defaultValue string) string {
 	return value
 }
 
-func envInt(key string, defaultValue int) int {
+func envInt(key string, defaultValue int) (int, error) {
 	value := strings.TrimSpace(os.Getenv(key))
 	if value == "" {
-		return defaultValue
+		return defaultValue, nil
 	}
 	parsed, err := strconv.Atoi(value)
 	if err != nil {
-		return defaultValue
+		return 0, errors.New(key + " must be an integer")
 	}
-	return parsed
+	return parsed, nil
 }

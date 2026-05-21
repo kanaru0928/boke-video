@@ -12,6 +12,8 @@ Goバックエンドは次を担当します。
 - ヘルスチェックを返す
 - SQLiteへ配信ルームとコメントを保存する
 - 配信枠サムネイルの状態と更新間隔を保存する
+- OvenMediaEngine REST APIで実配信の開始、継続、終了を同期する
+- OvenMediaEngine Thumbnail Publisherからサムネイルを取得して返す
 - JWTの`sub`に紐づくユニーク来場者数を集計する
 - 管理者向けAPIを提供する
 - Cloudflare Access JWTを検証する
@@ -27,6 +29,7 @@ GET /healthz
 GET /api/rooms
 GET /api/rooms/:roomId
 GET /api/rooms/:roomId/stats
+GET /api/rooms/:roomId/thumbnail
 GET /api/rooms/:roomId/comments
 GET /ws/rooms/:roomId/comments
 POST /api/rooms/:roomId/visits
@@ -50,6 +53,10 @@ CREATE TABLE rooms (
   thumbnail_url TEXT NOT NULL,
   thumbnail_updated_at TEXT NOT NULL,
   thumbnail_refresh_seconds INTEGER NOT NULL,
+  stream_status TEXT NOT NULL,
+  stream_started_at TEXT,
+  stream_last_seen_at TEXT,
+  stream_ended_at TEXT,
   created_at TEXT NOT NULL
 );
 
@@ -86,7 +93,9 @@ SQLiteはWALを有効にします。初期規模100人では外部DBを追加し
 
 保存するユーザー識別子はCloudflare Access JWTの`sub`だけです。認証情報、パスワード、メールアドレス、WHIP Bearer Tokenの平文は保存しません。配信ルーム所有者は`owner_sub`、コメント投稿者は`author_sub`、来場者は`visitor_sub`として保存します。WHIP Bearer Tokenはハッシュだけを保存します。
 
-`thumbnail_url`は必須です。サムネイル未生成時は`n/a`を保存し、フロントエンドはその状態をサムネイル生成待ちとして表示します。`thumbnail_refresh_seconds`はトップページがサムネイル再取得に使う更新間隔です。初期値は30秒です。
+`stream_status`は`waiting`、`live`、`ended`のいずれかです。公開枠一覧は`live`だけを返します。OvenMediaEngineでストリームが見えなくなっても`stream_last_seen_at`から`STREAM_END_GRACE_SECONDS`秒以内は`live`を維持し、短い通信断で枠を消しません。猶予を超えた枠は`ended`にして公開枠一覧から外します。
+
+`thumbnail_url`は実サムネイルを返すバックエンドAPIのパスです。未配信時は空文字を保存します。フロントエンドは空文字の間だけサムネイル待ちを表示します。`thumbnail_refresh_seconds`はトップページがサムネイル再取得に使う更新間隔です。初期値は15秒です。
 
 ## 環境変数
 
@@ -96,6 +105,13 @@ DATABASE_PATH=/var/lib/boke-video/boke-video.sqlite3
 STREAM_PUBLIC_BASE_URL=https://rtc.example.com
 STREAM_SIGNING_SECRET=replace-with-strong-secret
 WHIP_UPSTREAM_BASE_URL=http://127.0.0.1:3333
+OME_API_BASE_URL=http://127.0.0.1:8081
+OME_API_ACCESS_TOKEN=replace-with-api-token
+OME_VHOST_NAME=default
+OME_APP_NAME=live
+OME_THUMBNAIL_BASE_URL=http://127.0.0.1:20080
+OME_THUMBNAIL_CODEC=jpg
+STREAM_END_GRACE_SECONDS=90
 ```
 
 CORSとCloudflare Access関連の設定値は`docs/deployment.md`を参照します。
