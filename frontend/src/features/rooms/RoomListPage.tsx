@@ -39,7 +39,7 @@ export function RoomListPage({ config }: RoomListPageProps) {
         title="枠一覧"
       >
         {rooms.length === 0 ? (
-          <div className="flex items-center justify-between gap-2 border border-t-0 border-[#a7a7a7] bg-white p-[7px]">
+          <div className="grid content-start grid-cols-[1fr_auto] items-start gap-2 border border-t-0 border-[#a7a7a7] bg-white p-[7px] max-[520px]:grid-cols-1">
             <p>現在表示できる枠はありません</p>
             <a className={buttonClassName()} href="/admin">
               <Settings aria-hidden="true" size={17} />
