@@ -4,6 +4,8 @@
 
 このdocsの`example.com`はプレースホルダーです。Cloudflare上では実ドメインの既存Access ApplicationとTunnel設定に合わせます。
 
+Terraformで管理する場合は`docs/terraform.md`を参照します。
+
 ## DNS
 
 | ホスト名 | 設定 |
@@ -32,23 +34,9 @@ GoバックエンドはAccess JWTの署名、`aud`、`iss`、`exp`、`sub`を検
 
 ## Tunnel
 
-Tunnelは`stream.example.com`だけをGoバックエンドへ転送します。
+Tunnelは`stream.example.com`だけをGoバックエンドへ転送します。Terraformではremote Tunnel configを管理し、Oracle上のcloudflaredはtokenで起動します。
 
-```yaml
-tunnel: replace-with-tunnel-id
-credentials-file: /etc/cloudflared/replace-with-tunnel-id.json
-
-ingress:
-  - hostname: stream.example.com
-    service: http://127.0.0.1:8080
-    originRequest:
-      access:
-        required: true
-        teamName: replace-with-team-name
-        audTag:
-          - replace-with-access-aud-tag
-  - service: http_status:404
-```
+ローカル管理のYAMLを使う場合は`deploy/cloudflared/boke-video.yml.example`を参照します。ただしTerraformのremote Tunnel configと同時には使いません。
 
 ## 参考
 
