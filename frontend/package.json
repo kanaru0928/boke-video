@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "tsc --noEmit && vite build",
+    "build": "node scripts/validate-env.mjs && tsc --noEmit && vite build",
     "check": "pnpm typecheck && pnpm test && pnpm build",
     "deploy": "pnpm build && wrangler deploy",
     "test": "vitest run",

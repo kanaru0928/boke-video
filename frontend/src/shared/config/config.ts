@@ -4,10 +4,16 @@ export type AppConfig = {
   ingestBaseUrl: string;
 };
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
+function requiredEnv(name: keyof ImportMetaEnv): string {
+  const value = import.meta.env[name];
+  if (value === "") {
+    throw new Error(`${name} is required`);
+  }
+  return value;
+}
 
 export const appConfig: AppConfig = {
-  apiBaseUrl,
-  commentWsUrl: import.meta.env.VITE_COMMENT_WS_URL ?? "ws://localhost:8080",
-  ingestBaseUrl: import.meta.env.VITE_INGEST_BASE_URL ?? apiBaseUrl,
+  apiBaseUrl: requiredEnv("VITE_API_BASE_URL"),
+  commentWsUrl: requiredEnv("VITE_COMMENT_WS_URL"),
+  ingestBaseUrl: requiredEnv("VITE_INGEST_BASE_URL"),
 };
