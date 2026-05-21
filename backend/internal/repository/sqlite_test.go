@@ -137,3 +137,50 @@ func TestSQLiteStoresRoomAndComment(t *testing.T) {
 		t.Fatalf("DeleteComment returned error: %v", err)
 	}
 }
+
+func TestSQLiteAllowsOneRoomPerOwner(t *testing.T) {
+	ctx := context.Background()
+	db, err := OpenSQLite(filepath.Join(t.TempDir(), "test.sqlite3"))
+	if err != nil {
+		t.Fatalf("OpenSQLite returned error: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.Migrate(ctx); err != nil {
+		t.Fatalf("Migrate returned error: %v", err)
+	}
+
+	firstRoom := testRoom("room-1", "owner-1")
+	if err := db.CreateRoom(ctx, firstRoom); err != nil {
+		t.Fatalf("CreateRoom returned error: %v", err)
+	}
+	secondRoom := testRoom("room-2", "owner-1")
+	if err := db.CreateRoom(ctx, secondRoom); err != ErrOwnerRoomLimitExceeded {
+		t.Fatalf("CreateRoom error = %v", err)
+	}
+	otherOwnerRoom := testRoom("room-3", "owner-2")
+	if err := db.CreateRoom(ctx, otherOwnerRoom); err != nil {
+		t.Fatalf("CreateRoom for another owner returned error: %v", err)
+	}
+
+	if err := db.DeleteRoom(ctx, firstRoom.ID, firstRoom.OwnerSub); err != nil {
+		t.Fatalf("DeleteRoom returned error: %v", err)
+	}
+	if err := db.CreateRoom(ctx, secondRoom); err != nil {
+		t.Fatalf("CreateRoom after delete returned error: %v", err)
+	}
+}
+
+func testRoom(roomID string, ownerSub string) Room {
+	return Room{
+		ID:                      roomID,
+		Title:                   "テスト配信",
+		ThumbnailURL:            "",
+		ThumbnailUpdatedAt:      time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
+		ThumbnailRefreshSeconds: 15,
+		StreamStatus:            "waiting",
+		OwnerSub:                ownerSub,
+		IngestTokenHash:         "token-hash",
+		CreatedAt:               time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
+	}
+}

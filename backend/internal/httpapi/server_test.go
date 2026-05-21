@@ -173,6 +173,38 @@ func TestServerReturnsConflictForDuplicateRoomID(t *testing.T) {
 	}
 }
 
+func TestServerRejectsSecondRoomForSameOwner(t *testing.T) {
+	server := newTestServer(t)
+
+	firstResponse := performRequest(server, http.MethodPost, "/api/admin/rooms", `{"id":"first-room","title":"OBS"}`)
+	if firstResponse.Code != http.StatusCreated {
+		t.Fatalf("create room status = %d, body = %s", firstResponse.Code, firstResponse.Body.String())
+	}
+
+	secondResponse := performRequest(server, http.MethodPost, "/api/admin/rooms", `{"id":"second-room","title":"OBS 2"}`)
+	if secondResponse.Code != http.StatusConflict {
+		t.Fatalf("second room status = %d, body = %s", secondResponse.Code, secondResponse.Body.String())
+	}
+}
+
+func TestServerAllowsRoomAfterOwnerDeletesCurrentRoom(t *testing.T) {
+	server := newTestServer(t)
+
+	firstResponse := performRequest(server, http.MethodPost, "/api/admin/rooms", `{"id":"first-room","title":"OBS"}`)
+	if firstResponse.Code != http.StatusCreated {
+		t.Fatalf("create room status = %d, body = %s", firstResponse.Code, firstResponse.Body.String())
+	}
+	deleteResponse := performRequest(server, http.MethodDelete, "/api/admin/rooms/first-room", "")
+	if deleteResponse.Code != http.StatusNoContent {
+		t.Fatalf("delete room status = %d, body = %s", deleteResponse.Code, deleteResponse.Body.String())
+	}
+
+	secondResponse := performRequest(server, http.MethodPost, "/api/admin/rooms", `{"id":"second-room","title":"OBS 2"}`)
+	if secondResponse.Code != http.StatusCreated {
+		t.Fatalf("second room status = %d, body = %s", secondResponse.Code, secondResponse.Body.String())
+	}
+}
+
 func TestServerRejectsUnsafeRoomID(t *testing.T) {
 	server := newTestServer(t)
 
@@ -370,6 +402,42 @@ func TestServerReturnsStreamElapsedSecondsFromStreamStartedAt(t *testing.T) {
 	}
 	if stats.StreamStatus != "live" {
 		t.Fatalf("stats.StreamStatus = %q", stats.StreamStatus)
+	}
+	if stats.ElapsedSeconds != 75 {
+		t.Fatalf("stats.ElapsedSeconds = %d", stats.ElapsedSeconds)
+	}
+}
+
+func TestServerKeepsStreamStartedAtWhileStreamRemainsLive(t *testing.T) {
+	server := newTestServer(t)
+	now := time.Unix(2000, 0).UTC()
+	server.now = func() time.Time {
+		return now
+	}
+	roomID := createTestRoom(t, server, "配信")
+	server.streamMonitor = &fakeStreamMonitor{
+		snapshots: map[string]streammonitor.StreamSnapshot{
+			roomID: {
+				Active: true,
+			},
+		},
+	}
+
+	firstResponse := performRequest(server, http.MethodGet, "/api/rooms/"+roomID+"/stats", "")
+	if firstResponse.Code != http.StatusOK {
+		t.Fatalf("first stats status = %d, body = %s", firstResponse.Code, firstResponse.Body.String())
+	}
+
+	now = now.Add(75 * time.Second)
+	secondResponse := performRequest(server, http.MethodGet, "/api/rooms/"+roomID+"/stats", "")
+	if secondResponse.Code != http.StatusOK {
+		t.Fatalf("second stats status = %d, body = %s", secondResponse.Code, secondResponse.Body.String())
+	}
+	var stats struct {
+		ElapsedSeconds int `json:"elapsedSeconds"`
+	}
+	if err := json.NewDecoder(secondResponse.Body).Decode(&stats); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
 	}
 	if stats.ElapsedSeconds != 75 {
 		t.Fatalf("stats.ElapsedSeconds = %d", stats.ElapsedSeconds)

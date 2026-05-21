@@ -672,7 +672,9 @@ func (s *Server) reconcileRoomWithSnapshot(ctx context.Context, room repository.
 
 	if snapshot.Active {
 		startedAt := now
-		if snapshot.StartedAt != nil {
+		if room.StreamStartedAt != nil {
+			startedAt = room.StreamStartedAt.UTC()
+		} else if snapshot.StartedAt != nil {
 			startedAt = snapshot.StartedAt.UTC()
 		}
 		nextState.StreamStatus = "live"
@@ -775,6 +777,10 @@ func writeRepositoryError(w http.ResponseWriter, err error) {
 	}
 	if errors.Is(err, repository.ErrAlreadyExists) {
 		writeError(w, http.StatusConflict, "already exists")
+		return
+	}
+	if errors.Is(err, repository.ErrOwnerRoomLimitExceeded) {
+		writeError(w, http.StatusConflict, "owner room limit exceeded")
 		return
 	}
 	writeError(w, http.StatusInternalServerError, "internal server error")

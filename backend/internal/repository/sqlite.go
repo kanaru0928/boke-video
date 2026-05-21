@@ -52,6 +52,7 @@ type RoomStreamState struct {
 }
 
 var ErrAlreadyExists = errors.New("already exists")
+var ErrOwnerRoomLimitExceeded = errors.New("owner room limit exceeded")
 
 func OpenSQLite(path string) (*SQLite, error) {
 	db, err := sql.Open("sqlite", path)
@@ -93,6 +94,8 @@ func (s *SQLite) Migrate(ctx context.Context) error {
 		`ALTER TABLE rooms ADD COLUMN stream_ended_at TEXT`,
 		`ALTER TABLE rooms ADD COLUMN owner_sub TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE rooms ADD COLUMN ingest_token_hash TEXT NOT NULL DEFAULT ''`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS rooms_owner_sub_unique_index
+			ON rooms (owner_sub)`,
 		`CREATE TABLE IF NOT EXISTS comments (
 				id TEXT PRIMARY KEY,
 				room_id TEXT NOT NULL,
@@ -488,8 +491,15 @@ func normalizeSQLiteError(err error) error {
 	if errors.As(err, &sqliteErr) {
 		switch sqliteErr.Code() {
 		case sqlite3.SQLITE_CONSTRAINT_PRIMARYKEY, sqlite3.SQLITE_CONSTRAINT_UNIQUE:
+			if isOwnerRoomLimitError(sqliteErr.Error()) {
+				return ErrOwnerRoomLimitExceeded
+			}
 			return ErrAlreadyExists
 		}
 	}
 	return err
+}
+
+func isOwnerRoomLimitError(message string) bool {
+	return strings.Contains(message, "rooms.owner_sub") || strings.Contains(message, "rooms_owner_sub_unique_index")
 }
