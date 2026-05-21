@@ -7,6 +7,7 @@ import type { CommentMessage } from "../comments/types";
 import type { RoomStats } from "../rooms/room_api";
 import {
   commentLogNumber,
+  formatCommentSentAt,
   formatElapsedTime,
   isCommentLogScrolledToBottom,
 } from "./room_activity";
@@ -162,7 +163,10 @@ export function CommentSidebar({
                 </span>
                 <div className={commentLogContentClassName}>
                   <p className={commentLogMetaClassName}>
-                    {commentAuthorLabel(comment.author)}
+                    <span>{commentAuthorLabel(comment.author)}</span>
+                    <time dateTime={comment.sentAt}>
+                      {formatCommentSentAt(comment.sentAt)}
+                    </time>
                   </p>
                   <p
                     className={cn(

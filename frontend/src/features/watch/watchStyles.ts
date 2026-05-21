@@ -160,7 +160,7 @@ export const commentLogContentClassName =
   "grid min-w-0 gap-[2px] px-2 py-[7px] max-[520px]:py-[6px]";
 
 export const commentLogMetaClassName =
-  "m-0 truncate text-[11px] font-extrabold text-[#777777]";
+  "m-0 flex min-w-0 items-center gap-[7px] text-[11px] font-extrabold text-[#777777] [&_span]:min-w-0 [&_span]:truncate [&_time]:shrink-0 [&_time]:font-normal";
 
 export const commentLogBodyClassName =
   "m-0 text-[13px] [overflow-wrap:anywhere]";

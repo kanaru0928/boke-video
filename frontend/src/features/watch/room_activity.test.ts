@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   commentLogNumber,
+  formatCommentSentAt,
   formatElapsedTime,
   isCommentLogScrolledToBottom,
 } from "./room_activity";
@@ -11,6 +12,17 @@ describe("formatElapsedTime", () => {
     expect(formatElapsedTime(65)).toBe("1:05");
     expect(formatElapsedTime(80611)).toBe("22:23:31");
     expect(formatElapsedTime(-1)).toBe("0:00");
+  });
+});
+
+describe("formatCommentSentAt", () => {
+  it("コメント投稿時刻を時分秒表示にする", () => {
+    const sentAt = new Date(2026, 4, 21, 9, 8, 7).toISOString();
+    expect(formatCommentSentAt(sentAt)).toBe("09:08:07");
+  });
+
+  it("不正な時刻は空文字にする", () => {
+    expect(formatCommentSentAt("invalid")).toBe("");
   });
 });
 
