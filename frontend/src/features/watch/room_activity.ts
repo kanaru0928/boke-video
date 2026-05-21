@@ -20,3 +20,11 @@ export function commentLogNumber(
   );
   return firstVisibleNumber + commentIndex + 1;
 }
+
+export function isCommentLogScrolledToBottom(
+  scrollTop: number,
+  clientHeight: number,
+  scrollHeight: number,
+): boolean {
+  return scrollHeight - scrollTop - clientHeight <= 8;
+}
