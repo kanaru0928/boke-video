@@ -1,4 +1,5 @@
 import { AdminPage } from "./features/admin/AdminPage";
+import { NotFoundPage } from "./features/notFound/NotFoundPage";
 import { RoomListPage } from "./features/rooms/RoomListPage";
 import { WatchPage } from "./features/watch/WatchPage";
 import type { AppConfig } from "./shared/config/config";
@@ -8,11 +9,15 @@ type AppProps = {
 };
 
 export function App({ config }: AppProps) {
-  if (location.pathname.startsWith("/admin")) {
+  const pathname = location.pathname;
+  if (pathname === "/") {
+    return <RoomListPage config={config} />;
+  }
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     return <AdminPage config={config} />;
   }
-  if (location.pathname.startsWith("/watch")) {
+  if (pathname === "/watch" || pathname.startsWith("/watch/")) {
     return <WatchPage config={config} />;
   }
-  return <RoomListPage config={config} />;
+  return <NotFoundPage />;
 }

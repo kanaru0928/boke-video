@@ -1,10 +1,11 @@
-import { Bot, MonitorPlay, Newspaper, Settings } from "lucide-react";
+import { Bot, MonitorPlay, Newspaper } from "lucide-react";
 import { useEffect } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import { AppHeader } from "../../shared/ui/AppHeader";
 import { Board } from "../../shared/ui/Board";
 import { cn } from "../../shared/ui/classNames";
-import { appShellClassName, buttonClassName } from "../../shared/ui/styles";
+import { appShellClassName } from "../../shared/ui/styles";
+import { EmptyRooms } from "./EmptyRooms";
 import type { Room } from "./room_api";
 import {
   roomThumbnail,
@@ -39,13 +40,7 @@ export function RoomListPage({ config }: RoomListPageProps) {
         title="枠一覧"
       >
         {rooms.length === 0 ? (
-          <div className="grid content-start grid-cols-[1fr_auto] items-start gap-2 border border-t-0 border-[#a7a7a7] bg-white p-[7px] max-[520px]:grid-cols-1">
-            <p>現在表示できる枠はありません</p>
-            <a className={buttonClassName()} href="/admin">
-              <Settings aria-hidden="true" size={17} />
-              管理
-            </a>
-          </div>
+          <EmptyRooms />
         ) : (
           <section className="grid content-start gap-[10px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2 [grid-template-columns:repeat(auto-fill,minmax(238px,1fr))] max-[860px]:grid-cols-2 max-[860px]:gap-[7px] max-[520px]:p-1.5">
             {rooms.map((room) => (
