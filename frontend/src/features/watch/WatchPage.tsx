@@ -16,6 +16,7 @@ import { isCommentSubmitShortcut } from "./comment_shortcuts";
 import { autoQualityId } from "./stream_quality";
 import { useCommentRenderer } from "./useCommentRenderer";
 import { useCommentSocket } from "./useCommentSocket";
+import { useFullscreen } from "./useFullscreen";
 import { useRoomActivity } from "./useRoomActivity";
 import { useStreamPlayer } from "./useStreamPlayer";
 import { WatchPlayer } from "./WatchPlayer";
@@ -40,8 +41,7 @@ export function WatchPage({ config }: WatchPageProps) {
   const [commentsVisible, setCommentsVisible] = useState(true);
   const [selectedQualityId, setSelectedQualityId] = useState(autoQualityId);
   const { rooms } = useRooms(config);
-  const { clearComments, commentsLayerRef, renderComment } =
-    useCommentRenderer();
+  const { commentsLayerRef, renderComment } = useCommentRenderer();
   const {
     comments,
     elapsedSeconds,
@@ -72,6 +72,7 @@ export function WatchPage({ config }: WatchPageProps) {
     videoRef,
     selectedQualityId,
   );
+  const { isFullscreen, toggleFullscreen } = useFullscreen(stageRef);
 
   useEffect(() => {
     if (rooms.length === 0 || selectedRoomId !== "") {
@@ -119,13 +120,6 @@ export function WatchPage({ config }: WatchPageProps) {
     event.currentTarget.form?.requestSubmit();
   };
 
-  const switchRoom = (roomId: string): void => {
-    clearComments();
-    setSelectedRoomId(roomId);
-    setSelectedQualityId(autoQualityId);
-    history.replaceState(null, "", `/watch?room=${encodeURIComponent(roomId)}`);
-  };
-
   const togglePlayback = (): void => {
     const video = videoRef.current;
     if (video === null) {
@@ -148,14 +142,6 @@ export function WatchPage({ config }: WatchPageProps) {
     updatePlayerState();
   };
 
-  const toggleFullscreen = (): void => {
-    if (document.fullscreenElement === null) {
-      void stageRef.current?.requestFullscreen();
-      return;
-    }
-    void document.exitFullscreen();
-  };
-
   return (
     <section className={appShellClassName}>
       <AppHeader
@@ -165,12 +151,7 @@ export function WatchPage({ config }: WatchPageProps) {
           { href: "/admin", label: "管理" },
         ]}
       />
-      <WatchProgramHeader
-        rooms={rooms}
-        selectedRoom={selectedRoom}
-        selectedRoomId={selectedRoomId}
-        onSwitchRoom={switchRoom}
-      />
+      <WatchProgramHeader selectedRoom={selectedRoom} />
       <section className={watchGridClassName}>
         <main className={playerColumnClassName}>
           <WatchPlayer
@@ -179,6 +160,7 @@ export function WatchPage({ config }: WatchPageProps) {
             elapsedSeconds={elapsedSeconds}
             isMuted={isMuted}
             isPaused={isPaused}
+            isFullscreen={isFullscreen}
             isStreamLoading={isStreamLoading}
             playbackQualities={playbackQualities}
             selectedQualityId={selectedQualityId}

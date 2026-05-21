@@ -1,5 +1,6 @@
 import {
   Maximize,
+  Minimize,
   Pause,
   Play,
   RefreshCw,
@@ -7,21 +8,25 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useState } from "react";
 import { Button } from "../../shared/ui/Button";
+import { cn } from "../../shared/ui/classNames";
 import type { RoomStreamStatus } from "../rooms/room_api";
 import { PlayerSettingsPopover } from "./PlayerSettingsPopover";
 import { formatElapsedTime } from "./room_activity";
 import type { PlaybackQualityOption } from "./stream_quality";
+import { useSettingsPopover } from "./useSettingsPopover";
 import {
   liveBadgeClassName,
   playerControlsClassName,
+  playerControlsVisibleClassName,
   playTimeClassName,
 } from "./watchStyles";
 
 type PlayerControlsProps = {
   commentsVisible: boolean;
+  controlsVisible: boolean;
   elapsedSeconds: number;
+  isFullscreen: boolean;
   isMuted: boolean;
   isPaused: boolean;
   onCommentsVisibleChange: (visible: boolean) => void;
@@ -36,7 +41,9 @@ type PlayerControlsProps = {
 
 export function PlayerControls({
   commentsVisible,
+  controlsVisible,
   elapsedSeconds,
+  isFullscreen,
   isMuted,
   isPaused,
   onCommentsVisibleChange,
@@ -48,10 +55,15 @@ export function PlayerControls({
   selectedQualityId,
   streamStatus,
 }: PlayerControlsProps) {
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { settingsOpen, settingsRef, toggleSettings } = useSettingsPopover();
 
   return (
-    <div className={playerControlsClassName}>
+    <div
+      className={cn(
+        playerControlsClassName,
+        controlsVisible && playerControlsVisibleClassName,
+      )}
+    >
       <div className="flex min-w-0 items-center gap-1">
         <Button
           aria-label={isPaused ? "再生" : "一時停止"}
@@ -94,15 +106,19 @@ export function PlayerControls({
           <RefreshCw aria-hidden="true" size={18} />
         </Button>
         <Button
-          aria-label="全画面"
+          aria-label={isFullscreen ? "全画面を解除" : "全画面"}
           className="max-[520px]:hidden"
           id="fullscreen-toggle"
           square
           onClick={onToggleFullscreen}
         >
-          <Maximize aria-hidden="true" size={18} />
+          {isFullscreen ? (
+            <Minimize aria-hidden="true" size={18} />
+          ) : (
+            <Maximize aria-hidden="true" size={18} />
+          )}
         </Button>
-        <div className="relative">
+        <div className="relative" ref={settingsRef}>
           <PlayerSettingsPopover
             commentsVisible={commentsVisible}
             isOpen={settingsOpen}
@@ -116,7 +132,7 @@ export function PlayerControls({
             aria-label="設定"
             id="settings-toggle"
             square
-            onClick={() => setSettingsOpen((current) => !current)}
+            onClick={toggleSettings}
           >
             <Settings aria-hidden="true" size={18} />
           </Button>

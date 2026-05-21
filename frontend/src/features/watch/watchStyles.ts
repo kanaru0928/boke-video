@@ -12,11 +12,6 @@ export const programKickerClassName =
 export const programTitleClassName =
   "m-0 text-[19px] font-extrabold tracking-normal max-[520px]:text-base";
 
-export const roomSelectClassName = cn(
-  "grid grid-cols-[auto_minmax(0,1fr)] items-center gap-[7px] text-[13px]",
-  "max-[520px]:grid-cols-[30px_minmax(0,1fr)] max-[520px]:gap-1",
-);
-
 export const watchGridClassName =
   "grid grid-cols-[minmax(0,1fr)_350px] gap-2 max-[860px]:grid-cols-1";
 
@@ -28,6 +23,7 @@ export const playerColumnClassName = cn(
 export const stageClassName = cn(
   "group relative aspect-video w-full overflow-hidden border border-black bg-[#020202] leading-none",
   "bg-[repeating-linear-gradient(0deg,rgb(255_255_255_/_3%)_0,rgb(255_255_255_/_3%)_1px,transparent_1px,transparent_3px)]",
+  "[&:fullscreen]:h-screen [&:fullscreen]:w-screen [&:fullscreen]:aspect-auto [&:fullscreen_video]:object-contain",
 );
 
 export const videoElementClassName =
@@ -59,10 +55,12 @@ export const streamLoadingTextClassName = "text-sm font-extrabold leading-none";
 export const playerControlsClassName = cn(
   "pointer-events-none absolute inset-x-0 bottom-0 z-20 flex min-h-[45px] items-center justify-between gap-2 opacity-0",
   "border-t border-t-[rgb(255_255_255_/_28%)] bg-[linear-gradient(rgb(0_0_0_/_10%),rgb(0_0_0_/_72%))] px-[10px] py-[6px] text-white",
-  "transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100",
+  "transition-opacity duration-150 group-focus-within:pointer-events-auto group-focus-within:opacity-100",
   "[@media(pointer:coarse)]:pointer-events-auto [@media(pointer:coarse)]:opacity-100",
   "max-[520px]:min-h-[39px] max-[520px]:gap-[3px] max-[520px]:px-[5px] max-[520px]:py-[5px]",
 );
+
+export const playerControlsVisibleClassName = "pointer-events-auto opacity-100";
 
 export const playTimeClassName = cn(
   "min-w-[104px] rounded-xl border border-[#898989] px-[10px] py-1 text-center font-extrabold text-white",
@@ -134,7 +132,7 @@ export const selectedColorButtonClassName =
   "outline-2 outline-offset-2 outline-[#006bd6]";
 
 export const sidePanelClassName =
-  "grid min-h-[360px] grid-rows-[auto_auto_minmax(0,1fr)] border border-[#8c8c8c] bg-white shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#b8b8b8] max-[860px]:h-[min(420px,calc(100vh-24px))] max-[860px]:min-h-[280px] max-[520px]:h-[min(360px,calc(100vh-18px))] max-[520px]:min-h-[230px]";
+  "grid grid-rows-[auto_auto_minmax(0,1fr)] border border-[#8c8c8c] bg-white shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#b8b8b8] max-[860px]:h-[min(420px,calc(100vh-24px))] max-[860px]:min-h-[280px] max-[520px]:h-[min(360px,calc(100vh-18px))] max-[520px]:min-h-[230px]";
 
 export const counterStripClassName =
   "grid grid-cols-3 border-b border-[#d2d2d2] bg-white [&_span]:border-l [&_span]:border-[#e2e2e2] [&_span]:px-1 [&_span]:py-[7px] [&_span]:text-center [&_span]:text-xs [&_span]:leading-[1.35] [&_span]:text-[#777777] [&_span:first-child]:border-l-0 max-[520px]:[&_span]:py-[5px]";
@@ -146,7 +144,9 @@ export const activeTabButtonClassName =
   "min-h-[34px] rounded-none border-0 border-b-2 border-b-[#111111] bg-white font-extrabold shadow-none max-[520px]:min-h-[29px]";
 
 export const commentLogClassName =
-  "relative m-0 h-full min-h-0 list-none overflow-auto bg-white p-0";
+  "relative h-[calc(100dvh-250px)] min-h-[260px] overflow-auto bg-white max-[860px]:h-full max-[860px]:min-h-0";
+
+export const commentLogVirtualListClassName = "relative m-0 list-none p-0";
 
 export const commentLogItemClassName =
   "absolute left-0 top-0 grid min-h-[52px] w-full grid-cols-[38px_minmax(0,1fr)] border-b border-[#eeeeee] max-[520px]:min-h-[44px]";
@@ -158,7 +158,7 @@ export const commentLogContentClassName =
   "grid min-w-0 gap-[2px] px-2 py-[7px] max-[520px]:py-[6px]";
 
 export const commentLogMetaClassName =
-  "m-0 truncate text-[11px] font-extrabold text-[#777777]";
+  "m-0 flex min-w-0 items-center gap-[7px] text-[11px] font-extrabold text-[#777777] [&_span]:min-w-0 [&_span]:truncate [&_time]:shrink-0 [&_time]:font-normal";
 
 export const commentLogBodyClassName =
   "m-0 text-[13px] [overflow-wrap:anywhere]";

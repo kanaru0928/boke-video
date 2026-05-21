@@ -4,6 +4,7 @@ import { cn } from "../../shared/ui/classNames";
 import type { RoomStreamStatus } from "../rooms/room_api";
 import { PlayerControls } from "./PlayerControls";
 import type { PlaybackQualityOption } from "./stream_quality";
+import { usePlayerControlsVisibility } from "./usePlayerControlsVisibility";
 import {
   commentsLayerClassName,
   stageClassName,
@@ -23,6 +24,7 @@ type WatchPlayerProps = {
   commentsLayerRef: RefObject<HTMLDivElement | null>;
   commentsVisible: boolean;
   elapsedSeconds: number;
+  isFullscreen: boolean;
   isMuted: boolean;
   isPaused: boolean;
   isStreamLoading: boolean;
@@ -48,6 +50,7 @@ export function WatchPlayer({
   commentsLayerRef,
   commentsVisible,
   elapsedSeconds,
+  isFullscreen,
   isMuted,
   isPaused,
   isStreamLoading,
@@ -64,11 +67,17 @@ export function WatchPlayer({
   streamStatus,
   videoRef,
 }: WatchPlayerProps) {
+  const { controlsVisible, hideControls, revealControlsUntilIdle } =
+    usePlayerControlsVisibility(stageRef);
+
   return (
     <section
       ref={stageRef}
       className={stageClassName}
       onContextMenu={preventPlayerContextMenu}
+      onPointerEnter={revealControlsUntilIdle}
+      onPointerLeave={hideControls}
+      onPointerMove={revealControlsUntilIdle}
       role="application"
     >
       <video
@@ -101,7 +110,9 @@ export function WatchPlayer({
       ) : null}
       <PlayerControls
         commentsVisible={commentsVisible}
+        controlsVisible={controlsVisible}
         elapsedSeconds={elapsedSeconds}
+        isFullscreen={isFullscreen}
         isMuted={isMuted}
         isPaused={isPaused}
         playbackQualities={playbackQualities}
