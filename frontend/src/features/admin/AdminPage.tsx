@@ -12,6 +12,8 @@ import type { CommentMessage } from "../comments/types";
 import { deleteComment, fetchComments } from "../rooms/room_api";
 import { useAdminRooms } from "../rooms/useAdminRooms";
 import { AdminRoom } from "./AdminRoom";
+import { buildWhipIngestUrl } from "./ingest_url";
+import { ObsSettings } from "./ObsSettings";
 
 type AdminPageProps = {
   config: AppConfig;
@@ -32,6 +34,14 @@ export function AdminPage({ config }: AdminPageProps) {
     rotateIngestTokenByRoomId,
     updateRoomTitleById,
   } = useAdminRooms(config);
+  const latestTokenRoomId = Object.keys(whipTokensByRoomId).at(-1) ?? null;
+  const selectedObsRoom = latestTokenRoomId
+    ? (rooms.find((room) => room.id === latestTokenRoomId) ?? null)
+    : (rooms[0] ?? null);
+  const selectedObsToken =
+    selectedObsRoom === null
+      ? null
+      : (whipTokensByRoomId[selectedObsRoom.id] ?? null);
 
   const submitRoom = async (
     event: FormEvent<HTMLFormElement>,
@@ -100,6 +110,14 @@ export function AdminPage({ config }: AdminPageProps) {
   return (
     <section className={appShellClassName}>
       <AppHeader section="ADMIN" links={[{ href: "/", label: "枠一覧" }]} />
+      <ObsSettings
+        serverUrl={
+          selectedObsRoom === null
+            ? null
+            : buildWhipIngestUrl(config, selectedObsRoom.id)
+        }
+        bearerToken={selectedObsToken}
+      />
       <Board icon={MonitorPlay} title="番組管理">
         <form
           className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] gap-[5px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2"

@@ -105,6 +105,7 @@ STREAM_END_GRACE_SECONDS=90
 ```text
 VITE_API_BASE_URL=https://stream.example.com
 VITE_COMMENT_WS_URL=wss://stream.example.com
+VITE_INGEST_BASE_URL=https://ingest.example.com
 ```
 
 ## OBS

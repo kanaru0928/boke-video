@@ -28,7 +28,7 @@ Cloudflare Workersで静的アセットとして配信します。
 
 ## 設定
 
-API、OvenMediaEngine、コメントWebSocketの接続先はビルド時のVite環境変数で設定します。本番の設定値は`docs/deployment.md`を正本にします。
+API、OBS入力、コメントWebSocketの接続先はビルド時のVite環境変数で設定します。本番の設定値は`docs/deployment.md`を正本にします。
 
 ## デプロイ
 

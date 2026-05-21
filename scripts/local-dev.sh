@@ -51,6 +51,6 @@ wait_for_url "http://127.0.0.1:5173/" "frontend"
 
 echo "frontend: http://127.0.0.1:5173"
 echo "backend: http://127.0.0.1:8080"
-echo "stream: ${STREAM_PUBLIC_BASE_URL:-http://127.0.0.1:3333}"
+echo "obs ingest: ${INGEST_PUBLIC_BASE_URL:-http://127.0.0.1:8080}/live/<roomId>?direction=whip"
 
 wait
