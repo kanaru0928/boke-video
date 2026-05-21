@@ -33,6 +33,14 @@ resource "cloudflare_zero_trust_access_application" "backend" {
   domain     = local.stream_hostname
   type       = "self_hosted"
 
+  cors_headers = {
+    allow_credentials = true
+    allowed_headers   = ["Content-Type", "Cf-Access-Jwt-Assertion"]
+    allowed_methods   = ["GET", "POST", "PATCH", "DELETE", "OPTIONS"]
+    allowed_origins   = ["https://${local.frontend_hostname}"]
+    max_age           = 86400
+  }
+
   policies = [{
     id = var.access_policy_id
   }]

@@ -22,6 +22,8 @@ rtc.example.com
 
 `stream.example.com`だけをCloudflare Tunnelへ入れます。`ingest.example.com`と`rtc.example.com`はWebRTCのためOracleへDNS-onlyで向けます。
 
+`stream.example.com`はAccess Application側でCORS preflightに応答します。Accessで保護された別originへ`PATCH`やJSON `POST`を送ると、ブラウザはcookieなしの`OPTIONS`を先に送ります。Accessは通常この`OPTIONS`を認証前に拒否するため、Terraformで`bokevideo.example.com`からのCORSを明示します。
+
 ## サブドメイン
 
 | ホスト名 | 役割 | 設定 |
@@ -85,6 +87,28 @@ Tunnelは`stream.example.com`だけをGoへ転送します。Terraformのremote 
 printf 'TUNNEL_TOKEN=%s\n' "$(terraform -chdir=infra/cloudflare output -raw tunnel_token)" | sudo tee /etc/boke-video/cloudflared.env >/dev/null
 sudo chmod 600 /etc/boke-video/cloudflared.env
 ```
+
+### Workers Builds
+
+Cloudflare WorkersのGit連携を使う場合は、`boke-video-frontend`Workerでリポジトリを接続します。Cloudflare公式docsでは、push時に任意のBuild commandを実行し、その後Deploy commandを実行します。
+
+| 項目 | 値 |
+| --- | --- |
+| Git repository | `boke-video` |
+| Production branch | `main` |
+| Build command | `pnpm --dir frontend build` |
+| Deploy command | `pnpm --dir frontend exec wrangler deploy` |
+| Root directory | 空欄 |
+
+Build variablesには、Viteがビルド時に読み込む公開URLだけを設定します。
+
+```text
+VITE_API_BASE_URL=https://stream.example.com
+VITE_COMMENT_WS_URL=wss://stream.example.com
+VITE_INGEST_BASE_URL=https://ingest.example.com
+```
+
+`STREAM_SIGNING_SECRET`、`OME_API_ACCESS_TOKEN`、`CLOUDFLARE_TUNNEL_TOKEN`はフロントエンドのビルドに不要です。Workers Buildsへ入れません。
 
 ## 環境変数
 
