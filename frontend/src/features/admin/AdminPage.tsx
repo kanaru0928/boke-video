@@ -9,7 +9,7 @@ import {
   formControlClassName,
 } from "../../shared/ui/styles";
 import type { CommentMessage } from "../comments/types";
-import { deleteComment, fetchComments } from "../rooms/room_api";
+import { deleteComment, fetchCommentPage } from "../rooms/room_api";
 import { useAdminRooms } from "../rooms/useAdminRooms";
 import { AdminRoom } from "./AdminRoom";
 import { buildWhipIngestUrl } from "./ingest_url";
@@ -19,7 +19,13 @@ type AdminPageProps = {
   config: AppConfig;
 };
 
-type CommentMap = Record<string, CommentMessage[]>;
+type AdminCommentState = {
+  comments: CommentMessage[];
+  isLoadingOlder: boolean;
+  nextCursor: string | null;
+};
+
+type CommentMap = Record<string, AdminCommentState>;
 
 export function AdminPage({ config }: AdminPageProps) {
   const [title, setTitle] = useState("");
@@ -53,8 +59,58 @@ export function AdminPage({ config }: AdminPageProps) {
   };
 
   const loadComments = async (roomId: string): Promise<void> => {
-    const comments = await fetchComments(config, roomId);
-    setCommentsByRoomId((current) => ({ ...current, [roomId]: comments }));
+    const page = await fetchCommentPage(config, roomId);
+    setCommentsByRoomId((current) => ({
+      ...current,
+      [roomId]: {
+        comments: page.comments,
+        isLoadingOlder: false,
+        nextCursor: page.nextCursor,
+      },
+    }));
+  };
+
+  const loadOlderComments = async (roomId: string): Promise<void> => {
+    const current = commentsByRoomId[roomId];
+    if (
+      current === undefined ||
+      current.nextCursor === null ||
+      current.isLoadingOlder
+    ) {
+      return;
+    }
+    setCommentsByRoomId((map) => ({
+      ...map,
+      [roomId]: { ...current, isLoadingOlder: true },
+    }));
+    try {
+      const page = await fetchCommentPage(config, roomId, current.nextCursor);
+      setCommentsByRoomId((map) => {
+        const latest = map[roomId];
+        if (latest === undefined) {
+          return map;
+        }
+        return {
+          ...map,
+          [roomId]: {
+            comments: [...page.comments, ...latest.comments],
+            isLoadingOlder: false,
+            nextCursor: page.nextCursor,
+          },
+        };
+      });
+    } finally {
+      setCommentsByRoomId((map) => {
+        const latest = map[roomId];
+        if (latest === undefined) {
+          return map;
+        }
+        return {
+          ...map,
+          [roomId]: { ...latest, isLoadingOlder: false },
+        };
+      });
+    }
   };
 
   const removeRoom = async (roomId: string): Promise<void> => {
@@ -82,9 +138,13 @@ export function AdminPage({ config }: AdminPageProps) {
     }
     setCommentsByRoomId((current) => ({
       ...current,
-      [roomId]: (current[roomId] ?? []).filter(
-        (comment) => comment.commentId !== commentId,
-      ),
+      [roomId]: {
+        comments: (current[roomId]?.comments ?? []).filter(
+          (comment) => comment.commentId !== commentId,
+        ),
+        isLoadingOlder: current[roomId]?.isLoadingOlder ?? false,
+        nextCursor: current[roomId]?.nextCursor ?? null,
+      },
     }));
   };
 
@@ -136,6 +196,7 @@ export function AdminPage({ config }: AdminPageProps) {
               comments={commentsByRoomId[room.id] ?? null}
               key={room.id}
               onLoadComments={loadComments}
+              onLoadOlderComments={loadOlderComments}
               onRemoveComment={removeComment}
               onRemoveRoom={removeRoom}
               onRotateIngestToken={rotateIngestToken}

@@ -38,6 +38,11 @@ export type CreatedRoom = Room & {
   whipBearerToken: string;
 };
 
+type CommentPage = {
+  comments: CommentMessage[];
+  nextCursor: string | null;
+};
+
 type IngestToken = {
   whipBearerToken: string;
 };
@@ -105,19 +110,24 @@ export async function deleteComment(
   return requestOK(config, "DELETE", adminCommentPath(commentId));
 }
 
-export async function fetchComments(
+export async function fetchCommentPage(
   config: AppConfig,
   roomId: string,
-): Promise<CommentMessage[]> {
-  const parsed = await requestJSON(
-    config,
-    "GET",
-    apiRoomPath(roomId, "/comments?limit=300"),
-  );
-  if (!Array.isArray(parsed)) {
-    return [];
+  cursor: string | null = null,
+): Promise<CommentPage> {
+  const query = new URLSearchParams();
+  if (cursor !== null) {
+    query.set("cursor", cursor);
   }
-  return parsed.filter(isCommentMessage);
+  const suffix = query.size === 0 ? "/comments" : `/comments?${query}`;
+  const parsed = await requestJSON(config, "GET", apiRoomPath(roomId, suffix));
+  if (!isCommentPage(parsed)) {
+    return { comments: [], nextCursor: null };
+  }
+  return {
+    comments: parsed.comments,
+    nextCursor: parsed.nextCursor === "" ? null : parsed.nextCursor,
+  };
 }
 
 export async function fetchRoomStats(
@@ -204,6 +214,18 @@ function isIngestToken(value: unknown): value is IngestToken {
   }
   const token = value as Record<string, unknown>;
   return typeof token.whipBearerToken === "string";
+}
+
+function isCommentPage(value: unknown): value is CommentPage {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const page = value as Record<string, unknown>;
+  return (
+    Array.isArray(page.comments) &&
+    page.comments.every(isCommentMessage) &&
+    (typeof page.nextCursor === "string" || page.nextCursor === null)
+  );
 }
 
 function parseRoom(value: unknown): Room | null {

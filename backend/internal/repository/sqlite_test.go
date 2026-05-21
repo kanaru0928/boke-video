@@ -52,7 +52,7 @@ func TestSQLiteStoresRoomAndComment(t *testing.T) {
 		t.Fatalf("CreateComment returned error: %v", err)
 	}
 
-	comments, err := db.ListComments(ctx, room.ID, 10)
+	comments, err := db.ListComments(ctx, room.ID, 10, nil)
 	if err != nil {
 		t.Fatalf("ListComments returned error: %v", err)
 	}

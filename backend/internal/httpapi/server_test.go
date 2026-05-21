@@ -43,10 +43,11 @@ func TestServerStoresCommentAppearance(t *testing.T) {
 		t.Fatalf("list comments status = %d, body = %s", listResponse.Code, listResponse.Body.String())
 	}
 
-	var messages []comment.Message
-	if err := json.NewDecoder(listResponse.Body).Decode(&messages); err != nil {
+	var page commentPageResponse
+	if err := json.NewDecoder(listResponse.Body).Decode(&page); err != nil {
 		t.Fatalf("Decode returned error: %v", err)
 	}
+	messages := page.Comments
 	if len(messages) != 1 {
 		t.Fatalf("len(messages) = %d", len(messages))
 	}

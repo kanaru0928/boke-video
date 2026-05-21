@@ -3,7 +3,7 @@ import type { AppConfig } from "../../shared/config/config";
 import type { CommentMessage } from "../comments/types";
 import {
   createRoomVisit,
-  fetchComments,
+  fetchCommentPage,
   fetchRoomStats,
   type RoomStats,
 } from "../rooms/room_api";
@@ -11,6 +11,9 @@ import {
 type UseRoomActivityResult = {
   comments: CommentMessage[];
   elapsedSeconds: number;
+  hasOlderComments: boolean;
+  isLoadingOlderComments: boolean;
+  loadOlderComments: () => Promise<void>;
   recordComment: (comment: CommentMessage) => void;
   stats: RoomStats | null;
 };
@@ -21,6 +24,10 @@ export function useRoomActivity(
 ): UseRoomActivityResult {
   const [comments, setComments] = useState<CommentMessage[]>([]);
   const [loadedStats, setLoadedStats] = useState<RoomStats | null>(null);
+  const [nextCommentCursor, setNextCommentCursor] = useState<string | null>(
+    null,
+  );
+  const [isLoadingOlderComments, setIsLoadingOlderComments] = useState(false);
   const [realtimeCommentCount, setRealtimeCommentCount] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const stats = useMemo((): RoomStats | null => {
@@ -40,13 +47,14 @@ export function useRoomActivity(
       if (roomId === "") {
         setComments([]);
         setLoadedStats(null);
+        setNextCommentCursor(null);
         setRealtimeCommentCount(0);
         setElapsedSeconds(0);
         return;
       }
 
-      const [loadedComments, visitedStats] = await Promise.all([
-        fetchComments(config, roomId),
+      const [commentPage, visitedStats] = await Promise.all([
+        fetchCommentPage(config, roomId),
         createRoomVisit(config, roomId),
       ]);
       const loadedStats =
@@ -54,7 +62,8 @@ export function useRoomActivity(
       if (canceled) {
         return;
       }
-      setComments(loadedComments);
+      setComments(commentPage.comments);
+      setNextCommentCursor(commentPage.nextCursor);
       setLoadedStats(loadedStats);
       setRealtimeCommentCount(0);
       setElapsedSeconds(loadedStats?.elapsedSeconds ?? 0);
@@ -107,5 +116,27 @@ export function useRoomActivity(
     setRealtimeCommentCount((current) => current + 1);
   }, []);
 
-  return { comments, elapsedSeconds, recordComment, stats };
+  const loadOlderComments = useCallback(async (): Promise<void> => {
+    if (roomId === "" || nextCommentCursor === null || isLoadingOlderComments) {
+      return;
+    }
+    setIsLoadingOlderComments(true);
+    try {
+      const page = await fetchCommentPage(config, roomId, nextCommentCursor);
+      setComments((current) => [...page.comments, ...current]);
+      setNextCommentCursor(page.nextCursor);
+    } finally {
+      setIsLoadingOlderComments(false);
+    }
+  }, [config, isLoadingOlderComments, nextCommentCursor, roomId]);
+
+  return {
+    comments,
+    elapsedSeconds,
+    hasOlderComments: nextCommentCursor !== null,
+    isLoadingOlderComments,
+    loadOlderComments,
+    recordComment,
+    stats,
+  };
 }

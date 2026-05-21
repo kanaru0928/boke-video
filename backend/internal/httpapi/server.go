@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -12,7 +13,6 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -31,6 +31,7 @@ import (
 
 const roomThumbnailRefreshSeconds = 15
 const defaultStreamEndGrace = 90 * time.Second
+const commentPageSize = 100
 
 type ServerConfig struct {
 	Logger         *slog.Logger
@@ -365,27 +366,38 @@ func (s *Server) handleListComments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/rooms/"), "/comments")
-	limit := 100
-	if rawLimit := r.URL.Query().Get("limit"); rawLimit != "" {
-		parsedLimit, err := strconv.Atoi(rawLimit)
-		if err != nil {
-			writeError(w, http.StatusBadRequest, "invalid limit")
-			return
-		}
-		limit = min(max(parsedLimit, 1), 300)
+	cursor, err := decodeCommentCursor(r.URL.Query().Get("cursor"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid cursor")
+		return
 	}
 
-	storedComments, err := s.repository.ListComments(r.Context(), roomID, limit)
+	storedComments, err := s.repository.ListComments(r.Context(), roomID, commentPageSize+1, cursor)
 	if err != nil {
 		s.writeServerError(w, err)
 		return
+	}
+	hasMore := len(storedComments) > commentPageSize
+	if hasMore {
+		storedComments = storedComments[:commentPageSize]
 	}
 
 	messages := make([]comment.Message, 0, len(storedComments))
 	for i := len(storedComments) - 1; i >= 0; i-- {
 		messages = append(messages, storedToMessage(storedComments[i]))
 	}
-	writeJSON(w, http.StatusOK, messages)
+	nextCursor := ""
+	if hasMore && len(storedComments) > 0 {
+		nextCursor, err = encodeCommentCursor(storedComments[len(storedComments)-1])
+		if err != nil {
+			s.writeServerError(w, err)
+			return
+		}
+	}
+	writeJSON(w, http.StatusOK, commentPageResponse{
+		Comments:   messages,
+		NextCursor: nextCursor,
+	})
 }
 
 func (s *Server) handleGetRoomStats(w http.ResponseWriter, r *http.Request) {
@@ -605,6 +617,52 @@ func storedToMessage(stored comment.StoredComment) comment.Message {
 		FontSize:  stored.FontSize,
 		SentAt:    stored.SentAt,
 	}
+}
+
+type commentCursorPayload struct {
+	SentAt string `json:"sentAt"`
+	ID     string `json:"id"`
+}
+
+type commentPageResponse struct {
+	Comments   []comment.Message `json:"comments"`
+	NextCursor string            `json:"nextCursor"`
+}
+
+func decodeCommentCursor(rawValue string) (*repository.CommentCursor, error) {
+	if rawValue == "" {
+		return nil, nil
+	}
+	rawJSON, err := base64.RawURLEncoding.DecodeString(rawValue)
+	if err != nil {
+		return nil, err
+	}
+	var payload commentCursorPayload
+	if err := json.Unmarshal(rawJSON, &payload); err != nil {
+		return nil, err
+	}
+	sentAt, err := time.Parse(time.RFC3339Nano, payload.SentAt)
+	if err != nil {
+		return nil, err
+	}
+	if payload.ID == "" {
+		return nil, errors.New("cursor id is empty")
+	}
+	return &repository.CommentCursor{
+		SentAt: sentAt,
+		ID:     payload.ID,
+	}, nil
+}
+
+func encodeCommentCursor(stored comment.StoredComment) (string, error) {
+	rawJSON, err := json.Marshal(commentCursorPayload{
+		SentAt: stored.SentAt.Format(time.RFC3339Nano),
+		ID:     stored.ID,
+	})
+	if err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(rawJSON), nil
 }
 
 type roomStatsResponse struct {

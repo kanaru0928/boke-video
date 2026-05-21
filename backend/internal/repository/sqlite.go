@@ -51,6 +51,11 @@ type RoomStreamState struct {
 	ThumbnailRefreshSeconds int
 }
 
+type CommentCursor struct {
+	SentAt time.Time
+	ID     string
+}
+
 var ErrAlreadyExists = errors.New("already exists")
 var ErrOwnerRoomLimitExceeded = errors.New("owner room limit exceeded")
 
@@ -111,8 +116,9 @@ func (s *SQLite) Migrate(ctx context.Context) error {
 		)`,
 		`ALTER TABLE comments ADD COLUMN author_email TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE comments ADD COLUMN author_display_name TEXT NOT NULL DEFAULT ''`,
+		`DROP INDEX IF EXISTS comments_room_id_sent_at_index`,
 		`CREATE INDEX IF NOT EXISTS comments_room_id_sent_at_index
-			ON comments (room_id, sent_at)`,
+			ON comments (room_id, sent_at, id)`,
 		`CREATE TABLE IF NOT EXISTS room_visits (
 			room_id TEXT NOT NULL,
 			visitor_sub TEXT NOT NULL,
@@ -289,15 +295,22 @@ func (s *SQLite) CreateComment(ctx context.Context, stored comment.StoredComment
 	return normalizeSQLiteError(err)
 }
 
-func (s *SQLite) ListComments(ctx context.Context, roomID string, limit int) ([]comment.StoredComment, error) {
+func (s *SQLite) ListComments(ctx context.Context, roomID string, limit int, before *CommentCursor) ([]comment.StoredComment, error) {
+	args := []any{roomID}
+	cursorClause := ""
+	if before != nil {
+		cursorClause = " AND (sent_at < ? OR (sent_at = ? AND id < ?))"
+		sentAt := before.SentAt.Format(time.RFC3339Nano)
+		args = append(args, sentAt, sentAt, before.ID)
+	}
+	args = append(args, limit)
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT id, room_id, author_sub, author_email, author_display_name, body, direction, color, font_size, sent_at
 		 FROM comments
-		 WHERE room_id = ?
-		 ORDER BY sent_at DESC
+		 WHERE room_id = ?`+cursorClause+`
+		 ORDER BY sent_at DESC, id DESC
 		 LIMIT ?`,
-		roomID,
-		limit,
+		args...,
 	)
 	if err != nil {
 		return nil, err

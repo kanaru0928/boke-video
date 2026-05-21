@@ -90,7 +90,7 @@ export function WatchPlayer({
         autoPlay
         className={videoElementClassName}
         ref={videoRef}
-        muted
+        muted={isMuted}
         onPause={onUpdatePlayerState}
         onPlay={onUpdatePlayerState}
         onVolumeChange={onUpdatePlayerState}

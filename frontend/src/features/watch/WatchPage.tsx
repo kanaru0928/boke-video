@@ -31,7 +31,7 @@ export function WatchPage({ config }: WatchPageProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [body, setBody] = useState("");
   const [isPaused, setIsPaused] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState("");
   const [selectedDirection, setSelectedDirection] =
     useState<CommentDirection>("rightToLeft");
@@ -42,10 +42,15 @@ export function WatchPage({ config }: WatchPageProps) {
   const { rooms } = useRooms(config);
   const { clearComments, commentsLayerRef, renderComment } =
     useCommentRenderer();
-  const { comments, elapsedSeconds, recordComment, stats } = useRoomActivity(
-    config,
-    selectedRoomId,
-  );
+  const {
+    comments,
+    elapsedSeconds,
+    hasOlderComments,
+    isLoadingOlderComments,
+    loadOlderComments,
+    recordComment,
+    stats,
+  } = useRoomActivity(config, selectedRoomId);
   const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? null;
   const streamStatus =
     stats?.streamStatus ?? selectedRoom?.streamStatus ?? "waiting";
@@ -204,6 +209,9 @@ export function WatchPage({ config }: WatchPageProps) {
         <CommentSidebar
           comments={comments}
           elapsedSeconds={elapsedSeconds}
+          hasOlderComments={hasOlderComments}
+          isLoadingOlderComments={isLoadingOlderComments}
+          onLoadOlderComments={loadOlderComments}
           stats={stats}
         />
       </section>
