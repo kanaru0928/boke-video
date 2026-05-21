@@ -27,7 +27,7 @@ export const playerColumnClassName = cn(
 );
 
 export const stageClassName = cn(
-  "relative aspect-video overflow-hidden border-[5px] border-t-0 border-black bg-[#020202]",
+  "group relative aspect-video w-full overflow-hidden border-[5px] border-t-0 border-black bg-[#020202]",
   "bg-[repeating-linear-gradient(0deg,rgb(255_255_255_/_3%)_0,rgb(255_255_255_/_3%)_1px,transparent_1px,transparent_3px)]",
 );
 
@@ -40,8 +40,10 @@ export const streamStatusClassName = cn(
 );
 
 export const playerControlsClassName = cn(
-  "grid grid-cols-[repeat(2,34px)_minmax(104px,auto)_1fr_repeat(3,34px)] items-center gap-1",
+  "pointer-events-none absolute inset-x-0 bottom-0 z-20 grid grid-cols-[repeat(2,34px)_minmax(104px,auto)_1fr_repeat(3,34px)] items-center gap-1 opacity-0",
   "border-[5px] border-t border-black border-t-[#333333] bg-[#050505] p-[5px] text-white",
+  "transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100",
+  "[@media(pointer:coarse)]:pointer-events-auto [@media(pointer:coarse)]:opacity-100",
   "max-[520px]:grid-cols-[repeat(2,31px)_1fr_repeat(2,31px)] max-[520px]:gap-[3px] max-[520px]:p-1",
 );
 

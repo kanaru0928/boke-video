@@ -20,6 +20,10 @@ import {
   streamStatusClassName,
 } from "./watchStyles";
 
+type PreventableEvent = {
+  preventDefault: () => void;
+};
+
 type WatchPlayerProps = {
   commentsLayerRef: RefObject<HTMLDivElement | null>;
   elapsedSeconds: number;
@@ -34,6 +38,10 @@ type WatchPlayerProps = {
   streamStatus: RoomStreamStatus;
   videoRef: RefObject<HTMLVideoElement | null>;
 };
+
+export function preventPlayerContextMenu(event: PreventableEvent): void {
+  event.preventDefault();
+}
 
 export function WatchPlayer({
   commentsLayerRef,
@@ -50,23 +58,27 @@ export function WatchPlayer({
   videoRef,
 }: WatchPlayerProps) {
   return (
-    <>
-      <section ref={stageRef} className={stageClassName}>
-        <video
-          autoPlay
-          className="block h-full w-full bg-[#020202]"
-          ref={videoRef}
-          muted
-          onPause={onUpdatePlayerState}
-          onPlay={onUpdatePlayerState}
-          onVolumeChange={onUpdatePlayerState}
-          playsInline
-        />
-        <div ref={commentsLayerRef} className={commentsLayerClassName} />
-        {streamMessage !== "" ? (
-          <div className={streamStatusClassName}>{streamMessage}</div>
-        ) : null}
-      </section>
+    <section
+      ref={stageRef}
+      className={stageClassName}
+      onContextMenu={preventPlayerContextMenu}
+      role="application"
+    >
+      <video
+        autoPlay
+        className="block h-full w-full bg-[#020202]"
+        ref={videoRef}
+        muted
+        onPause={onUpdatePlayerState}
+        onPlay={onUpdatePlayerState}
+        onVolumeChange={onUpdatePlayerState}
+        onContextMenu={preventPlayerContextMenu}
+        playsInline
+      />
+      <div ref={commentsLayerRef} className={commentsLayerClassName} />
+      {streamMessage !== "" ? (
+        <div className={streamStatusClassName}>{streamMessage}</div>
+      ) : null}
       <div className={playerControlsClassName}>
         <button
           aria-label={isPaused ? "再生" : "一時停止"}
@@ -129,6 +141,6 @@ export function WatchPlayer({
           <Settings aria-hidden="true" size={18} />
         </a>
       </div>
-    </>
+    </section>
   );
 }
