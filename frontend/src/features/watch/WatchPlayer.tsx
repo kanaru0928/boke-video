@@ -1,15 +1,10 @@
 import { LoaderCircle } from "lucide-react";
-import {
-  type RefObject,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import type { RefObject } from "react";
 import { cn } from "../../shared/ui/classNames";
 import type { RoomStreamStatus } from "../rooms/room_api";
 import { PlayerControls } from "./PlayerControls";
 import type { PlaybackQualityOption } from "./stream_quality";
+import { usePlayerControlsVisibility } from "./usePlayerControlsVisibility";
 import {
   commentsLayerClassName,
   stageClassName,
@@ -24,8 +19,6 @@ import {
 type PreventableEvent = {
   preventDefault: () => void;
 };
-
-export const playerControlsIdleDelayMs = 2400;
 
 type WatchPlayerProps = {
   commentsLayerRef: RefObject<HTMLDivElement | null>;
@@ -74,42 +67,8 @@ export function WatchPlayer({
   streamStatus,
   videoRef,
 }: WatchPlayerProps) {
-  const [controlsVisible, setControlsVisible] = useState(false);
-  const controlsIdleTimerRef = useRef<number | null>(null);
-
-  const revealControlsUntilIdle = useCallback((): void => {
-    setControlsVisible(true);
-    clearControlsIdleTimer(controlsIdleTimerRef);
-    controlsIdleTimerRef.current = window.setTimeout(() => {
-      setControlsVisible(false);
-      controlsIdleTimerRef.current = null;
-    }, playerControlsIdleDelayMs);
-  }, []);
-
-  const hideControls = useCallback((): void => {
-    clearControlsIdleTimer(controlsIdleTimerRef);
-    setControlsVisible(false);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      clearControlsIdleTimer(controlsIdleTimerRef);
-    };
-  }, []);
-
-  useEffect(() => {
-    const syncFullscreenControls = (): void => {
-      if (document.fullscreenElement === stageRef.current) {
-        revealControlsUntilIdle();
-        return;
-      }
-      hideControls();
-    };
-    document.addEventListener("fullscreenchange", syncFullscreenControls);
-    return () => {
-      document.removeEventListener("fullscreenchange", syncFullscreenControls);
-    };
-  }, [hideControls, revealControlsUntilIdle, stageRef]);
+  const { controlsVisible, hideControls, revealControlsUntilIdle } =
+    usePlayerControlsVisibility(stageRef);
 
   return (
     <section
@@ -167,12 +126,4 @@ export function WatchPlayer({
       />
     </section>
   );
-}
-
-function clearControlsIdleTimer(timerRef: RefObject<number | null>): void {
-  if (timerRef.current === null) {
-    return;
-  }
-  window.clearTimeout(timerRef.current);
-  timerRef.current = null;
 }

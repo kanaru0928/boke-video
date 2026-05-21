@@ -8,13 +8,13 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import { Button } from "../../shared/ui/Button";
 import { cn } from "../../shared/ui/classNames";
 import type { RoomStreamStatus } from "../rooms/room_api";
 import { PlayerSettingsPopover } from "./PlayerSettingsPopover";
 import { formatElapsedTime } from "./room_activity";
 import type { PlaybackQualityOption } from "./stream_quality";
+import { useSettingsPopover } from "./useSettingsPopover";
 import {
   liveBadgeClassName,
   playerControlsClassName,
@@ -55,32 +55,7 @@ export function PlayerControls({
   selectedQualityId,
   streamStatus,
 }: PlayerControlsProps) {
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const settingsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!settingsOpen) {
-      return;
-    }
-    const closeSettingsOnOutsidePointerDown = (event: PointerEvent): void => {
-      const settings = settingsRef.current;
-      if (
-        settings === null ||
-        !(event.target instanceof Node) ||
-        settings.contains(event.target)
-      ) {
-        return;
-      }
-      setSettingsOpen(false);
-    };
-    document.addEventListener("pointerdown", closeSettingsOnOutsidePointerDown);
-    return () => {
-      document.removeEventListener(
-        "pointerdown",
-        closeSettingsOnOutsidePointerDown,
-      );
-    };
-  }, [settingsOpen]);
+  const { settingsOpen, settingsRef, toggleSettings } = useSettingsPopover();
 
   return (
     <div
@@ -157,7 +132,7 @@ export function PlayerControls({
             aria-label="設定"
             id="settings-toggle"
             square
-            onClick={() => setSettingsOpen((current) => !current)}
+            onClick={toggleSettings}
           >
             <Settings aria-hidden="true" size={18} />
           </Button>

@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  playerControlsIdleDelayMs,
-  preventPlayerContextMenu,
-} from "./WatchPlayer";
+import { playerControlsIdleDelayMs } from "./usePlayerControlsVisibility";
+import { preventPlayerContextMenu } from "./WatchPlayer";
 import {
   playerControlsClassName,
   playerControlsVisibleClassName,

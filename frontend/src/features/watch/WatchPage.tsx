@@ -16,6 +16,7 @@ import { isCommentSubmitShortcut } from "./comment_shortcuts";
 import { autoQualityId } from "./stream_quality";
 import { useCommentRenderer } from "./useCommentRenderer";
 import { useCommentSocket } from "./useCommentSocket";
+import { useFullscreen } from "./useFullscreen";
 import { useRoomActivity } from "./useRoomActivity";
 import { useStreamPlayer } from "./useStreamPlayer";
 import { WatchPlayer } from "./WatchPlayer";
@@ -38,7 +39,6 @@ export function WatchPage({ config }: WatchPageProps) {
   const [selectedSize, setSelectedSize] = useState<CommentFontSize>("medium");
   const [selectedColor, setSelectedColor] = useState<string>(commentColors[0]);
   const [commentsVisible, setCommentsVisible] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedQualityId, setSelectedQualityId] = useState(autoQualityId);
   const { rooms } = useRooms(config);
   const { clearComments, commentsLayerRef, renderComment } =
@@ -73,6 +73,7 @@ export function WatchPage({ config }: WatchPageProps) {
     videoRef,
     selectedQualityId,
   );
+  const { isFullscreen, toggleFullscreen } = useFullscreen(stageRef);
 
   useEffect(() => {
     if (rooms.length === 0 || selectedRoomId !== "") {
@@ -89,16 +90,6 @@ export function WatchPage({ config }: WatchPageProps) {
       );
     }
   }, [rooms, selectedRoomId]);
-
-  useEffect(() => {
-    const updateFullscreenState = (): void => {
-      setIsFullscreen(document.fullscreenElement === stageRef.current);
-    };
-    document.addEventListener("fullscreenchange", updateFullscreenState);
-    return () => {
-      document.removeEventListener("fullscreenchange", updateFullscreenState);
-    };
-  }, []);
 
   const updatePlayerState = (): void => {
     const video = videoRef.current;
@@ -157,14 +148,6 @@ export function WatchPage({ config }: WatchPageProps) {
     }
     video.muted = !video.muted;
     updatePlayerState();
-  };
-
-  const toggleFullscreen = (): void => {
-    if (document.fullscreenElement === null) {
-      void stageRef.current?.requestFullscreen();
-      return;
-    }
-    void document.exitFullscreen();
   };
 
   return (
