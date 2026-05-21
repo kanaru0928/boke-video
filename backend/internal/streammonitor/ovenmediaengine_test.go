@@ -107,12 +107,17 @@ func TestOvenMediaEngineClientListsPlaybackPlaylists(t *testing.T) {
 							{
 								"name": "master",
 								"fileName": "master",
-								"renditions": [{"name": "360p"}, {"name": "720p"}]
+								"renditions": [{"name": "1080p"}, {"name": "720p"}, {"name": "360p"}]
 							},
 							{
-								"name": "layer 1",
+								"name": "simulcast-layer-1",
 								"fileName": "layer-1",
-								"renditions": [{"name": "360p"}]
+								"renditions": [{"name": "layer-1"}]
+							},
+							{
+								"name": "webrtc_default",
+								"fileName": "webrtc_default",
+								"renditions": [{"name": "default"}]
 							},
 							{
 								"name": "pending",
@@ -138,7 +143,7 @@ func TestOvenMediaEngineClientListsPlaybackPlaylists(t *testing.T) {
 	if playlists[0].FileName != "master" || playlists[0].Renditions[1] != "720p" {
 		t.Fatalf("playlists[0] = %#v", playlists[0])
 	}
-	if playlists[1].FileName != "layer-1" || playlists[1].Renditions[0] != "360p" {
+	if playlists[1].FileName != "layer-1" || playlists[1].Renditions[0] != "1080p" {
 		t.Fatalf("playlists[1] = %#v", playlists[1])
 	}
 }

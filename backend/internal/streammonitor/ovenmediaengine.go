@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -154,6 +155,7 @@ func (c *OvenMediaEngineClient) PlaybackPlaylists(ctx context.Context, streamNam
 		return nil, err
 	}
 	playlists := []PlaybackPlaylist{}
+	masterRenditions := []string{}
 	for _, output := range parsed.Response.Outputs {
 		for _, playlist := range output.Playlists {
 			renditionNames := make([]string, 0, len(playlist.Renditions))
@@ -165,6 +167,12 @@ func (c *OvenMediaEngineClient) PlaybackPlaylists(ctx context.Context, streamNam
 			if strings.TrimSpace(playlist.FileName) == "" || len(renditionNames) == 0 {
 				continue
 			}
+			if isGeneratedDefaultPlaylist(playlist) {
+				continue
+			}
+			if strings.TrimSpace(playlist.FileName) == "master" {
+				masterRenditions = renditionNames
+			}
 			playlists = append(playlists, PlaybackPlaylist{
 				Name:       strings.TrimSpace(playlist.Name),
 				FileName:   strings.TrimSpace(playlist.FileName),
@@ -172,7 +180,7 @@ func (c *OvenMediaEngineClient) PlaybackPlaylists(ctx context.Context, streamNam
 			})
 		}
 	}
-	return playlists, nil
+	return labelSimulcastPlaylists(playlists, masterRenditions), nil
 }
 
 func (c *OvenMediaEngineClient) FetchThumbnail(ctx context.Context, streamName string) (Thumbnail, error) {
@@ -227,15 +235,52 @@ type streamListResponse struct {
 type streamDetailResponse struct {
 	Response struct {
 		Outputs []struct {
-			Playlists []struct {
-				Name       string `json:"name"`
-				FileName   string `json:"fileName"`
-				Renditions []struct {
-					Name string `json:"name"`
-				} `json:"renditions"`
-			} `json:"playlists"`
+			Playlists []streamDetailPlaylist `json:"playlists"`
 		} `json:"outputs"`
 	} `json:"response"`
+}
+
+type streamDetailPlaylist struct {
+	Name       string `json:"name"`
+	FileName   string `json:"fileName"`
+	Renditions []struct {
+		Name string `json:"name"`
+	} `json:"renditions"`
+}
+
+func isGeneratedDefaultPlaylist(playlist streamDetailPlaylist) bool {
+	fileName := strings.TrimSpace(playlist.FileName)
+	name := strings.TrimSpace(playlist.Name)
+	return fileName == "webrtc_default" || name == "webrtc_default"
+}
+
+func labelSimulcastPlaylists(
+	playlists []PlaybackPlaylist,
+	masterRenditions []string,
+) []PlaybackPlaylist {
+	if len(masterRenditions) == 0 {
+		return playlists
+	}
+	for index, playlist := range playlists {
+		renditionIndex, ok := simulcastLayerIndex(playlist.FileName)
+		if !ok || renditionIndex >= len(masterRenditions) {
+			continue
+		}
+		playlists[index].Renditions = []string{masterRenditions[renditionIndex]}
+	}
+	return playlists
+}
+
+func simulcastLayerIndex(fileName string) (int, bool) {
+	value, ok := strings.CutPrefix(strings.TrimSpace(fileName), "layer-")
+	if !ok {
+		return 0, false
+	}
+	layerNumber, err := strconv.Atoi(value)
+	if err != nil || layerNumber <= 0 {
+		return 0, false
+	}
+	return layerNumber - 1, true
 }
 
 func parseBaseURL(rawValue string) (*url.URL, error) {
