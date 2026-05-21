@@ -1,3 +1,5 @@
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useRef } from "react";
 import { cn } from "../../shared/ui/classNames";
 import { commentAuthorLabel } from "../comments/comment_author";
 import type { CommentMessage } from "../comments/types";
@@ -28,6 +30,15 @@ export function CommentSidebar({
   elapsedSeconds,
   stats,
 }: CommentSidebarProps) {
+  const commentLogRef = useRef<HTMLOListElement>(null);
+  const commentVirtualizer = useVirtualizer({
+    count: comments.length,
+    estimateSize: () => 52,
+    getScrollElement: () => commentLogRef.current,
+    overscan: 8,
+  });
+  const virtualComments = commentVirtualizer.getVirtualItems();
+
   return (
     <aside className={sidePanelClassName}>
       <div className={counterStripClassName}>
@@ -52,31 +63,54 @@ export function CommentSidebar({
           コメント
         </button>
       </div>
-      <ol className={commentLogClassName} aria-label="コメント">
-        {comments.map((comment, index) => (
-          <li className={commentLogItemClassName} key={comment.commentId}>
-            <span className={commentLogNumberClassName}>
-              {commentLogNumber(
-                index,
-                comments.length,
-                stats?.commentCount ?? comments.length,
-              )}
-            </span>
-            <div className={commentLogContentClassName}>
-              <p className={commentLogMetaClassName}>
-                {commentAuthorLabel(comment.author)}
-              </p>
-              <p
-                className={cn(
-                  commentLogBodyClassName,
-                  index === 1 && secondCommentLogBodyClassName,
+      <ol
+        className={commentLogClassName}
+        ref={commentLogRef}
+        aria-label="コメント"
+      >
+        <li
+          aria-hidden="true"
+          className="pointer-events-none block p-0"
+          style={{ height: `${commentVirtualizer.getTotalSize()}px` }}
+        />
+        {virtualComments.map((virtualComment) => {
+          const comment = comments[virtualComment.index];
+          if (comment === undefined) {
+            return null;
+          }
+          return (
+            <li
+              className={commentLogItemClassName}
+              data-index={virtualComment.index}
+              key={comment.commentId}
+              ref={commentVirtualizer.measureElement}
+              style={{
+                transform: `translateY(${virtualComment.start}px)`,
+              }}
+            >
+              <span className={commentLogNumberClassName}>
+                {commentLogNumber(
+                  virtualComment.index,
+                  comments.length,
+                  stats?.commentCount ?? comments.length,
                 )}
-              >
-                {comment.body}
-              </p>
-            </div>
-          </li>
-        ))}
+              </span>
+              <div className={commentLogContentClassName}>
+                <p className={commentLogMetaClassName}>
+                  {commentAuthorLabel(comment.author)}
+                </p>
+                <p
+                  className={cn(
+                    commentLogBodyClassName,
+                    virtualComment.index === 1 && secondCommentLogBodyClassName,
+                  )}
+                >
+                  {comment.body}
+                </p>
+              </div>
+            </li>
+          );
+        })}
       </ol>
     </aside>
   );

@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { CommentMessage } from "../comments/types";
-import {
-  appendRecentComment,
-  commentLogNumber,
-  formatElapsedTime,
-} from "./room_activity";
+import { commentLogNumber, formatElapsedTime } from "./room_activity";
 
 describe("formatElapsedTime", () => {
   it("秒数を時間分秒表示にする", () => {
@@ -22,33 +17,3 @@ describe("commentLogNumber", () => {
     expect(commentLogNumber(0, 3, 2)).toBe(1);
   });
 });
-
-describe("appendRecentComment", () => {
-  it("新しいコメントを追加し最大件数に丸める", () => {
-    const comments: CommentMessage[] = [
-      createComment("1", "one"),
-      createComment("2", "two"),
-    ];
-    expect(
-      appendRecentComment(comments, createComment("3", "three"), 2),
-    ).toEqual([createComment("2", "two"), createComment("3", "three")]);
-  });
-});
-
-function createComment(commentId: string, body: string): CommentMessage {
-  return {
-    type: "comment",
-    roomId: "room-1",
-    commentId,
-    author: {
-      subject: "user-1",
-      email: "user@example.com",
-      displayName: "user",
-    },
-    body,
-    direction: "rightToLeft",
-    color: "#ffffff",
-    fontSize: "medium",
-    sentAt: "2026-05-09T00:00:00Z",
-  };
-}

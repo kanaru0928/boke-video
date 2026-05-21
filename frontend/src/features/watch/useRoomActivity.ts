@@ -7,9 +7,6 @@ import {
   fetchRoomStats,
   type RoomStats,
 } from "../rooms/room_api";
-import { appendRecentComment } from "./room_activity";
-
-const maxVisibleComments = 60;
 
 type UseRoomActivityResult = {
   comments: CommentMessage[];
@@ -106,9 +103,7 @@ export function useRoomActivity(
   }, [config, roomId]);
 
   const recordComment = useCallback((comment: CommentMessage): void => {
-    setComments((current) =>
-      appendRecentComment(current, comment, maxVisibleComments),
-    );
+    setComments((current) => [...current, comment]);
     setRealtimeCommentCount((current) => current + 1);
   }, []);
 

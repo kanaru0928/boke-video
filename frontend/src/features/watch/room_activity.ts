@@ -1,5 +1,3 @@
-import type { CommentMessage } from "../comments/types";
-
 export function formatElapsedTime(totalSeconds: number): string {
   const safeSeconds = Math.max(Math.trunc(totalSeconds), 0);
   const hours = Math.floor(safeSeconds / 3600);
@@ -21,14 +19,4 @@ export function commentLogNumber(
     0,
   );
   return firstVisibleNumber + commentIndex + 1;
-}
-
-export function appendRecentComment(
-  comments: CommentMessage[],
-  comment: CommentMessage,
-  maxComments: number,
-): CommentMessage[] {
-  return [...comments, comment].slice(
-    Math.max(comments.length + 1 - maxComments, 0),
-  );
 }

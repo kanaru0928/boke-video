@@ -75,7 +75,7 @@ export const liveBadgeClassName =
 
 export const settingsChipClassName = cn(
   "absolute right-0 bottom-[46px] z-30 w-[312px] max-w-[calc(100vw-24px)] border border-[#666666] bg-[#050505] p-[7px] text-xs text-white",
-  "shadow-[2px_2px_0_rgb(0_0_0_/_65%),inset_1px_1px_0_rgb(255_255_255_/_18%)] max-[520px]:right-[-42px] max-[520px]:w-[268px]",
+  "shadow-[2px_2px_0_rgb(0_0_0_/_65%),inset_1px_1px_0_rgb(255_255_255_/_18%)] max-[520px]:right-0 max-[520px]:w-[292px] max-[380px]:w-[262px]",
 );
 
 export const settingsChipHeadingClassName =
@@ -83,17 +83,19 @@ export const settingsChipHeadingClassName =
 
 export const settingsChipRowClassName = cn(
   "m-0 grid grid-cols-[70px_minmax(0,1fr)] items-start gap-[7px] border-0 border-b border-[#333333] px-0 py-[7px] last:border-b-0",
-  "[&_legend]:contents [&_legend]:pt-[4px] [&_legend]:font-extrabold [&_legend]:text-white",
+  "[&_legend]:contents [&_legend]:pt-[4px] [&_legend]:font-extrabold [&_legend]:text-white max-[520px]:grid-cols-1 max-[520px]:gap-[5px]",
 );
 
-export const settingsChipSegmentClassName =
-  "flex min-w-0 flex-wrap justify-end gap-[4px]";
+export const settingsChipSegmentClassName = cn(
+  "flex min-w-0 flex-wrap justify-end gap-[4px] [&_label]:min-w-0",
+  "max-[520px]:grid max-[520px]:grid-cols-2 max-[520px]:justify-stretch max-[520px]:[&_label]:w-full",
+);
 
 export const settingsChipSegmentInputClassName =
   "peer pointer-events-none absolute m-0 h-px w-px opacity-0";
 
 export const settingsChipSegmentTextClassName = cn(
-  "grid min-h-[26px] cursor-pointer select-none grid-flow-col place-items-center justify-center gap-1 whitespace-nowrap rounded-[13px] border border-[#3f3f3f]",
+  "grid min-h-[26px] max-w-full cursor-pointer select-none grid-flow-col place-items-center justify-center gap-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-[13px] border border-[#3f3f3f]",
   "bg-[linear-gradient(#4d4d4d,#1b1b1b)] px-[9px] py-[4px] text-[11px] leading-none text-[#eeeeee]",
   "peer-checked:border-[#7fbdff] peer-checked:bg-[linear-gradient(#4dc7ff,#006fd8)] peer-checked:font-extrabold peer-checked:text-white",
   "peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-[#ffffff]",
@@ -147,10 +149,10 @@ export const activeTabButtonClassName =
   "min-h-[34px] rounded-none border-0 border-b-2 border-b-[#111111] bg-white font-extrabold shadow-none max-[520px]:min-h-[29px]";
 
 export const commentLogClassName =
-  "m-0 h-full min-h-0 list-none overflow-auto bg-white p-0";
+  "relative m-0 h-full min-h-0 list-none overflow-auto bg-white p-0";
 
 export const commentLogItemClassName =
-  "grid min-h-[52px] grid-cols-[38px_minmax(0,1fr)] border-b border-[#eeeeee] max-[520px]:min-h-[44px]";
+  "absolute left-0 top-0 grid min-h-[52px] w-full grid-cols-[38px_minmax(0,1fr)] border-b border-[#eeeeee] max-[520px]:min-h-[44px]";
 
 export const commentLogNumberClassName =
   "pt-[9px] text-center text-xs text-[#8d8d8d] max-[520px]:pt-[7px]";

@@ -112,7 +112,7 @@ export async function fetchComments(
   const parsed = await requestJSON(
     config,
     "GET",
-    apiRoomPath(roomId, "/comments?limit=60"),
+    apiRoomPath(roomId, "/comments?limit=300"),
   );
   if (!Array.isArray(parsed)) {
     return [];
