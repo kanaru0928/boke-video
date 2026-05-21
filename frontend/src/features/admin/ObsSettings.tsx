@@ -12,6 +12,10 @@ export function ObsSettings() {
           text="配信枠のコピーボタンからサーバーURLとBearer Tokenを入力します。"
         />
         <ObsStep number="4" text="適用して配信開始を押します。" />
+        <p className="m-0 border border-[#d6d6d6] bg-white px-2 py-[6px] text-sm leading-snug text-[#333333]">
+          注: 出力 &gt; 配信 &gt;
+          エンコーダ設定で「Bフレームを使用する」をオフにしてください。
+        </p>
       </section>
     </Board>
   );
