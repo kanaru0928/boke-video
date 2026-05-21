@@ -1,7 +1,11 @@
 import {
+  CommentLaneAllocator,
+  type CommentLaneAxis,
   type CommentPosition,
   commentLimit,
+  horizontalLaneCount,
   horizontalLaneTop,
+  verticalLaneCount,
   verticalLaneLeft,
 } from "./comment_layout";
 import { commentClassName } from "./comment_styles";
@@ -9,8 +13,7 @@ import type { CommentMessage } from "./types";
 
 export class CommentRenderer {
   private readonly active = new Set<HTMLElement>();
-  private horizontalLane = 0;
-  private verticalLane = 0;
+  private readonly laneAllocator = new CommentLaneAllocator();
 
   constructor(private readonly root: HTMLElement) {}
 
@@ -29,7 +32,7 @@ export class CommentRenderer {
     element.className = commentClassName(message.direction, message.fontSize);
     element.textContent = message.body;
     element.style.color = message.color;
-    this.position(element, message.direction);
+    const occupiedLane = this.position(element, message.direction);
 
     this.active.add(element);
     this.root.append(element);
@@ -42,6 +45,9 @@ export class CommentRenderer {
     void animation.finished.finally(() => {
       element.remove();
       this.active.delete(element);
+      if (occupiedLane !== null) {
+        this.laneAllocator.release(occupiedLane.axis, occupiedLane.lane);
+      }
     });
   }
 
@@ -50,6 +56,7 @@ export class CommentRenderer {
       element.remove();
     }
     this.active.clear();
+    this.laneAllocator.clear();
   }
 
   private limit(): number {
@@ -59,37 +66,42 @@ export class CommentRenderer {
   private position(
     element: HTMLElement,
     direction: CommentMessage["direction"],
-  ): void {
+  ): OccupiedCommentLane | null {
     switch (direction) {
       case "rightToLeft":
       case "leftToRight": {
-        const position = horizontalLaneTop(
-          this.horizontalLane,
-          this.root.clientHeight,
+        const lane = this.laneAllocator.acquire(
+          "horizontal",
+          horizontalLaneCount(this.root.clientHeight),
         );
-        this.horizontalLane += 1;
+        const position = horizontalLaneTop(lane, this.root.clientHeight);
         applyPosition(element, position);
-        break;
+        return { axis: "horizontal", lane };
       }
       case "topToBottom":
       case "bottomToTop": {
-        const position = verticalLaneLeft(
-          this.verticalLane,
-          this.root.clientWidth,
+        const lane = this.laneAllocator.acquire(
+          "vertical",
+          verticalLaneCount(this.root.clientWidth),
         );
-        this.verticalLane += 1;
+        const position = verticalLaneLeft(lane, this.root.clientWidth);
         applyPosition(element, position);
-        break;
+        return { axis: "vertical", lane };
       }
       case "fixedTop":
         element.style.top = "12px";
-        break;
+        return null;
       case "fixedBottom":
         element.style.bottom = "12px";
-        break;
+        return null;
     }
   }
 }
+
+type OccupiedCommentLane = {
+  axis: CommentLaneAxis;
+  lane: number;
+};
 
 function applyPosition(element: HTMLElement, position: CommentPosition): void {
   element.style[position.property] = position.value;

@@ -4,16 +4,23 @@ import {
   playerControlsClassName,
   settingsChipClassName,
   stageClassName,
+  videoElementClassName,
 } from "./watchStyles";
 
 describe("WatchPlayer", () => {
   it("動画領域を16:9にする", () => {
     expect(stageClassName).toContain("aspect-video");
+    expect(stageClassName).not.toContain("border-[5px]");
+    expect(videoElementClassName).toContain("aspect-video");
+    expect(videoElementClassName).toContain("object-cover");
   });
 
   it("コントロールを通常は隠し、操作時に表示する", () => {
     expect(playerControlsClassName).toContain("opacity-0");
     expect(playerControlsClassName).toContain("pointer-events-none");
+    expect(playerControlsClassName).toContain("items-center");
+    expect(playerControlsClassName).toContain("bg-[linear-gradient");
+    expect(playerControlsClassName).not.toContain("bg-[#050505]");
     expect(playerControlsClassName).toContain("group-hover:opacity-100");
     expect(playerControlsClassName).toContain("group-focus-within:opacity-100");
     expect(playerControlsClassName).toContain(

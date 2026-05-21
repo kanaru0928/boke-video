@@ -21,6 +21,7 @@ import {
   playTimeClassName,
   stageClassName,
   streamStatusClassName,
+  videoElementClassName,
 } from "./watchStyles";
 
 type PreventableEvent = {
@@ -80,7 +81,7 @@ export function WatchPlayer({
     >
       <video
         autoPlay
-        className="block h-full w-full bg-[#020202]"
+        className={videoElementClassName}
         ref={videoRef}
         muted
         onPause={onUpdatePlayerState}
