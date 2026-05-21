@@ -86,11 +86,8 @@ function RoomCard({ room }: RoomCardProps) {
           )}
         >
           {thumbnail.url === null ? (
-            <div className="grid h-full grid-cols-[auto_minmax(0,1fr)] grid-rows-[1fr_auto] items-center gap-x-[9px] p-3 text-white [text-shadow:1px_1px_0_#000000] max-[520px]:gap-x-1.5 max-[520px]:p-2">
+            <div className="grid h-full grid-rows-[1fr_auto] p-3 text-white [text-shadow:1px_1px_0_#000000] max-[520px]:p-2">
               <Bot aria-hidden="true" size={34} />
-              <strong className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[28px] leading-none max-[520px]:text-xl">
-                {thumbnail.initials}
-              </strong>
               <span className="col-span-full border-t border-[rgb(255_255_255_/_55%)] pt-[3px] font-[Arial,sans-serif] text-[11px] tracking-normal">
                 Loading
               </span>

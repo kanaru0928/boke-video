@@ -11,7 +11,6 @@ const thumbnailToneClassNames = [
 ] as const;
 
 type RoomThumbnail = {
-  initials: string;
   isGenerated: boolean;
   toneClassName: string;
   url: string | null;
@@ -20,16 +19,10 @@ type RoomThumbnail = {
 export function roomThumbnail(room: Room): RoomThumbnail {
   const isGenerated = room.thumbnailUrl === unavailableThumbnailURL;
   return {
-    initials: roomInitials(room.title),
     isGenerated,
     toneClassName: thumbnailToneClassNames[thumbnailTone(room.id)],
     url: isGenerated ? null : room.thumbnailUrl,
   };
-}
-
-export function roomInitials(title: string): string {
-  const letters = Array.from(title.trim()).filter((letter) => letter !== " ");
-  return letters.slice(0, 2).join("") || "枠";
 }
 
 export function roomThumbnailRefreshMilliseconds(rooms: Room[]): number | null {

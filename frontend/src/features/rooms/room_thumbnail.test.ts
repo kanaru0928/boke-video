@@ -1,16 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  roomInitials,
   roomThumbnail,
   roomThumbnailRefreshMilliseconds,
 } from "./room_thumbnail";
-
-describe("roomInitials", () => {
-  it("タイトルからサムネイル表示文字を作る", () => {
-    expect(roomInitials("配信テスト")).toBe("配信");
-    expect(roomInitials("")).toBe("枠");
-  });
-});
 
 describe("roomThumbnailRefreshMilliseconds", () => {
   it("枠一覧の最短更新間隔をミリ秒で返す", () => {
