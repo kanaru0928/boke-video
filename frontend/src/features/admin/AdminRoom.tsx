@@ -1,4 +1,6 @@
 import {
+  Check,
+  Clipboard,
   ExternalLink,
   KeyRound,
   MessageSquare,
@@ -9,6 +11,7 @@ import { useEffect, useState } from "react";
 import { buttonClassName, formControlClassName } from "../../shared/ui/styles";
 import type { CommentMessage } from "../comments/types";
 import type { Room } from "../rooms/room_api";
+import { normalizeIngestClipboardValue } from "./copy_ingest_value";
 
 type AdminRoomProps = {
   comments: CommentMessage[] | null;
@@ -34,9 +37,20 @@ export function AdminRoom({
   whipBearerToken,
 }: AdminRoomProps) {
   const [title, setTitle] = useState(room.title);
+  const [copiedTarget, setCopiedTarget] = useState<IngestCopyTarget | null>(
+    null,
+  );
   useEffect(() => {
     setTitle(room.title);
   }, [room.title]);
+
+  const copyIngestValue = async (
+    target: IngestCopyTarget,
+    value: string,
+  ): Promise<void> => {
+    await navigator.clipboard.writeText(normalizeIngestClipboardValue(value));
+    setCopiedTarget(target);
+  };
 
   return (
     <article className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 border border-[#a7a7a7] bg-white p-[7px] max-[860px]:grid-cols-1">
@@ -49,16 +63,33 @@ export function AdminRoom({
           type="text"
           value={title}
         />
-        <p className="m-0 [overflow-wrap:anywhere] font-[Arial,sans-serif] text-xs text-[#666666]">
-          {room.id}
-        </p>
-        <dl className="grid gap-[4px] border border-[#c9c9c9] bg-[#f7f7f7] p-[6px]">
-          <AdminRoomSetting label="サーバー" value={serverUrl} />
-          <AdminRoomSetting
-            label="Bearer Token"
-            value={whipBearerToken ?? "作成時または再発行時に表示します"}
-          />
-        </dl>
+        <section
+          aria-label="配信枠のOBS入力"
+          className="grid select-none gap-[6px] border border-[#c9c9c9] bg-[#f7f7f7] p-[6px]"
+        >
+          <div className="flex flex-wrap gap-[5px]">
+            <IngestCopyButton
+              copied={copiedTarget === "serverUrl"}
+              label="サーバーURLをコピー"
+              onCopy={() => copyIngestValue("serverUrl", serverUrl)}
+            />
+            <IngestCopyButton
+              copied={copiedTarget === "bearerToken"}
+              disabled={whipBearerToken === null}
+              label="Bearer Tokenをコピー"
+              onCopy={() =>
+                whipBearerToken === null
+                  ? Promise.resolve()
+                  : copyIngestValue("bearerToken", whipBearerToken)
+              }
+            />
+          </div>
+          {whipBearerToken === null ? (
+            <p className="m-0 text-xs text-[#555555]">
+              Tokenは作成時または再発行時にコピーできます。
+            </p>
+          ) : null}
+        </section>
       </div>
       <div className="flex flex-wrap justify-end gap-[5px] max-[860px]:justify-start">
         <a
@@ -97,7 +128,11 @@ export function AdminRoom({
         <button
           className={buttonClassName()}
           type="button"
-          onClick={() => void onRemoveRoom(room.id)}
+          onClick={() => {
+            if (window.confirm("この配信枠を削除しますか？")) {
+              void onRemoveRoom(room.id);
+            }
+          }}
         >
           <Trash2 aria-hidden="true" size={18} />
           削除
@@ -127,18 +162,37 @@ export function AdminRoom({
   );
 }
 
-type AdminRoomSettingProps = {
+type IngestCopyTarget = "serverUrl" | "bearerToken";
+
+type IngestCopyButtonProps = {
+  copied: boolean;
+  disabled?: boolean;
   label: string;
-  value: string;
+  onCopy: () => Promise<void>;
 };
 
-function AdminRoomSetting({ label, value }: AdminRoomSettingProps) {
+function IngestCopyButton({
+  copied,
+  disabled = false,
+  label,
+  onCopy,
+}: IngestCopyButtonProps) {
   return (
-    <div className="grid grid-cols-[110px_minmax(0,1fr)] gap-2 max-[520px]:grid-cols-1 max-[520px]:gap-1">
-      <dt className="font-extrabold">{label}</dt>
-      <dd className="m-0 [overflow-wrap:anywhere] font-[Arial,sans-serif] text-xs">
-        {value}
-      </dd>
-    </div>
+    <button
+      className={buttonClassName({
+        className:
+          "select-none text-sm disabled:cursor-not-allowed disabled:opacity-60",
+      })}
+      disabled={disabled}
+      type="button"
+      onClick={() => void onCopy()}
+    >
+      {copied ? (
+        <Check aria-hidden="true" size={17} />
+      ) : (
+        <Clipboard aria-hidden="true" size={17} />
+      )}
+      {copied ? "コピー済み" : label}
+    </button>
   );
 }

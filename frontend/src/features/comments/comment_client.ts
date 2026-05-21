@@ -1,3 +1,4 @@
+import { commentWebSocketEndpoint } from "../../shared/api/endpoints";
 import type { AppConfig } from "../../shared/config/config";
 import type { CommentCreateRequest, CommentMessage } from "./types";
 
@@ -14,8 +15,7 @@ export class CommentClient {
 
   connect(roomId: string): void {
     this.disconnect();
-    const url = `${this.config.commentWsUrl}/ws/rooms/${encodeURIComponent(roomId)}/comments`;
-    this.socket = new WebSocket(url);
+    this.socket = new WebSocket(commentWebSocketEndpoint(this.config, roomId));
     this.socket.addEventListener("open", () => {
       this.flushPendingRequests();
     });

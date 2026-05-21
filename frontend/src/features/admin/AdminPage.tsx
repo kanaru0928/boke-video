@@ -39,7 +39,7 @@ export function AdminPage({ config }: AdminPageProps) {
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
-    if (title.trim() === "") {
+    if (rooms.length > 0 || title.trim() === "") {
       return;
     }
     const room = await createRoomFromTitle(title);
@@ -98,6 +98,7 @@ export function AdminPage({ config }: AdminPageProps) {
       [roomId]: token,
     }));
   };
+  const hasRoom = rooms.length > 0;
 
   return (
     <section className={appShellClassName}>
@@ -110,14 +111,21 @@ export function AdminPage({ config }: AdminPageProps) {
         >
           <input
             className={formControlClassName}
+            disabled={hasRoom}
             maxLength={80}
             onChange={(event) => setTitle(event.currentTarget.value)}
-            placeholder="ルーム名"
+            placeholder={hasRoom ? "作成済み" : "ルーム名"}
             required
             type="text"
             value={title}
           />
-          <button className={buttonClassName()} type="submit">
+          <button
+            className={buttonClassName({
+              className: "disabled:cursor-not-allowed disabled:opacity-60",
+            })}
+            disabled={hasRoom}
+            type="submit"
+          >
             <Plus aria-hidden="true" size={18} />
             作成
           </button>

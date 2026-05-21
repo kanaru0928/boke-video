@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { AppConfig } from "../../shared/config/config";
 import type { Room } from "./room_api";
 import {
   roomThumbnail,
@@ -39,7 +40,7 @@ describe("roomThumbnail", () => {
         thumbnailUpdatedAt: "2026-05-20T10:00:00Z",
         thumbnailRefreshSeconds: 30,
       }),
-      "http://localhost:8080",
+      testConfig,
     );
     expect(thumbnail.isPending).toBe(false);
     expect(thumbnail.url).toBe(
@@ -56,13 +57,19 @@ describe("roomThumbnail", () => {
         thumbnailUpdatedAt: "2026-05-20T10:00:00Z",
         thumbnailRefreshSeconds: 30,
       }),
-      "http://localhost:8080",
+      testConfig,
     );
     expect(thumbnail.isPending).toBe(true);
     expect(thumbnail.url).toBeNull();
     expect(thumbnail.toneClassName).toContain("linear-gradient");
   });
 });
+
+const testConfig: AppConfig = {
+  apiBaseUrl: "http://localhost:8080",
+  commentWsUrl: "ws://localhost:8080",
+  ingestBaseUrl: "http://localhost:8080",
+};
 
 function createRoom(room: Partial<Room> & Pick<Room, "id" | "title">): Room {
   return {

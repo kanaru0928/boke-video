@@ -1,3 +1,9 @@
+import {
+  adminCommentPath,
+  adminRoomPath,
+  apiRoomPath,
+} from "../../shared/api/endpoints";
+import { requestJSON, requestOK } from "../../shared/api/http_client";
 import type { AppConfig } from "../../shared/config/config";
 import {
   type CommentDirection,
@@ -40,13 +46,7 @@ type IngestToken = {
 };
 
 export async function fetchRooms(config: AppConfig): Promise<Room[]> {
-  const response = await fetch(`${config.apiBaseUrl}/api/rooms`, {
-    credentials: "include",
-  });
-  if (!response.ok) {
-    return [];
-  }
-  const parsed: unknown = await response.json();
+  const parsed = await requestJSON(config, "GET", "/api/rooms");
   if (!Array.isArray(parsed)) {
     return [];
   }
@@ -54,13 +54,7 @@ export async function fetchRooms(config: AppConfig): Promise<Room[]> {
 }
 
 export async function fetchAdminRooms(config: AppConfig): Promise<Room[]> {
-  const response = await fetch(`${config.apiBaseUrl}/api/admin/rooms`, {
-    credentials: "include",
-  });
-  if (!response.ok) {
-    return [];
-  }
-  const parsed: unknown = await response.json();
+  const parsed = await requestJSON(config, "GET", "/api/admin/rooms");
   if (!Array.isArray(parsed)) {
     return [];
   }
@@ -71,15 +65,10 @@ export async function createRoom(
   config: AppConfig,
   title: string,
 ): Promise<CreatedRoom | null> {
-  const response = await fetch(`${config.apiBaseUrl}/api/admin/rooms`, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ title }),
+  const parsed = await requestJSON(config, "POST", "/api/admin/rooms", {
+    title,
   });
-  return parseCreatedRoomResponse(response);
+  return parseCreatedRoom(parsed);
 }
 
 export async function updateRoomTitle(
@@ -87,76 +76,47 @@ export async function updateRoomTitle(
   roomId: string,
   title: string,
 ): Promise<Room | null> {
-  const response = await fetch(
-    `${config.apiBaseUrl}/api/admin/rooms/${encodeURIComponent(roomId)}`,
-    {
-      method: "PATCH",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ title }),
-    },
-  );
-  return parseRoomResponse(response);
+  const parsed = await requestJSON(config, "PATCH", adminRoomPath(roomId), {
+    title,
+  });
+  return parseRoom(parsed);
 }
 
 export async function deleteRoom(
   config: AppConfig,
   roomId: string,
 ): Promise<boolean> {
-  const response = await fetch(
-    `${config.apiBaseUrl}/api/admin/rooms/${encodeURIComponent(roomId)}`,
-    {
-      method: "DELETE",
-      credentials: "include",
-    },
-  );
-  return response.ok;
+  return requestOK(config, "DELETE", adminRoomPath(roomId));
 }
 
 export async function rotateRoomIngestToken(
   config: AppConfig,
   roomId: string,
 ): Promise<IngestToken | null> {
-  const response = await fetch(
-    `${config.apiBaseUrl}/api/admin/rooms/${encodeURIComponent(roomId)}/ingest-token`,
-    {
-      method: "POST",
-      credentials: "include",
-    },
+  const parsed = await requestJSON(
+    config,
+    "POST",
+    adminRoomPath(roomId, "/ingest-token"),
   );
-  return parseIngestTokenResponse(response);
+  return parseIngestToken(parsed);
 }
 
 export async function deleteComment(
   config: AppConfig,
   commentId: string,
 ): Promise<boolean> {
-  const response = await fetch(
-    `${config.apiBaseUrl}/api/admin/comments/${encodeURIComponent(commentId)}`,
-    {
-      method: "DELETE",
-      credentials: "include",
-    },
-  );
-  return response.ok;
+  return requestOK(config, "DELETE", adminCommentPath(commentId));
 }
 
 export async function fetchComments(
   config: AppConfig,
   roomId: string,
 ): Promise<CommentMessage[]> {
-  const response = await fetch(
-    `${config.apiBaseUrl}/api/rooms/${encodeURIComponent(roomId)}/comments?limit=60`,
-    {
-      credentials: "include",
-    },
+  const parsed = await requestJSON(
+    config,
+    "GET",
+    apiRoomPath(roomId, "/comments?limit=60"),
   );
-  if (!response.ok) {
-    return [];
-  }
-  const parsed: unknown = await response.json();
   if (!Array.isArray(parsed)) {
     return [];
   }
@@ -167,27 +127,24 @@ export async function fetchRoomStats(
   config: AppConfig,
   roomId: string,
 ): Promise<RoomStats | null> {
-  const response = await fetch(
-    `${config.apiBaseUrl}/api/rooms/${encodeURIComponent(roomId)}/stats`,
-    {
-      credentials: "include",
-    },
+  const parsed = await requestJSON(
+    config,
+    "GET",
+    apiRoomPath(roomId, "/stats"),
   );
-  return parseRoomStatsResponse(response);
+  return parseRoomStats(parsed);
 }
 
 export async function createRoomVisit(
   config: AppConfig,
   roomId: string,
 ): Promise<RoomStats | null> {
-  const response = await fetch(
-    `${config.apiBaseUrl}/api/rooms/${encodeURIComponent(roomId)}/visits`,
-    {
-      method: "POST",
-      credentials: "include",
-    },
+  const parsed = await requestJSON(
+    config,
+    "POST",
+    apiRoomPath(roomId, "/visits"),
   );
-  return parseRoomStatsResponse(response);
+  return parseRoomStats(parsed);
 }
 
 export function isRoom(value: unknown): value is Room {
@@ -286,52 +243,30 @@ function isCommentFontSize(value: unknown): value is CommentFontSize {
   return value === "small" || value === "medium" || value === "large";
 }
 
-async function parseRoomResponse(response: Response): Promise<Room | null> {
-  if (!response.ok) {
+function parseRoom(value: unknown): Room | null {
+  if (!isRoom(value)) {
     return null;
   }
-  const parsed: unknown = await response.json();
-  if (!isRoom(parsed)) {
-    return null;
-  }
-  return parsed;
+  return value;
 }
 
-async function parseCreatedRoomResponse(
-  response: Response,
-): Promise<CreatedRoom | null> {
-  if (!response.ok) {
+function parseCreatedRoom(value: unknown): CreatedRoom | null {
+  if (!isCreatedRoom(value)) {
     return null;
   }
-  const parsed: unknown = await response.json();
-  if (!isCreatedRoom(parsed)) {
-    return null;
-  }
-  return parsed;
+  return value;
 }
 
-async function parseRoomStatsResponse(
-  response: Response,
-): Promise<RoomStats | null> {
-  if (!response.ok) {
+function parseRoomStats(value: unknown): RoomStats | null {
+  if (!isRoomStats(value)) {
     return null;
   }
-  const parsed: unknown = await response.json();
-  if (!isRoomStats(parsed)) {
-    return null;
-  }
-  return parsed;
+  return value;
 }
 
-async function parseIngestTokenResponse(
-  response: Response,
-): Promise<IngestToken | null> {
-  if (!response.ok) {
+function parseIngestToken(value: unknown): IngestToken | null {
+  if (!isIngestToken(value)) {
     return null;
   }
-  const parsed: unknown = await response.json();
-  if (!isIngestToken(parsed)) {
-    return null;
-  }
-  return parsed;
+  return value;
 }

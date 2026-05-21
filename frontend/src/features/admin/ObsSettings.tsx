@@ -4,27 +4,31 @@ import { Board } from "../../shared/ui/Board";
 export function ObsSettings() {
   return (
     <Board icon={RadioTower} title="OBS設定">
-      <section className="grid gap-[6px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2">
-        <ObsSettingRow label="サービス" value="WHIP" />
-        <ObsSettingRow label="サーバー" value="各配信枠のサーバーを入力" />
-        <ObsSettingRow label="Bearer Token" value="各配信枠のTokenを入力" />
+      <section className="grid gap-[7px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2">
+        <ObsStep number="1" text="OBSの設定を開き、配信を選択します。" />
+        <ObsStep number="2" text="サービスでWHIPを選択します。" />
+        <ObsStep
+          number="3"
+          text="配信枠のコピーボタンからサーバーURLとBearer Tokenを入力します。"
+        />
+        <ObsStep number="4" text="適用して配信開始を押します。" />
       </section>
     </Board>
   );
 }
 
-type ObsSettingRowProps = {
-  label: string;
-  value: string;
+type ObsStepProps = {
+  number: string;
+  text: string;
 };
 
-function ObsSettingRow({ label, value }: ObsSettingRowProps) {
+function ObsStep({ number, text }: ObsStepProps) {
   return (
-    <div className="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-2 max-[520px]:grid-cols-1 max-[520px]:gap-1">
-      <span className="font-extrabold">{label}</span>
-      <code className="min-h-8 border border-[#a7a7a7] bg-white px-2 py-[6px] font-[Arial,sans-serif] text-sm [overflow-wrap:anywhere]">
-        {value}
-      </code>
+    <div className="grid grid-cols-[28px_minmax(0,1fr)] items-start gap-[7px]">
+      <span className="grid h-[24px] w-[24px] select-none place-items-center border border-[#777777] bg-[linear-gradient(#ffffff,#d5d5d5_48%,#a9a9a9_49%,#efefef)] text-sm font-extrabold shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#8a8a8a]">
+        {number}
+      </span>
+      <p className="m-0 pt-[2px] leading-snug">{text}</p>
     </div>
   );
 }

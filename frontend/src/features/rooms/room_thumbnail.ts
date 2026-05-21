@@ -1,3 +1,5 @@
+import { roomThumbnailEndpoint } from "../../shared/api/endpoints";
+import type { AppConfig } from "../../shared/config/config";
 import type { Room } from "./room_api";
 
 const thumbnailToneClassNames = [
@@ -15,12 +17,18 @@ type RoomThumbnail = {
   url: string | null;
 };
 
-export function roomThumbnail(room: Room, apiBaseUrl: string): RoomThumbnail {
+export function roomThumbnail(room: Room, config: AppConfig): RoomThumbnail {
   const isPending = room.thumbnailUrl === "";
   return {
     isPending,
     toneClassName: thumbnailToneClassNames[thumbnailTone(room.id)],
-    url: isPending ? null : thumbnailImageURL(room, apiBaseUrl),
+    url: isPending
+      ? null
+      : roomThumbnailEndpoint(
+          config,
+          room.thumbnailUrl,
+          room.thumbnailUpdatedAt,
+        ),
   };
 }
 
@@ -44,14 +52,4 @@ function thumbnailTone(seed: string): number {
     hash = (hash * 31 + codePoint) % thumbnailToneClassNames.length;
   }
   return hash;
-}
-
-function thumbnailImageURL(room: Room, apiBaseUrl: string): string {
-  const url = new URL(room.thumbnailUrl, normalizedBaseURL(apiBaseUrl));
-  url.searchParams.set("updated", room.thumbnailUpdatedAt);
-  return url.toString();
-}
-
-function normalizedBaseURL(apiBaseUrl: string): string {
-  return apiBaseUrl.endsWith("/") ? apiBaseUrl : `${apiBaseUrl}/`;
 }

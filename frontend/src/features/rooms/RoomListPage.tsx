@@ -49,11 +49,7 @@ export function RoomListPage({ config }: RoomListPageProps) {
         ) : (
           <section className="grid content-start gap-[10px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2 [grid-template-columns:repeat(auto-fill,minmax(238px,1fr))] max-[860px]:grid-cols-2 max-[860px]:gap-[7px] max-[520px]:p-1.5">
             {rooms.map((room) => (
-              <RoomCard
-                apiBaseUrl={config.apiBaseUrl}
-                key={room.id}
-                room={room}
-              />
+              <RoomCard config={config} key={room.id} room={room} />
             ))}
           </section>
         )}
@@ -70,12 +66,12 @@ export function RoomListPage({ config }: RoomListPageProps) {
 }
 
 type RoomCardProps = {
-  apiBaseUrl: string;
+  config: AppConfig;
   room: Room;
 };
 
-function RoomCard({ apiBaseUrl, room }: RoomCardProps) {
-  const thumbnail = roomThumbnail(room, apiBaseUrl);
+function RoomCard({ config, room }: RoomCardProps) {
+  const thumbnail = roomThumbnail(room, config);
 
   return (
     <article className="grid grid-rows-[auto_minmax(92px,1fr)] gap-0 border border-[#a7a7a7] bg-white">

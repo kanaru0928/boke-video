@@ -1,3 +1,5 @@
+import { apiRoomPath } from "../../shared/api/endpoints";
+import { requestJSON } from "../../shared/api/http_client";
 import type { AppConfig } from "../../shared/config/config";
 
 type StreamAccess = {
@@ -8,17 +10,11 @@ export async function fetchStreamAccess(
   config: AppConfig,
   roomId: string,
 ): Promise<StreamAccess | null> {
-  const response = await fetch(
-    `${config.apiBaseUrl}/api/rooms/${encodeURIComponent(roomId)}/stream-access`,
-    {
-      credentials: "include",
-      method: "POST",
-    },
+  const parsed = await requestJSON(
+    config,
+    "POST",
+    apiRoomPath(roomId, "/stream-access"),
   );
-  if (!response.ok) {
-    return null;
-  }
-  const parsed: unknown = await response.json();
   if (!isStreamAccess(parsed)) {
     return null;
   }
