@@ -149,6 +149,7 @@ export function WatchPage({ config }: WatchPageProps) {
         links={[
           { href: "/", label: "枠一覧" },
           { href: "/admin", label: "管理" },
+          { href: "/user", label: "ユーザー" },
         ]}
       />
       <WatchProgramHeader selectedRoom={selectedRoom} />

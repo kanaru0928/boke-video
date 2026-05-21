@@ -178,6 +178,50 @@ func TestSQLiteAllowsOneRoomPerOwner(t *testing.T) {
 	}
 }
 
+func TestSQLiteUpsertsUserProfile(t *testing.T) {
+	ctx := context.Background()
+	db, err := OpenSQLite(filepath.Join(t.TempDir(), "test.sqlite3"))
+	if err != nil {
+		t.Fatalf("OpenSQLite returned error: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.Migrate(ctx); err != nil {
+		t.Fatalf("Migrate returned error: %v", err)
+	}
+
+	first := UserProfile{
+		Subject:     "user-1",
+		DisplayName: "最初の名前",
+		UpdatedAt:   time.Date(2026, 5, 9, 0, 1, 0, 0, time.UTC),
+	}
+	if err := db.UpsertUserProfile(ctx, first); err != nil {
+		t.Fatalf("UpsertUserProfile returned error: %v", err)
+	}
+	second := UserProfile{
+		Subject:     first.Subject,
+		DisplayName: "新しい名前",
+		UpdatedAt:   time.Date(2026, 5, 9, 0, 2, 0, 0, time.UTC),
+	}
+	if err := db.UpsertUserProfile(ctx, second); err != nil {
+		t.Fatalf("UpsertUserProfile returned error: %v", err)
+	}
+
+	profile, err := db.GetUserProfile(ctx, first.Subject)
+	if err != nil {
+		t.Fatalf("GetUserProfile returned error: %v", err)
+	}
+	if profile.Subject != second.Subject {
+		t.Fatalf("profile.Subject = %q", profile.Subject)
+	}
+	if profile.DisplayName != second.DisplayName {
+		t.Fatalf("profile.DisplayName = %q", profile.DisplayName)
+	}
+	if !profile.UpdatedAt.Equal(second.UpdatedAt) {
+		t.Fatalf("profile.UpdatedAt = %s", profile.UpdatedAt)
+	}
+}
+
 func testRoom(roomID string, ownerSub string) Room {
 	return Room{
 		ID:                      roomID,

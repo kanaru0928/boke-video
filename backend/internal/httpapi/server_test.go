@@ -27,6 +27,7 @@ import (
 func TestServerStoresCommentAppearance(t *testing.T) {
 	server := newTestServer(t)
 
+	setTestDisplayName(t, server, "local-dev", "配信者")
 	roomID := createTestRoom(t, server, "配信")
 	createCommentRequest := `{
 		"body": "こんにちは",
@@ -61,14 +62,57 @@ func TestServerStoresCommentAppearance(t *testing.T) {
 	if messages[0].Author.Subject != "local-dev" {
 		t.Fatalf("message author subject = %q", messages[0].Author.Subject)
 	}
-	if messages[0].Author.DisplayName != "local-dev" {
+	if messages[0].Author.DisplayName != "配信者" {
 		t.Fatalf("message author display name = %q", messages[0].Author.DisplayName)
+	}
+}
+
+func TestServerRejectsCommentWithoutDisplayName(t *testing.T) {
+	server := newTestServer(t)
+
+	roomID := createTestRoom(t, server, "配信")
+	response := performRequest(server, http.MethodPost, "/api/rooms/"+roomID+"/comments", `{
+		"body": "こんにちは",
+		"direction": "rightToLeft",
+		"color": "#ffffff",
+		"fontSize": "medium"
+	}`)
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("create comment status = %d, body = %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), "display name is required") {
+		t.Fatalf("create comment body = %s", response.Body.String())
+	}
+}
+
+func TestServerUpdatesUserProfile(t *testing.T) {
+	server := newTestServer(t)
+
+	updateResponse := performRequest(server, http.MethodPatch, "/api/me", `{"displayName":" 表示名 "}`)
+	if updateResponse.Code != http.StatusOK {
+		t.Fatalf("update profile status = %d, body = %s", updateResponse.Code, updateResponse.Body.String())
+	}
+
+	getResponse := performRequest(server, http.MethodGet, "/api/me", "")
+	if getResponse.Code != http.StatusOK {
+		t.Fatalf("get profile status = %d, body = %s", getResponse.Code, getResponse.Body.String())
+	}
+	var profile repository.UserProfile
+	if err := json.NewDecoder(getResponse.Body).Decode(&profile); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if profile.Subject != "local-dev" {
+		t.Fatalf("profile.Subject = %q", profile.Subject)
+	}
+	if profile.DisplayName != "表示名" {
+		t.Fatalf("profile.DisplayName = %q", profile.DisplayName)
 	}
 }
 
 func TestServerReturnsRoomStatsFromStoredData(t *testing.T) {
 	server := newTestServer(t)
 
+	setTestDisplayName(t, server, "local-dev", "local-dev")
 	roomID := createTestRoom(t, server, "配信")
 	visitResponse := performRequest(server, http.MethodPost, "/api/rooms/"+roomID+"/visits", "")
 	if visitResponse.Code != http.StatusCreated {
@@ -693,6 +737,18 @@ func createTestRoom(t *testing.T, server *Server, title string) string {
 		t.Fatalf("Decode returned error: %v", err)
 	}
 	return room.ID
+}
+
+func setTestDisplayName(t *testing.T, server *Server, subject string, displayName string) {
+	t.Helper()
+
+	if err := server.repository.UpsertUserProfile(context.Background(), repository.UserProfile{
+		Subject:     subject,
+		DisplayName: displayName,
+		UpdatedAt:   time.Unix(2000, 0).UTC(),
+	}); err != nil {
+		t.Fatalf("UpsertUserProfile returned error: %v", err)
+	}
 }
 
 func performRequest(server *Server, method string, path string, body string) *httptest.ResponseRecorder {

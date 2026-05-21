@@ -1,6 +1,7 @@
 import { AdminPage } from "./features/admin/AdminPage";
 import { NotFoundPage } from "./features/notFound/NotFoundPage";
 import { RoomListPage } from "./features/rooms/RoomListPage";
+import { UserPage } from "./features/user/UserPage";
 import { WatchPage } from "./features/watch/WatchPage";
 import type { AppConfig } from "./shared/config/config";
 
@@ -15,6 +16,9 @@ export function App({ config }: AppProps) {
   }
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     return <AdminPage config={config} />;
+  }
+  if (pathname === "/user" || pathname.startsWith("/user/")) {
+    return <UserPage config={config} />;
   }
   if (pathname === "/watch" || pathname.startsWith("/watch/")) {
     return <WatchPage config={config} />;

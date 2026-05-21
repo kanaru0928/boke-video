@@ -56,6 +56,12 @@ type CommentCursor struct {
 	ID     string
 }
 
+type UserProfile struct {
+	Subject     string    `json:"subject"`
+	DisplayName string    `json:"displayName"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
 var ErrAlreadyExists = errors.New("already exists")
 var ErrOwnerRoomLimitExceeded = errors.New("owner room limit exceeded")
 
@@ -101,6 +107,11 @@ func (s *SQLite) Migrate(ctx context.Context) error {
 		`ALTER TABLE rooms ADD COLUMN ingest_token_hash TEXT NOT NULL DEFAULT ''`,
 		`CREATE UNIQUE INDEX IF NOT EXISTS rooms_owner_sub_unique_index
 			ON rooms (owner_sub)`,
+		`CREATE TABLE IF NOT EXISTS user_profiles (
+			subject TEXT PRIMARY KEY,
+			display_name TEXT NOT NULL,
+			updated_at TEXT NOT NULL
+		)`,
 		`CREATE TABLE IF NOT EXISTS comments (
 				id TEXT PRIMARY KEY,
 				room_id TEXT NOT NULL,
@@ -139,6 +150,40 @@ func (s *SQLite) Migrate(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func (s *SQLite) GetUserProfile(ctx context.Context, subject string) (UserProfile, error) {
+	row := s.db.QueryRowContext(ctx,
+		`SELECT subject, display_name, updated_at
+		 FROM user_profiles
+		 WHERE subject = ?`,
+		subject,
+	)
+	var profile UserProfile
+	var updatedAt string
+	if err := row.Scan(&profile.Subject, &profile.DisplayName, &updatedAt); err != nil {
+		return UserProfile{}, err
+	}
+	parsedUpdatedAt, err := time.Parse(time.RFC3339Nano, updatedAt)
+	if err != nil {
+		return UserProfile{}, err
+	}
+	profile.UpdatedAt = parsedUpdatedAt
+	return profile, nil
+}
+
+func (s *SQLite) UpsertUserProfile(ctx context.Context, profile UserProfile) error {
+	_, err := s.db.ExecContext(ctx,
+		`INSERT INTO user_profiles (subject, display_name, updated_at)
+		 VALUES (?, ?, ?)
+		 ON CONFLICT (subject) DO UPDATE SET
+			display_name = excluded.display_name,
+			updated_at = excluded.updated_at`,
+		profile.Subject,
+		profile.DisplayName,
+		profile.UpdatedAt.Format(time.RFC3339Nano),
+	)
+	return normalizeSQLiteError(err)
 }
 
 func (s *SQLite) CreateRoom(ctx context.Context, room Room) error {

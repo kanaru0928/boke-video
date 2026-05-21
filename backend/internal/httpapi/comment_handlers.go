@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -131,13 +132,23 @@ func (s *Server) createCommentFromRequest(ctx context.Context, roomID string, pr
 	if _, err := s.repository.GetRoom(ctx, roomID); err != nil {
 		return comment.Message{}, err
 	}
+	profile, err := s.repository.GetUserProfile(ctx, principal.Subject)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return comment.Message{}, errors.New("display name is required")
+		}
+		return comment.Message{}, err
+	}
+	if profile.DisplayName == "" {
+		return comment.Message{}, errors.New("display name is required")
+	}
 
 	now := s.now().UTC()
 	stored := comment.StoredComment{
 		ID:                newID(),
 		RoomID:            roomID,
 		AuthorSub:         principal.Subject,
-		AuthorDisplayName: principal.DisplayName(),
+		AuthorDisplayName: profile.DisplayName,
 		Body:              validReq.Body,
 		Direction:         validReq.Direction,
 		Color:             validReq.Color,

@@ -33,7 +33,13 @@ export function RoomListPage({ config }: RoomListPageProps) {
 
   return (
     <section className={appShellClassName}>
-      <AppHeader section="ROOMS" links={[{ href: "/admin", label: "管理" }]} />
+      <AppHeader
+        section="ROOMS"
+        links={[
+          { href: "/admin", label: "管理" },
+          { href: "/user", label: "ユーザー" },
+        ]}
+      />
       <Board
         className="grid min-h-[calc(100vh-96px)] grid-rows-[auto_minmax(0,1fr)]"
         icon={MonitorPlay}

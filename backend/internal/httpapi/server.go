@@ -78,6 +78,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	case r.Method == http.MethodGet && r.URL.Path == "/api/rooms":
 		s.handleListRooms(w, r)
+	case r.Method == http.MethodGet && r.URL.Path == "/api/me":
+		s.handleGetMe(w, r)
+	case r.Method == http.MethodPatch && r.URL.Path == "/api/me":
+		s.handleUpdateMe(w, r)
 	case r.Method == http.MethodGet && r.URL.Path == "/api/admin/rooms":
 		s.handleListOwnedRooms(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/api/admin/rooms":

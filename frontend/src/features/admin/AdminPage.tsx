@@ -162,7 +162,13 @@ export function AdminPage({ config }: AdminPageProps) {
 
   return (
     <section className={appShellClassName}>
-      <AppHeader section="ADMIN" links={[{ href: "/", label: "枠一覧" }]} />
+      <AppHeader
+        section="ADMIN"
+        links={[
+          { href: "/", label: "枠一覧" },
+          { href: "/user", label: "ユーザー" },
+        ]}
+      />
       <ObsSettings />
       <Board icon={MonitorPlay} title="番組管理">
         <form

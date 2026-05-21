@@ -17,7 +17,6 @@ import (
 
 type Principal struct {
 	Subject string
-	Name    string
 }
 
 type VerifierConfig struct {
@@ -50,7 +49,7 @@ func NewVerifier(cfg VerifierConfig) *Verifier {
 
 func (v *Verifier) VerifyRequest(ctx context.Context, r *http.Request) (Principal, error) {
 	if !v.enabled {
-		return Principal{Subject: "local-dev", Name: "local-dev"}, nil
+		return Principal{Subject: "local-dev"}, nil
 	}
 
 	tokenText := r.Header.Get("Cf-Access-Jwt-Assertion")
@@ -83,12 +82,7 @@ func (v *Verifier) VerifyRequest(ctx context.Context, r *http.Request) (Principa
 		return Principal{}, errors.New("missing subject")
 	}
 
-	name, _ := claims["name"].(string)
-	return Principal{Subject: subject, Name: name}, nil
-}
-
-func (p Principal) DisplayName() string {
-	return p.Name
+	return Principal{Subject: subject}, nil
 }
 
 func (v *Verifier) key(ctx context.Context, kid string) (*rsa.PublicKey, error) {
