@@ -3,9 +3,9 @@ import { type FormEvent, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import { AppHeader } from "../../shared/ui/AppHeader";
 import { Board } from "../../shared/ui/Board";
+import { Button } from "../../shared/ui/Button";
 import {
   appShellClassName,
-  buttonClassName,
   formControlClassName,
 } from "../../shared/ui/styles";
 import type { CommentMessage } from "../comments/types";
@@ -179,16 +179,14 @@ export function AdminPage({ config }: AdminPageProps) {
             type="text"
             value={title}
           />
-          <button
-            className={buttonClassName({
-              className: "disabled:cursor-not-allowed disabled:opacity-60",
-            })}
+          <Button
+            className="disabled:cursor-not-allowed disabled:opacity-60"
             disabled={hasRoom}
             type="submit"
           >
             <Plus aria-hidden="true" size={18} />
             作成
-          </button>
+          </Button>
         </form>
         <section className="grid gap-1.5">
           {rooms.map((room) => (
