@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../shared/ui/Button";
+import { cn } from "../../shared/ui/classNames";
 import type { RoomStreamStatus } from "../rooms/room_api";
 import { PlayerSettingsPopover } from "./PlayerSettingsPopover";
 import { formatElapsedTime } from "./room_activity";
@@ -16,11 +17,13 @@ import type { PlaybackQualityOption } from "./stream_quality";
 import {
   liveBadgeClassName,
   playerControlsClassName,
+  playerControlsVisibleClassName,
   playTimeClassName,
 } from "./watchStyles";
 
 type PlayerControlsProps = {
   commentsVisible: boolean;
+  controlsVisible: boolean;
   elapsedSeconds: number;
   isMuted: boolean;
   isPaused: boolean;
@@ -36,6 +39,7 @@ type PlayerControlsProps = {
 
 export function PlayerControls({
   commentsVisible,
+  controlsVisible,
   elapsedSeconds,
   isMuted,
   isPaused,
@@ -51,7 +55,12 @@ export function PlayerControls({
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <div className={playerControlsClassName}>
+    <div
+      className={cn(
+        playerControlsClassName,
+        controlsVisible && playerControlsVisibleClassName,
+      )}
+    >
       <div className="flex min-w-0 items-center gap-1">
         <Button
           aria-label={isPaused ? "再生" : "一時停止"}

@@ -1,5 +1,11 @@
 import { LoaderCircle } from "lucide-react";
-import type { RefObject } from "react";
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "../../shared/ui/classNames";
 import type { RoomStreamStatus } from "../rooms/room_api";
 import { PlayerControls } from "./PlayerControls";
@@ -18,6 +24,8 @@ import {
 type PreventableEvent = {
   preventDefault: () => void;
 };
+
+export const playerControlsIdleDelayMs = 2400;
 
 type WatchPlayerProps = {
   commentsLayerRef: RefObject<HTMLDivElement | null>;
@@ -64,11 +72,51 @@ export function WatchPlayer({
   streamStatus,
   videoRef,
 }: WatchPlayerProps) {
+  const [controlsVisible, setControlsVisible] = useState(false);
+  const controlsIdleTimerRef = useRef<number | null>(null);
+
+  const revealControlsUntilIdle = useCallback((): void => {
+    setControlsVisible(true);
+    clearControlsIdleTimer(controlsIdleTimerRef);
+    controlsIdleTimerRef.current = window.setTimeout(() => {
+      setControlsVisible(false);
+      controlsIdleTimerRef.current = null;
+    }, playerControlsIdleDelayMs);
+  }, []);
+
+  const hideControls = useCallback((): void => {
+    clearControlsIdleTimer(controlsIdleTimerRef);
+    setControlsVisible(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      clearControlsIdleTimer(controlsIdleTimerRef);
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncFullscreenControls = (): void => {
+      if (document.fullscreenElement === stageRef.current) {
+        revealControlsUntilIdle();
+        return;
+      }
+      hideControls();
+    };
+    document.addEventListener("fullscreenchange", syncFullscreenControls);
+    return () => {
+      document.removeEventListener("fullscreenchange", syncFullscreenControls);
+    };
+  }, [hideControls, revealControlsUntilIdle, stageRef]);
+
   return (
     <section
       ref={stageRef}
       className={stageClassName}
       onContextMenu={preventPlayerContextMenu}
+      onPointerEnter={revealControlsUntilIdle}
+      onPointerLeave={hideControls}
+      onPointerMove={revealControlsUntilIdle}
       role="application"
     >
       <video
@@ -101,6 +149,7 @@ export function WatchPlayer({
       ) : null}
       <PlayerControls
         commentsVisible={commentsVisible}
+        controlsVisible={controlsVisible}
         elapsedSeconds={elapsedSeconds}
         isMuted={isMuted}
         isPaused={isPaused}
@@ -115,4 +164,12 @@ export function WatchPlayer({
       />
     </section>
   );
+}
+
+function clearControlsIdleTimer(timerRef: RefObject<number | null>): void {
+  if (timerRef.current === null) {
+    return;
+  }
+  window.clearTimeout(timerRef.current);
+  timerRef.current = null;
 }
