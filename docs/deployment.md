@@ -100,9 +100,12 @@ CLOUDFLARE_ZONE_ID=replace-with-zone-id
 CLOUDFLARE_ACCESS_TEAM_NAME=replace-with-team-name
 CLOUDFLARE_ACCESS_POLICY_ID=replace-with-access-policy-id
 CLOUDFLARE_MANAGEMENT_ACCESS_POLICY_ID=
+CLOUDFLARE_API_TOKEN=replace-with-cloudflare-api-token
 STREAM_SIGNING_SECRET=replace-with-strong-secret
 OME_API_ACCESS_TOKEN=replace-with-api-token
 ```
+
+`CLOUDFLARE_API_TOKEN`はTerraformとWranglerの実行用です。`pnpm env:sync:production`はこの値を生成ファイルへ書きません。TerraformやWranglerを実行するshellで`export`して使います。
 
 `CLOUDFLARE_ACCESS_AUDIENCE`と`CLOUDFLARE_TUNNEL_TOKEN`はTerraform適用後に`.env.production`へ追記します。
 
