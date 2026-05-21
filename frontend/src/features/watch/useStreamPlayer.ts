@@ -3,9 +3,15 @@ import type { AppConfig } from "../../shared/config/config";
 import { OvenMediaEnginePlayer } from "../player/oven_media_engine_player";
 import type { RoomStreamStatus } from "../rooms/room_api";
 import { fetchStreamAccess } from "./stream_access_api";
+import {
+  type PlaybackQualityOption,
+  playbackQualityOptions,
+  selectedPlaybackQuality,
+} from "./stream_quality";
 import { streamStatusMessage } from "./watch_stream";
 
 type UseStreamPlayerResult = {
+  playbackQualities: PlaybackQualityOption[];
   streamMessage: string;
 };
 
@@ -14,9 +20,14 @@ export function useStreamPlayer(
   roomId: string,
   streamStatus: RoomStreamStatus,
   videoRef: RefObject<HTMLVideoElement | null>,
+  selectedQualityId: string,
 ): UseStreamPlayerResult {
   const playerRef = useRef<OvenMediaEnginePlayer | null>(null);
   const attachedRoomIdRef = useRef("");
+  const attachedQualityIdRef = useRef("");
+  const [playbackQualities, setPlaybackQualities] = useState<
+    PlaybackQualityOption[]
+  >([]);
   const [streamMessage, setStreamMessage] = useState(
     streamStatusMessage(streamStatus),
   );
@@ -36,6 +47,7 @@ export function useStreamPlayer(
     const detachStream = (): void => {
       playerRef.current?.destroy();
       attachedRoomIdRef.current = "";
+      attachedQualityIdRef.current = "";
       const video = videoRef.current;
       if (video === null) {
         return;
@@ -52,15 +64,20 @@ export function useStreamPlayer(
 
     const attachStreamWhenReady = async (): Promise<void> => {
       if (roomId === "") {
+        setPlaybackQualities([]);
         setStreamMessage(streamStatusMessage(streamStatus));
         return;
       }
       if (streamStatus === "ended") {
         detachStream();
+        setPlaybackQualities([]);
         setStreamMessage(streamStatusMessage(streamStatus));
         return;
       }
-      if (attachedRoomIdRef.current === roomId) {
+      if (
+        attachedRoomIdRef.current === roomId &&
+        attachedQualityIdRef.current === selectedQualityId
+      ) {
         return;
       }
 
@@ -72,9 +89,18 @@ export function useStreamPlayer(
         if (streamAccess === null) {
           throw new Error("stream access was not issued");
         }
+        const qualityOptions = playbackQualityOptions(
+          streamAccess.playbackUrl,
+          streamAccess.playbackVariants,
+        );
+        const quality = selectedPlaybackQuality(
+          qualityOptions,
+          selectedQualityId,
+        );
+        setPlaybackQualities(qualityOptions);
         await playerRef.current?.attach(
           videoRef.current,
-          streamAccess.playbackUrl,
+          quality.playbackUrl,
           () => {
             if (canceled) {
               return;
@@ -88,6 +114,7 @@ export function useStreamPlayer(
           return;
         }
         attachedRoomIdRef.current = roomId;
+        attachedQualityIdRef.current = quality.id;
         setStreamMessage("");
         return;
       } catch {
@@ -95,6 +122,7 @@ export function useStreamPlayer(
           return;
         }
         detachStream();
+        setPlaybackQualities([]);
         setStreamMessage(streamStatusMessage(streamStatus));
         scheduleReconnect();
       }
@@ -106,7 +134,7 @@ export function useStreamPlayer(
       window.clearTimeout(timerId);
       detachStream();
     };
-  }, [config, roomId, streamStatus, videoRef]);
+  }, [config, roomId, selectedQualityId, streamStatus, videoRef]);
 
-  return { streamMessage };
+  return { playbackQualities, streamMessage };
 }

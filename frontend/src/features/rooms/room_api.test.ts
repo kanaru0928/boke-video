@@ -53,6 +53,11 @@ describe("isCommentMessage", () => {
         type: "comment",
         commentId: "comment-1",
         roomId: "room-1",
+        author: {
+          subject: "user-1",
+          email: "user-1@example.test",
+          displayName: "user-1",
+        },
         body: "こんにちは",
         direction: "rightToLeft",
         color: "#ffffff",

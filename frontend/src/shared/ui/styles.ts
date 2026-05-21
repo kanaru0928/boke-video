@@ -62,6 +62,7 @@ const buttonBaseClassName = cn(
   "bg-[linear-gradient(#ffffff,#d5d5d5_48%,#a9a9a9_49%,#efefef)]",
   "shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#8a8a8a]",
   "active:bg-[linear-gradient(#bcbcbc,#eeeeee)] active:shadow-[inset_1px_1px_0_#777777,inset_-1px_-1px_0_#ffffff]",
+  "disabled:cursor-not-allowed disabled:border-[#9b9b9b] disabled:bg-[linear-gradient(#eeeeee,#d7d7d7)] disabled:text-[#777777] disabled:opacity-65 disabled:shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#b8b8b8]",
   "[&_svg]:shrink-0 [&_svg]:[stroke-width:2.4]",
 );
 

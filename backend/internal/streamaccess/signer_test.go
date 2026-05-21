@@ -76,6 +76,46 @@ func TestSignerBuildsOvenMediaEngineSignedPlaybackURL(t *testing.T) {
 	}
 }
 
+func TestSignerBuildsPlaybackAccessVariants(t *testing.T) {
+	signer, err := NewSigner(Config{
+		BaseURL: "https://rtc.example.com",
+		Secret:  "secret",
+		TTL:     time.Minute,
+		Now: func() time.Time {
+			return time.Unix(1000, 0).UTC()
+		},
+	})
+	if err != nil {
+		t.Fatalf("NewSigner returned error: %v", err)
+	}
+
+	access, err := signer.SignedPlaybackAccess("main")
+	if err != nil {
+		t.Fatalf("SignedPlaybackAccess returned error: %v", err)
+	}
+
+	if access.PlaybackURL == "" {
+		t.Fatal("playback URL is empty")
+	}
+	if len(access.PlaybackVariants) != 1 {
+		t.Fatalf("playback variants length = %d", len(access.PlaybackVariants))
+	}
+	variant := access.PlaybackVariants[0]
+	if variant.ID != "source" {
+		t.Fatalf("variant ID = %q", variant.ID)
+	}
+	if variant.Label != "元画質" {
+		t.Fatalf("variant label = %q", variant.Label)
+	}
+	parsedURL, err := url.Parse(variant.PlaybackURL)
+	if err != nil {
+		t.Fatalf("Parse returned error: %v", err)
+	}
+	if parsedURL.Path != "/live/main" {
+		t.Fatalf("variant path = %q", parsedURL.Path)
+	}
+}
+
 func TestSignerRejectsMissingSecret(t *testing.T) {
 	_, err := NewSigner(Config{
 		BaseURL: "https://rtc.example.com",

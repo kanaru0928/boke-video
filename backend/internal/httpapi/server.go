@@ -480,7 +480,7 @@ func (s *Server) handleCreateComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/rooms/"), "/comments")
-	msg, err := s.createComment(r.Context(), roomID, principal.Subject, r)
+	msg, err := s.createComment(r.Context(), roomID, principal, r)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
@@ -517,7 +517,7 @@ func (s *Server) handleCommentWebSocket(w http.ResponseWriter, r *http.Request) 
 			_ = wsjson.Write(r.Context(), conn, map[string]string{"type": "error", "message": "rate limited"})
 			continue
 		}
-		msg, err := s.createCommentFromRequest(r.Context(), roomID, principal.Subject, req)
+		msg, err := s.createCommentFromRequest(r.Context(), roomID, principal, req)
 		if err != nil {
 			_ = wsjson.Write(r.Context(), conn, map[string]string{"type": "error", "message": err.Error()})
 			continue
@@ -526,15 +526,15 @@ func (s *Server) handleCommentWebSocket(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (s *Server) createComment(ctx context.Context, roomID string, authorSub string, r *http.Request) (comment.Message, error) {
+func (s *Server) createComment(ctx context.Context, roomID string, principal access.Principal, r *http.Request) (comment.Message, error) {
 	var req comment.CreateRequest
 	if err := decodeJSON(r, &req); err != nil {
 		return comment.Message{}, err
 	}
-	return s.createCommentFromRequest(ctx, roomID, authorSub, req)
+	return s.createCommentFromRequest(ctx, roomID, principal, req)
 }
 
-func (s *Server) createCommentFromRequest(ctx context.Context, roomID string, authorSub string, req comment.CreateRequest) (comment.Message, error) {
+func (s *Server) createCommentFromRequest(ctx context.Context, roomID string, principal access.Principal, req comment.CreateRequest) (comment.Message, error) {
 	validReq, err := comment.ValidateCreateRequest(req)
 	if err != nil {
 		return comment.Message{}, err
@@ -545,14 +545,16 @@ func (s *Server) createCommentFromRequest(ctx context.Context, roomID string, au
 
 	now := s.now().UTC()
 	stored := comment.StoredComment{
-		ID:        newID(),
-		RoomID:    roomID,
-		AuthorSub: authorSub,
-		Body:      validReq.Body,
-		Direction: validReq.Direction,
-		Color:     validReq.Color,
-		FontSize:  validReq.FontSize,
-		SentAt:    now,
+		ID:                newID(),
+		RoomID:            roomID,
+		AuthorSub:         principal.Subject,
+		AuthorEmail:       principal.Email,
+		AuthorDisplayName: principal.DisplayName(),
+		Body:              validReq.Body,
+		Direction:         validReq.Direction,
+		Color:             validReq.Color,
+		FontSize:          validReq.FontSize,
+		SentAt:            now,
 	}
 	if err := s.repository.CreateComment(ctx, stored); err != nil {
 		return comment.Message{}, err
@@ -592,6 +594,11 @@ func storedToMessage(stored comment.StoredComment) comment.Message {
 		Type:      "comment",
 		RoomID:    stored.RoomID,
 		CommentID: stored.ID,
+		Author: comment.Author{
+			Subject:     stored.AuthorSub,
+			Email:       stored.AuthorEmail,
+			DisplayName: stored.AuthorDisplayName,
+		},
 		Body:      stored.Body,
 		Direction: stored.Direction,
 		Color:     stored.Color,

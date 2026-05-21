@@ -30,6 +30,17 @@ type policy struct {
 	URLExpire int64 `json:"url_expire"`
 }
 
+type PlaybackVariant struct {
+	ID          string `json:"id"`
+	Label       string `json:"label"`
+	PlaybackURL string `json:"playbackUrl"`
+}
+
+type PlaybackAccess struct {
+	PlaybackURL      string            `json:"playbackUrl"`
+	PlaybackVariants []PlaybackVariant `json:"playbackVariants"`
+}
+
 func NewSigner(cfg Config) (*Signer, error) {
 	baseURL, err := url.Parse(strings.TrimSpace(cfg.BaseURL))
 	if err != nil {
@@ -68,6 +79,31 @@ func NewSigner(cfg Config) (*Signer, error) {
 }
 
 func (s *Signer) SignedPlaybackURL(roomID string) (string, error) {
+	return s.signedPlaybackURL(roomID, "master")
+}
+
+func (s *Signer) SignedPlaybackAccess(roomID string) (PlaybackAccess, error) {
+	autoURL, err := s.signedPlaybackURL(roomID, "master")
+	if err != nil {
+		return PlaybackAccess{}, err
+	}
+	sourceURL, err := s.signedPlaybackURL(roomID, "")
+	if err != nil {
+		return PlaybackAccess{}, err
+	}
+	return PlaybackAccess{
+		PlaybackURL: autoURL,
+		PlaybackVariants: []PlaybackVariant{
+			{
+				ID:          "source",
+				Label:       "元画質",
+				PlaybackURL: sourceURL,
+			},
+		},
+	}, nil
+}
+
+func (s *Signer) signedPlaybackURL(roomID string, playlistName string) (string, error) {
 	policyValue, err := s.encodedPolicy()
 	if err != nil {
 		return "", err
@@ -75,7 +111,10 @@ func (s *Signer) SignedPlaybackURL(roomID string) (string, error) {
 
 	signedURL := *s.baseURL
 	signedURL.Scheme = playbackScheme(signedURL.Scheme)
-	signedURL.Path = "/live/" + url.PathEscape(roomID) + "/master"
+	signedURL.Path = "/live/" + url.PathEscape(roomID)
+	if playlistName != "" {
+		signedURL.Path += "/" + url.PathEscape(playlistName)
+	}
 	query := signedURL.Query()
 	query.Set("policy", policyValue)
 	signedURL.RawQuery = query.Encode()

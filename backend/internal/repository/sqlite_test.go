@@ -37,14 +37,16 @@ func TestSQLiteStoresRoomAndComment(t *testing.T) {
 	}
 
 	stored := comment.StoredComment{
-		ID:        "comment-1",
-		RoomID:    room.ID,
-		AuthorSub: "user-1",
-		Body:      "こんにちは",
-		Direction: comment.DirectionRightToLeft,
-		Color:     "#40c4ff",
-		FontSize:  comment.FontSizeLarge,
-		SentAt:    time.Date(2026, 5, 9, 0, 1, 0, 0, time.UTC),
+		ID:                "comment-1",
+		RoomID:            room.ID,
+		AuthorSub:         "user-1",
+		AuthorEmail:       "user-1@example.test",
+		AuthorDisplayName: "user-1",
+		Body:              "こんにちは",
+		Direction:         comment.DirectionRightToLeft,
+		Color:             "#40c4ff",
+		FontSize:          comment.FontSizeLarge,
+		SentAt:            time.Date(2026, 5, 9, 0, 1, 0, 0, time.UTC),
 	}
 	if err := db.CreateComment(ctx, stored); err != nil {
 		t.Fatalf("CreateComment returned error: %v", err)
@@ -59,6 +61,15 @@ func TestSQLiteStoresRoomAndComment(t *testing.T) {
 	}
 	if comments[0].Body != stored.Body {
 		t.Fatalf("comment body = %q", comments[0].Body)
+	}
+	if comments[0].AuthorSub != stored.AuthorSub {
+		t.Fatalf("comment author sub = %q", comments[0].AuthorSub)
+	}
+	if comments[0].AuthorEmail != stored.AuthorEmail {
+		t.Fatalf("comment author email = %q", comments[0].AuthorEmail)
+	}
+	if comments[0].AuthorDisplayName != stored.AuthorDisplayName {
+		t.Fatalf("comment author display name = %q", comments[0].AuthorDisplayName)
 	}
 	if comments[0].Color != stored.Color {
 		t.Fatalf("comment color = %q", comments[0].Color)

@@ -13,6 +13,7 @@ import { useRooms } from "../rooms/useRooms";
 import { CommentForm } from "./CommentForm";
 import { CommentSidebar } from "./CommentSidebar";
 import { isCommentSubmitShortcut } from "./comment_shortcuts";
+import { autoQualityId } from "./stream_quality";
 import { useCommentRenderer } from "./useCommentRenderer";
 import { useCommentSocket } from "./useCommentSocket";
 import { useRoomActivity } from "./useRoomActivity";
@@ -36,6 +37,8 @@ export function WatchPage({ config }: WatchPageProps) {
     useState<CommentDirection>("rightToLeft");
   const [selectedSize, setSelectedSize] = useState<CommentFontSize>("medium");
   const [selectedColor, setSelectedColor] = useState<string>(commentColors[0]);
+  const [commentsVisible, setCommentsVisible] = useState(true);
+  const [selectedQualityId, setSelectedQualityId] = useState(autoQualityId);
   const { rooms } = useRooms(config);
   const { clearComments, commentsLayerRef, renderComment } =
     useCommentRenderer();
@@ -47,7 +50,9 @@ export function WatchPage({ config }: WatchPageProps) {
   const streamStatus =
     stats?.streamStatus ?? selectedRoom?.streamStatus ?? "waiting";
   const renderAndRecordComment = (message: CommentMessage): void => {
-    renderComment(message);
+    if (commentsVisible) {
+      renderComment(message);
+    }
     recordComment(message);
   };
   const { sendComment } = useCommentSocket(
@@ -55,11 +60,12 @@ export function WatchPage({ config }: WatchPageProps) {
     selectedRoomId,
     renderAndRecordComment,
   );
-  const { streamMessage } = useStreamPlayer(
+  const { playbackQualities, streamMessage } = useStreamPlayer(
     config,
     selectedRoomId,
     streamStatus,
     videoRef,
+    selectedQualityId,
   );
 
   useEffect(() => {
@@ -111,6 +117,7 @@ export function WatchPage({ config }: WatchPageProps) {
   const switchRoom = (roomId: string): void => {
     clearComments();
     setSelectedRoomId(roomId);
+    setSelectedQualityId(autoQualityId);
     history.replaceState(null, "", `/watch?room=${encodeURIComponent(roomId)}`);
   };
 
@@ -162,10 +169,15 @@ export function WatchPage({ config }: WatchPageProps) {
       <section className={watchGridClassName}>
         <main className={playerColumnClassName}>
           <WatchPlayer
+            commentsVisible={commentsVisible}
             commentsLayerRef={commentsLayerRef}
             elapsedSeconds={elapsedSeconds}
             isMuted={isMuted}
             isPaused={isPaused}
+            playbackQualities={playbackQualities}
+            selectedQualityId={selectedQualityId}
+            onCommentsVisibleChange={setCommentsVisible}
+            onQualityChange={setSelectedQualityId}
             onToggleFullscreen={toggleFullscreen}
             onToggleMuted={toggleMuted}
             onTogglePlayback={togglePlayback}

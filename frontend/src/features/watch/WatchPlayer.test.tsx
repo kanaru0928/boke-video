@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { preventPlayerContextMenu } from "./WatchPlayer";
-import { playerControlsClassName, stageClassName } from "./watchStyles";
+import {
+  playerControlsClassName,
+  settingsChipClassName,
+  stageClassName,
+} from "./watchStyles";
 
 describe("WatchPlayer", () => {
   it("動画領域を16:9にする", () => {
@@ -27,5 +31,11 @@ describe("WatchPlayer", () => {
     });
 
     expect(prevented).toBe(true);
+  });
+
+  it("設定チップはプレイヤー内に重ねて表示する", () => {
+    expect(settingsChipClassName).toContain("absolute");
+    expect(settingsChipClassName).toContain("bottom-[42px]");
+    expect(settingsChipClassName).toContain("border-[#e00000]");
   });
 });

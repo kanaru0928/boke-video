@@ -5,10 +5,6 @@ import (
 	"strings"
 )
 
-type streamAccessResponse struct {
-	PlaybackURL string `json:"playbackUrl"`
-}
-
 func (s *Server) handleCreateStreamAccess(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.requirePrincipal(w, r); !ok {
 		return
@@ -18,10 +14,10 @@ func (s *Server) handleCreateStreamAccess(w http.ResponseWriter, r *http.Request
 		writeRepositoryError(w, err)
 		return
 	}
-	playbackURL, err := s.streamAccess.SignedPlaybackURL(roomID)
+	streamAccess, err := s.streamAccess.SignedPlaybackAccess(roomID)
 	if err != nil {
 		s.writeServerError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, streamAccessResponse{PlaybackURL: playbackURL})
+	writeJSON(w, http.StatusCreated, streamAccess)
 }

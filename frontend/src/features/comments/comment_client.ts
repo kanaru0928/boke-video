@@ -1,5 +1,6 @@
 import { commentWebSocketEndpoint } from "../../shared/api/endpoints";
 import type { AppConfig } from "../../shared/config/config";
+import { isCommentMessage } from "./comment_message";
 import type { CommentCreateRequest, CommentMessage } from "./types";
 
 type MessageHandler = (message: CommentMessage) => void;
@@ -62,15 +63,8 @@ export class CommentClient {
 
 function parseCommentMessage(raw: string): CommentMessage | null {
   const parsed: unknown = JSON.parse(raw);
-  if (!isObject(parsed)) {
+  if (!isCommentMessage(parsed)) {
     return null;
   }
-  if (parsed.type !== "comment") {
-    return null;
-  }
-  return parsed as CommentMessage;
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+  return parsed;
 }

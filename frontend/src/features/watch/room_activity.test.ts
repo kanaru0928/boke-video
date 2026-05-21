@@ -40,6 +40,11 @@ function createComment(commentId: string, body: string): CommentMessage {
     type: "comment",
     roomId: "room-1",
     commentId,
+    author: {
+      subject: "user-1",
+      email: "user@example.com",
+      displayName: "user",
+    },
     body,
     direction: "rightToLeft",
     color: "#ffffff",

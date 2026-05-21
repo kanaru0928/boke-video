@@ -9,8 +9,13 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { buttonClassName, formControlClassName } from "../../shared/ui/styles";
+import { commentAuthorLabel } from "../comments/comment_author";
 import type { CommentMessage } from "../comments/types";
 import type { Room } from "../rooms/room_api";
+import {
+  canSaveAdminRoomTitle,
+  normalizeAdminRoomTitle,
+} from "./admin_room_title";
 import { normalizeIngestClipboardValue } from "./copy_ingest_value";
 
 type AdminRoomProps = {
@@ -43,6 +48,9 @@ export function AdminRoom({
   useEffect(() => {
     setTitle(room.title);
   }, [room.title]);
+
+  const trimmedTitle = normalizeAdminRoomTitle(title);
+  const canSaveTitle = canSaveAdminRoomTitle(title, room.title);
 
   const copyIngestValue = async (
     target: IngestCopyTarget,
@@ -103,8 +111,13 @@ export function AdminRoom({
         </a>
         <button
           className={buttonClassName()}
+          disabled={!canSaveTitle}
           type="button"
-          onClick={() => void onUpdateTitle(room.id, title)}
+          onClick={() => {
+            if (canSaveTitle) {
+              void onUpdateTitle(room.id, trimmedTitle);
+            }
+          }}
         >
           <Save aria-hidden="true" size={18} />
           保存
@@ -139,13 +152,18 @@ export function AdminRoom({
         </button>
       </div>
       {comments !== null ? (
-        <section className="col-span-full grid gap-0 border border-[#c9c9c9]">
+        <section className="col-span-full grid max-h-[320px] gap-0 overflow-auto border border-[#c9c9c9]">
           {comments.map((comment) => (
             <article
               className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-t border-[#e4e4e4] p-[5px] first:border-t-0"
               key={comment.commentId}
             >
-              <p className="m-0 [overflow-wrap:anywhere]">{comment.body}</p>
+              <div className="min-w-0">
+                <p className="m-0 truncate text-xs font-extrabold text-[#666666]">
+                  {commentAuthorLabel(comment.author)}
+                </p>
+                <p className="m-0 [overflow-wrap:anywhere]">{comment.body}</p>
+              </div>
               <button
                 className={buttonClassName()}
                 type="button"

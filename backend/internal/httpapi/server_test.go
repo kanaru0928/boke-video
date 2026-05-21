@@ -56,6 +56,15 @@ func TestServerStoresCommentAppearance(t *testing.T) {
 	if messages[0].FontSize != comment.FontSizeLarge {
 		t.Fatalf("message font size = %q", messages[0].FontSize)
 	}
+	if messages[0].Author.Subject != "local-dev" {
+		t.Fatalf("message author subject = %q", messages[0].Author.Subject)
+	}
+	if messages[0].Author.Email != "local-dev@example.test" {
+		t.Fatalf("message author email = %q", messages[0].Author.Email)
+	}
+	if messages[0].Author.DisplayName != "local-dev" {
+		t.Fatalf("message author display name = %q", messages[0].Author.DisplayName)
+	}
 }
 
 func TestServerReturnsRoomStatsFromStoredData(t *testing.T) {
@@ -224,7 +233,12 @@ func TestServerCreatesSignedStreamAccess(t *testing.T) {
 	}
 
 	var parsed struct {
-		PlaybackURL string `json:"playbackUrl"`
+		PlaybackURL      string `json:"playbackUrl"`
+		PlaybackVariants []struct {
+			ID          string `json:"id"`
+			Label       string `json:"label"`
+			PlaybackURL string `json:"playbackUrl"`
+		} `json:"playbackVariants"`
 	}
 	if err := json.NewDecoder(response.Body).Decode(&parsed); err != nil {
 		t.Fatalf("Decode returned error: %v", err)
@@ -240,6 +254,22 @@ func TestServerCreatesSignedStreamAccess(t *testing.T) {
 	}
 	if !strings.Contains(parsed.PlaybackURL, "signature=") {
 		t.Fatalf("playbackUrl missing signature: %q", parsed.PlaybackURL)
+	}
+	if len(parsed.PlaybackVariants) != 1 {
+		t.Fatalf("playbackVariants length = %d", len(parsed.PlaybackVariants))
+	}
+	variant := parsed.PlaybackVariants[0]
+	if variant.ID != "source" || variant.Label != "元画質" {
+		t.Fatalf("playback variant = %#v", variant)
+	}
+	if !strings.HasPrefix(variant.PlaybackURL, "wss://rtc.example.com:443/live/"+roomID+"?") {
+		t.Fatalf("variant playbackUrl = %q", variant.PlaybackURL)
+	}
+	if !strings.Contains(variant.PlaybackURL, "policy=") {
+		t.Fatalf("variant playbackUrl missing policy: %q", variant.PlaybackURL)
+	}
+	if !strings.Contains(variant.PlaybackURL, "signature=") {
+		t.Fatalf("variant playbackUrl missing signature: %q", variant.PlaybackURL)
 	}
 }
 
@@ -270,14 +300,16 @@ func TestServerRejectsAdminMutationForAnotherOwner(t *testing.T) {
 		t.Fatalf("CreateRoom returned error: %v", err)
 	}
 	err = server.repository.CreateComment(context.Background(), comment.StoredComment{
-		ID:        "other-comment",
-		RoomID:    roomID,
-		AuthorSub: "viewer",
-		Body:      "こんにちは",
-		Direction: comment.DirectionRightToLeft,
-		Color:     "#ffffff",
-		FontSize:  comment.FontSizeMedium,
-		SentAt:    time.Now().UTC(),
+		ID:                "other-comment",
+		RoomID:            roomID,
+		AuthorSub:         "viewer",
+		AuthorEmail:       "viewer@example.test",
+		AuthorDisplayName: "viewer",
+		Body:              "こんにちは",
+		Direction:         comment.DirectionRightToLeft,
+		Color:             "#ffffff",
+		FontSize:          comment.FontSizeMedium,
+		SentAt:            time.Now().UTC(),
 	})
 	if err != nil {
 		t.Fatalf("CreateComment returned error: %v", err)

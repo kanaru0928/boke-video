@@ -5,13 +5,10 @@ import {
 } from "../../shared/api/endpoints";
 import { requestJSON, requestOK } from "../../shared/api/http_client";
 import type { AppConfig } from "../../shared/config/config";
-import {
-  type CommentDirection,
-  type CommentFontSize,
-  type CommentMessage,
-  commentColors,
-  commentDirections,
-} from "../comments/types";
+import { isCommentMessage } from "../comments/comment_message";
+import type { CommentMessage } from "../comments/types";
+
+export { isCommentMessage } from "../comments/comment_message";
 
 export type Room = {
   id: string;
@@ -207,40 +204,6 @@ function isIngestToken(value: unknown): value is IngestToken {
   }
   const token = value as Record<string, unknown>;
   return typeof token.whipBearerToken === "string";
-}
-
-export function isCommentMessage(value: unknown): value is CommentMessage {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-  const message = value as Record<string, unknown>;
-  return (
-    message.type === "comment" &&
-    typeof message.commentId === "string" &&
-    typeof message.body === "string" &&
-    typeof message.roomId === "string" &&
-    isCommentDirection(message.direction) &&
-    isCommentColor(message.color) &&
-    isCommentFontSize(message.fontSize) &&
-    typeof message.sentAt === "string"
-  );
-}
-
-function isCommentDirection(value: unknown): value is CommentDirection {
-  return (
-    typeof value === "string" &&
-    commentDirections.includes(value as CommentDirection)
-  );
-}
-
-function isCommentColor(value: unknown): boolean {
-  return (
-    typeof value === "string" && commentColors.some((color) => color === value)
-  );
-}
-
-function isCommentFontSize(value: unknown): value is CommentFontSize {
-  return value === "small" || value === "medium" || value === "large";
 }
 
 function parseRoom(value: unknown): Room | null {

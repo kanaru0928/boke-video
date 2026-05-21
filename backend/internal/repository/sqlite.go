@@ -100,6 +100,8 @@ func (s *SQLite) Migrate(ctx context.Context) error {
 				id TEXT PRIMARY KEY,
 				room_id TEXT NOT NULL,
 			author_sub TEXT NOT NULL,
+			author_email TEXT NOT NULL,
+			author_display_name TEXT NOT NULL,
 			body TEXT NOT NULL,
 			direction TEXT NOT NULL,
 			color TEXT NOT NULL,
@@ -107,6 +109,8 @@ func (s *SQLite) Migrate(ctx context.Context) error {
 			sent_at TEXT NOT NULL,
 			FOREIGN KEY (room_id) REFERENCES rooms (id)
 		)`,
+		`ALTER TABLE comments ADD COLUMN author_email TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE comments ADD COLUMN author_display_name TEXT NOT NULL DEFAULT ''`,
 		`CREATE INDEX IF NOT EXISTS comments_room_id_sent_at_index
 			ON comments (room_id, sent_at)`,
 		`CREATE TABLE IF NOT EXISTS room_visits (
@@ -269,11 +273,13 @@ func scanRooms(rows *sql.Rows, err error) ([]Room, error) {
 
 func (s *SQLite) CreateComment(ctx context.Context, stored comment.StoredComment) error {
 	_, err := s.db.ExecContext(ctx,
-		`INSERT INTO comments (id, room_id, author_sub, body, direction, color, font_size, sent_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO comments (id, room_id, author_sub, author_email, author_display_name, body, direction, color, font_size, sent_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		stored.ID,
 		stored.RoomID,
 		stored.AuthorSub,
+		stored.AuthorEmail,
+		stored.AuthorDisplayName,
 		stored.Body,
 		string(stored.Direction),
 		stored.Color,
@@ -285,7 +291,7 @@ func (s *SQLite) CreateComment(ctx context.Context, stored comment.StoredComment
 
 func (s *SQLite) ListComments(ctx context.Context, roomID string, limit int) ([]comment.StoredComment, error) {
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT id, room_id, author_sub, body, direction, color, font_size, sent_at
+		`SELECT id, room_id, author_sub, author_email, author_display_name, body, direction, color, font_size, sent_at
 		 FROM comments
 		 WHERE room_id = ?
 		 ORDER BY sent_at DESC
@@ -456,7 +462,7 @@ func parseNullableTime(value sql.NullString) (*time.Time, error) {
 func scanComment(scanner rowScanner) (comment.StoredComment, error) {
 	var stored comment.StoredComment
 	var sentAt string
-	if err := scanner.Scan(&stored.ID, &stored.RoomID, &stored.AuthorSub, &stored.Body, &stored.Direction, &stored.Color, &stored.FontSize, &sentAt); err != nil {
+	if err := scanner.Scan(&stored.ID, &stored.RoomID, &stored.AuthorSub, &stored.AuthorEmail, &stored.AuthorDisplayName, &stored.Body, &stored.Direction, &stored.Color, &stored.FontSize, &sentAt); err != nil {
 		return comment.StoredComment{}, err
 	}
 	parsedAt, err := time.Parse(time.RFC3339Nano, sentAt)

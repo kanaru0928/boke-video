@@ -40,11 +40,11 @@ export const streamStatusClassName = cn(
 );
 
 export const playerControlsClassName = cn(
-  "pointer-events-none absolute inset-x-0 bottom-0 z-20 grid grid-cols-[repeat(2,34px)_minmax(104px,auto)_1fr_repeat(3,34px)] items-center gap-1 opacity-0",
+  "pointer-events-none absolute inset-x-0 bottom-0 z-20 flex items-center justify-between gap-2 opacity-0",
   "border-[5px] border-t border-black border-t-[#333333] bg-[#050505] p-[5px] text-white",
   "transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100",
   "[@media(pointer:coarse)]:pointer-events-auto [@media(pointer:coarse)]:opacity-100",
-  "max-[520px]:grid-cols-[repeat(2,31px)_1fr_repeat(2,31px)] max-[520px]:gap-[3px] max-[520px]:p-1",
+  "max-[520px]:gap-[3px] max-[520px]:p-1",
 );
 
 export const playTimeClassName = cn(
@@ -54,6 +54,35 @@ export const playTimeClassName = cn(
 
 export const liveBadgeClassName =
   "font-[Arial,sans-serif] text-[13px] font-extrabold tracking-normal text-[#ff134f] [text-shadow:1px_1px_0_#000000]";
+
+export const settingsChipClassName = cn(
+  "absolute right-0 bottom-[42px] z-30 w-[260px] border border-[#e00000] bg-[#050505] p-[6px] text-xs text-white",
+  "shadow-[2px_2px_0_rgb(0_0_0_/_55%)] max-[520px]:right-[-38px] max-[520px]:w-[230px]",
+);
+
+export const settingsChipHeadingClassName =
+  "m-0 border-b border-[#555555] pb-[5px] font-extrabold";
+
+export const settingsChipRowClassName = cn(
+  "m-0 grid grid-cols-[74px_minmax(0,1fr)] items-center gap-[6px] border-0 border-b border-[#333333] px-0 py-[6px]",
+  "[&_legend]:contents [&_legend]:font-extrabold [&_legend]:text-white",
+);
+
+export const settingsChipSegmentClassName =
+  "grid min-w-0 grid-flow-col auto-cols-fr gap-[4px]";
+
+export const settingsChipSegmentInputClassName =
+  "peer pointer-events-none absolute m-0 h-px w-px opacity-0";
+
+export const settingsChipSegmentTextClassName = cn(
+  "grid min-h-[22px] cursor-pointer select-none grid-flow-col place-items-center justify-center gap-1 rounded-[10px] border border-[#333333]",
+  "bg-[linear-gradient(#4d4d4d,#1b1b1b)] px-[8px] py-[3px] text-[11px] leading-none text-[#eeeeee]",
+  "peer-checked:border-[#7fbdff] peer-checked:bg-[linear-gradient(#4dc7ff,#006fd8)] peer-checked:font-extrabold peer-checked:text-white",
+  "peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-[#ffffff]",
+);
+
+export const settingsChipEmptyClassName =
+  "min-h-[22px] select-none rounded-[10px] border border-[#333333] bg-[#111111] px-[8px] py-[5px] text-center text-[11px] leading-none text-[#bbbbbb]";
 
 export const commentFormClassName = "grid gap-[5px] pt-1.5";
 
@@ -103,13 +132,19 @@ export const commentLogClassName =
   "m-0 h-full min-h-0 list-none overflow-auto bg-white p-0";
 
 export const commentLogItemClassName =
-  "grid min-h-[43px] grid-cols-[38px_minmax(0,1fr)] border-b border-[#eeeeee] max-[520px]:min-h-[35px]";
+  "grid min-h-[52px] grid-cols-[38px_minmax(0,1fr)] border-b border-[#eeeeee] max-[520px]:min-h-[44px]";
 
 export const commentLogNumberClassName =
   "pt-[9px] text-center text-xs text-[#8d8d8d] max-[520px]:pt-[7px]";
 
+export const commentLogContentClassName =
+  "grid min-w-0 gap-[2px] px-2 py-[7px] max-[520px]:py-[6px]";
+
+export const commentLogMetaClassName =
+  "m-0 truncate text-[11px] font-extrabold text-[#777777]";
+
 export const commentLogBodyClassName =
-  "m-0 p-[9px_8px] text-[13px] [overflow-wrap:anywhere] max-[520px]:pt-[7px]";
+  "m-0 text-[13px] [overflow-wrap:anywhere]";
 
 export const secondCommentLogBodyClassName = "font-extrabold text-[#ff4b73]";
 

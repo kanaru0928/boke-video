@@ -12,11 +12,18 @@ export type CommentMessage = {
   type: "comment";
   roomId: string;
   commentId: string;
+  author: CommentAuthor;
   body: string;
   direction: CommentDirection;
   color: string;
   fontSize: CommentFontSize;
   sentAt: string;
+};
+
+export type CommentAuthor = {
+  subject: string;
+  email: string;
+  displayName: string;
 };
 
 export type CommentCreateRequest = {

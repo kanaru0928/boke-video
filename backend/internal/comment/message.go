@@ -32,6 +32,7 @@ type Message struct {
 	Type      string    `json:"type"`
 	RoomID    string    `json:"roomId"`
 	CommentID string    `json:"commentId"`
+	Author    Author    `json:"author"`
 	Body      string    `json:"body"`
 	Direction Direction `json:"direction"`
 	Color     string    `json:"color"`
@@ -39,13 +40,21 @@ type Message struct {
 	SentAt    time.Time `json:"sentAt"`
 }
 
+type Author struct {
+	Subject     string `json:"subject"`
+	Email       string `json:"email"`
+	DisplayName string `json:"displayName"`
+}
+
 type StoredComment struct {
-	ID        string
-	RoomID    string
-	AuthorSub string
-	Body      string
-	Direction Direction
-	Color     string
-	FontSize  FontSize
-	SentAt    time.Time
+	ID                string
+	RoomID            string
+	AuthorSub         string
+	AuthorEmail       string
+	AuthorDisplayName string
+	Body              string
+	Direction         Direction
+	Color             string
+	FontSize          FontSize
+	SentAt            time.Time
 }

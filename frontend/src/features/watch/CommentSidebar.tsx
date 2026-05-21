@@ -1,4 +1,5 @@
 import { cn } from "../../shared/ui/classNames";
+import { commentAuthorLabel } from "../comments/comment_author";
 import type { CommentMessage } from "../comments/types";
 import type { RoomStats } from "../rooms/room_api";
 import { commentLogNumber, formatElapsedTime } from "./room_activity";
@@ -6,7 +7,9 @@ import {
   activeTabButtonClassName,
   commentLogBodyClassName,
   commentLogClassName,
+  commentLogContentClassName,
   commentLogItemClassName,
+  commentLogMetaClassName,
   commentLogNumberClassName,
   counterStripClassName,
   secondCommentLogBodyClassName,
@@ -59,14 +62,19 @@ export function CommentSidebar({
                 stats?.commentCount ?? comments.length,
               )}
             </span>
-            <p
-              className={cn(
-                commentLogBodyClassName,
-                index === 1 && secondCommentLogBodyClassName,
-              )}
-            >
-              {comment.body}
-            </p>
+            <div className={commentLogContentClassName}>
+              <p className={commentLogMetaClassName}>
+                {commentAuthorLabel(comment.author)}
+              </p>
+              <p
+                className={cn(
+                  commentLogBodyClassName,
+                  index === 1 && secondCommentLogBodyClassName,
+                )}
+              >
+                {comment.body}
+              </p>
+            </div>
           </li>
         ))}
       </ol>
