@@ -42,6 +42,8 @@ pnpm env:sync:production
 
 IPv6を使う場合は`ORACLE_IPV6`を追加します。Worker名、Worker environment、Tunnel名を既定値から変える場合は`WORKER_SERVICE_NAME`、`WORKER_ENVIRONMENT`、`TUNNEL_NAME`を追加します。
 
+`CLOUDFLARE_ACCESS_AUDIENCE`と`CLOUDFLARE_TUNNEL_TOKEN`はTerraform適用後に出る値です。最初の`terraform apply`前には書きません。
+
 ## 適用
 
 ```sh
@@ -55,19 +57,19 @@ terraform -chdir=infra/cloudflare apply
 
 ## Oracleへ反映する値
 
-`terraform apply`後に、バックエンド環境変数へ次を反映します。
+`terraform apply`後に、バックエンドとcloudflaredの環境変数へTerraform outputを反映します。
 
 ```sh
-terraform -chdir=infra/cloudflare output -raw backend_access_audience
-terraform -chdir=infra/cloudflare output -raw access_issuer
-terraform -chdir=infra/cloudflare output -raw access_certs_url
+{
+  printf '\nCLOUDFLARE_ACCESS_AUDIENCE=%s\n' "$(terraform -chdir=infra/cloudflare output -raw backend_access_audience)"
+  printf 'CLOUDFLARE_TUNNEL_TOKEN=%s\n' "$(terraform -chdir=infra/cloudflare output -raw tunnel_token)"
+} >> .env.production
+pnpm env:sync:production
 ```
 
-cloudflaredはTerraformのremote Tunnel configを使います。tokenはsensitive outputなので、`.env.production`の`CLOUDFLARE_TUNNEL_TOKEN`へ入れてから同期します。
+cloudflaredはTerraformのremote Tunnel configを使います。
 
 ```sh
-terraform -chdir=infra/cloudflare output -raw tunnel_token
-pnpm env:sync:production
 sudo install -m 600 deploy/cloudflared/cloudflared.env /etc/boke-video/cloudflared.env
 sudo systemctl restart cloudflared-boke-video.service
 ```

@@ -90,7 +90,7 @@ function syncProduction(env) {
     DATABASE_PATH: "/var/lib/boke-video/boke-video.sqlite3",
     ALLOWED_ORIGINS: `https://${frontendHost}`,
     ACCESS_ENABLED: "true",
-    ACCESS_AUDIENCE: required(env, "CLOUDFLARE_ACCESS_AUDIENCE"),
+    ACCESS_AUDIENCE: envValue(env, "CLOUDFLARE_ACCESS_AUDIENCE", ""),
     ACCESS_ISSUER: `https://${accessTeamName}.cloudflareaccess.com`,
     ACCESS_CERTS_URL: `https://${accessTeamName}.cloudflareaccess.com/cdn-cgi/access/certs`,
     STREAM_PUBLIC_BASE_URL: `https://${rtcHost}`,
@@ -111,7 +111,7 @@ function syncProduction(env) {
   });
 
   writeEnv("deploy/cloudflared/cloudflared.env", {
-    TUNNEL_TOKEN: required(env, "CLOUDFLARE_TUNNEL_TOKEN"),
+    TUNNEL_TOKEN: envValue(env, "CLOUDFLARE_TUNNEL_TOKEN", ""),
   });
 
   writeTerraformVars("infra/cloudflare/terraform.tfvars", {

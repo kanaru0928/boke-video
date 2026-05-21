@@ -2,7 +2,7 @@
 
 本番の正本は`docs/deployment.md`です。このファイルはCloudflare作業だけを補足します。
 
-このdocsの`example.com`はプレースホルダーです。Cloudflare上では実ドメインの既存Access ApplicationとTunnel設定に合わせます。
+このdocsの`example.com`はプレースホルダーです。Cloudflare上では実ドメインの既存Access PolicyとZoneに合わせます。
 
 Terraformで管理する場合は`docs/terraform.md`を参照します。
 実値はリポジトリトップの`.env.production`へ書き、`pnpm env:sync:production`でCloudflare Terraformと各配置envへ反映します。

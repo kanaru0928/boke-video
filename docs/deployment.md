@@ -98,13 +98,13 @@ CLOUDFLARE_ZONE_ID=replace-with-zone-id
 CLOUDFLARE_ACCESS_TEAM_NAME=replace-with-team-name
 CLOUDFLARE_ACCESS_POLICY_ID=replace-with-access-policy-id
 CLOUDFLARE_MANAGEMENT_ACCESS_POLICY_ID=
-CLOUDFLARE_ACCESS_AUDIENCE=replace-with-access-aud-tag
-CLOUDFLARE_TUNNEL_TOKEN=replace-with-cloudflare-tunnel-token
 STREAM_SIGNING_SECRET=replace-with-strong-secret
 OME_API_ACCESS_TOKEN=replace-with-api-token
 ```
 
-`pnpm env:sync:production`は、`.env.production`から`frontend/.env.production`、`deploy/backend/backend.env`、`deploy/caddy/caddy.env`、`deploy/cloudflared/cloudflared.env`、`infra/cloudflare/terraform.tfvars`を生成します。生成先はgitへ入れません。
+`CLOUDFLARE_ACCESS_AUDIENCE`と`CLOUDFLARE_TUNNEL_TOKEN`はTerraform適用後に`.env.production`へ追記します。
+
+`pnpm env:sync:production`は、`.env.production`から`frontend/.env.production`、`deploy/backend/backend.env`、`deploy/caddy/caddy.env`、`deploy/cloudflared/cloudflared.env`、`infra/cloudflare/terraform.tfvars`を生成します。生成先はgitへ入れません。Terraform適用前の生成ファイルには、`ACCESS_AUDIENCE`と`TUNNEL_TOKEN`が空で出力されます。本番配置へ使う前にTerraform outputを`.env.production`へ反映し、もう一度`pnpm env:sync:production`を実行します。
 
 ## OBS
 
