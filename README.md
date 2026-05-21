@@ -19,7 +19,7 @@ docs/      仕様
 | --- | --- |
 | `docs/streaming.md` | OBS WHIP入力、OvenMediaEngine、WebRTC視聴 |
 | `docs/comments.md` | コメント仕様 |
-| `docs/auth-and-security.md` | Cloudflare Access、管理者判定、セキュリティ |
+| `docs/auth-and-security.md` | Cloudflare Access、所有者判定、セキュリティ |
 | `docs/cloudflare.md` | Cloudflare Access、Tunnel、Oracle VCN |
 | `docs/backend.md` | Goバックエンド、API、SQLite、環境変数 |
 | `docs/frontend.md` | フロントエンド、Workers |

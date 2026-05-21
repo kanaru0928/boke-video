@@ -62,7 +62,7 @@ Caddyの実ホスト名は`/etc/boke-video/caddy.env`で指定します。system
 
 Cloudflare Accessは`bokevideo.example.com`と`stream.example.com`を保護します。Goバックエンドは`Cf-Access-Jwt-Assertion`を検証し、署名、`aud`、`iss`、`exp`、`sub`を必須にします。
 
-管理画面と管理APIへ到達できるユーザーはCloudflare Accessのポリシーで制限します。動画枠の更新、削除、コメント削除、WHIP Token再発行は、動画枠を作成したJWTの`sub`だけに許可します。
+管理画面と管理APIへ到達できるユーザーはCloudflare Accessの既存ポリシーで制限します。アプリケーション独自の管理者ロールは持ちません。動画枠の更新、削除、コメント削除、WHIP Token再発行は、動画枠を作成したJWTの`sub`だけに許可します。
 
 OBS入力はCloudflare Accessを通しません。Goの`/live/*`でWHIPの`Authorization: Bearer`を検証し、正しい動画枠のTokenだけをOvenMediaEngineへ転送します。Token平文は作成時または再発行時だけ返し、DBにはハッシュだけを保存します。
 
@@ -72,12 +72,12 @@ Cloudflare側の設定はTerraformで管理します。詳細は`docs/terraform.
 
 Access Applicationはdeny by defaultにします。
 
-| 対象 | Application domain | 許可 |
+| 対象 | Application domain | Access Policy |
 | --- | --- | --- |
-| 視聴画面 | `bokevideo.example.com` | 視聴者 |
-| 管理画面 | `bokevideo.example.com/admin*` | 管理者 |
-| バックエンド | `stream.example.com` | 視聴者 |
-| 管理API | `stream.example.com/api/admin/*` | 管理者 |
+| フロントエンド | `bokevideo.example.com` | 既存ポリシー |
+| 管理画面 | `bokevideo.example.com/admin*` | 既存ポリシー |
+| バックエンド | `stream.example.com` | 既存ポリシー |
+| 管理画面用API | `stream.example.com/api/admin/*` | 既存ポリシー |
 
 Tunnelは`stream.example.com`だけをGoへ転送します。Terraformのremote Tunnel configを使うため、Oracle上のcloudflaredはtokenで起動します。
 
@@ -96,10 +96,10 @@ ORACLE_IPV4=203.0.113.10
 CLOUDFLARE_ACCOUNT_ID=replace-with-account-id
 CLOUDFLARE_ZONE_ID=replace-with-zone-id
 CLOUDFLARE_ACCESS_TEAM_NAME=replace-with-team-name
+CLOUDFLARE_ACCESS_POLICY_ID=replace-with-access-policy-id
+CLOUDFLARE_MANAGEMENT_ACCESS_POLICY_ID=
 CLOUDFLARE_ACCESS_AUDIENCE=replace-with-access-aud-tag
 CLOUDFLARE_TUNNEL_TOKEN=replace-with-cloudflare-tunnel-token
-VIEWER_EMAILS=viewer@example.com
-ADMIN_EMAILS=admin@example.com
 STREAM_SIGNING_SECRET=replace-with-strong-secret
 OME_API_ACCESS_TOKEN=replace-with-api-token
 ```

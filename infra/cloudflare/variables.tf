@@ -30,28 +30,15 @@ variable "cloudflare_access_team_name" {
   description = "Cloudflare Access team name without .cloudflareaccess.com."
 }
 
-variable "viewer_emails" {
-  type        = list(string)
-  description = "Email addresses allowed to use viewer applications."
-  default     = []
+variable "access_policy_id" {
+  type        = string
+  description = "Existing Cloudflare Access policy ID for the frontend and backend applications."
 }
 
-variable "viewer_email_domains" {
-  type        = list(string)
-  description = "Email domains allowed to use viewer applications."
-  default     = []
-}
-
-variable "admin_emails" {
-  type        = list(string)
-  description = "Email addresses allowed to use admin applications."
-  default     = []
-}
-
-variable "admin_email_domains" {
-  type        = list(string)
-  description = "Email domains allowed to use admin applications."
-  default     = []
+variable "management_access_policy_id" {
+  type        = string
+  description = "Existing Cloudflare Access policy ID for /admin* and /api/admin/*. Empty string reuses access_policy_id."
+  default     = ""
 }
 
 variable "worker_service_name" {

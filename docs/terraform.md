@@ -38,7 +38,9 @@ pnpm env:sync:production
 
 `.env.production`に実値を書きます。`CLOUDFLARE_ACCESS_TEAM_NAME`は`https://<team_name>.cloudflareaccess.com`の`<team_name>`だけを書きます。
 
-`VIEWER_EMAILS`と`ADMIN_EMAILS`はカンマ区切りです。メールドメインで許可する場合は、`.env.production`に`VIEWER_EMAIL_DOMAINS`または`ADMIN_EMAIL_DOMAINS`を追加します。IPv6を使う場合は`ORACLE_IPV6`を追加します。Worker名、Worker environment、Tunnel名を既定値から変える場合は`WORKER_SERVICE_NAME`、`WORKER_ENVIRONMENT`、`TUNNEL_NAME`を追加します。
+`CLOUDFLARE_ACCESS_POLICY_ID`には既存のCloudflare Access Policy IDを書きます。`/admin*`と`/api/admin/*`だけ別ポリシーへ分ける場合は、`CLOUDFLARE_MANAGEMENT_ACCESS_POLICY_ID`も書きます。空の場合は`CLOUDFLARE_ACCESS_POLICY_ID`を再利用します。
+
+IPv6を使う場合は`ORACLE_IPV6`を追加します。Worker名、Worker environment、Tunnel名を既定値から変える場合は`WORKER_SERVICE_NAME`、`WORKER_ENVIRONMENT`、`TUNNEL_NAME`を追加します。
 
 ## 適用
 
@@ -70,6 +72,6 @@ sudo install -m 600 deploy/cloudflared/cloudflared.env /etc/boke-video/cloudflar
 sudo systemctl restart cloudflared-boke-video.service
 ```
 
-## 管理者と視聴者
+## Access Policy
 
-管理者は通常画面も使うため、Terraformでは`admin_emails`と`admin_email_domains`を視聴者向けAccess Applicationの許可条件にも含めます。管理画面と管理APIは管理者だけを許可します。
+TerraformはAccess Applicationを作成し、既存のAccess Policy IDを紐づけます。メールアドレス、IdPグループ、許可ドメインなどの条件はCloudflare Access側のPolicyで管理します。このリポジトリのenvでは管理しません。

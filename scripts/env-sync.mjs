@@ -121,10 +121,12 @@ function syncProduction(env) {
     oracle_ipv4: required(env, "ORACLE_IPV4"),
     oracle_ipv6: envValue(env, "ORACLE_IPV6", ""),
     cloudflare_access_team_name: accessTeamName,
-    viewer_emails: csv(env, "VIEWER_EMAILS"),
-    viewer_email_domains: csv(env, "VIEWER_EMAIL_DOMAINS"),
-    admin_emails: csv(env, "ADMIN_EMAILS"),
-    admin_email_domains: csv(env, "ADMIN_EMAIL_DOMAINS"),
+    access_policy_id: required(env, "CLOUDFLARE_ACCESS_POLICY_ID"),
+    management_access_policy_id: envValue(
+      env,
+      "CLOUDFLARE_MANAGEMENT_ACCESS_POLICY_ID",
+      "",
+    ),
     worker_service_name: envValue(
       env,
       "WORKER_SERVICE_NAME",
@@ -182,13 +184,6 @@ function envValue(env, key, defaultValue) {
     return defaultValue;
   }
   return value.trim();
-}
-
-function csv(env, key) {
-  return envValue(env, key, "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter((value) => value !== "");
 }
 
 function writeEnv(relativePath, values) {

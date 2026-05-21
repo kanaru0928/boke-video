@@ -15,7 +15,7 @@ Goバックエンドは次を担当します。
 - OvenMediaEngine REST APIで実配信の開始、継続、終了を同期する
 - OvenMediaEngine Thumbnail Publisherからサムネイルを取得して返す
 - JWTの`sub`に紐づくユニーク来場者数を集計する
-- 管理者向けAPIを提供する
+- 管理画面用APIを提供する
 - Cloudflare Access JWTを検証する
 - OvenMediaEngine視聴用の短寿命トークンを発行する
 - OBS WHIP入力のBearer Tokenを検証してOvenMediaEngineへ転送する

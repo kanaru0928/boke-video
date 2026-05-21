@@ -24,12 +24,12 @@ Terraformで管理する場合は`docs/terraform.md`を参照します。
 
 Access Applicationはdeny by defaultにします。
 
-| 対象 | Application domain | 許可 |
+| 対象 | Application domain | Access Policy |
 | --- | --- | --- |
-| 視聴画面 | `bokevideo.example.com` | 視聴者 |
-| 管理画面 | `bokevideo.example.com/admin*` | 管理者 |
-| バックエンド | `stream.example.com` | 視聴者 |
-| 管理API | `stream.example.com/api/admin/*` | 管理者 |
+| フロントエンド | `bokevideo.example.com` | 既存ポリシー |
+| 管理画面 | `bokevideo.example.com/admin*` | 既存ポリシー |
+| バックエンド | `stream.example.com` | 既存ポリシー |
+| 管理画面用API | `stream.example.com/api/admin/*` | 既存ポリシー |
 
 GoバックエンドはAccess JWTの署名、`aud`、`iss`、`exp`、`sub`を検証します。`sub`は動画枠所有者の判定に使います。
 

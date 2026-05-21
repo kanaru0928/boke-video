@@ -4,16 +4,7 @@ locals {
   ingest_hostname   = "ingest.${var.zone_name}"
   rtc_hostname      = "rtc.${var.zone_name}"
 
-  viewer_include = concat(
-    [for email in var.viewer_emails : { email = { email = email } }],
-    [for domain in var.viewer_email_domains : { email_domain = { domain = domain } }],
-    [for email in var.admin_emails : { email = { email = email } }],
-    [for domain in var.admin_email_domains : { email_domain = { domain = domain } }]
-  )
-  admin_include = concat(
-    [for email in var.admin_emails : { email = { email = email } }],
-    [for domain in var.admin_email_domains : { email_domain = { domain = domain } }]
-  )
+  management_access_policy_id = var.management_access_policy_id == "" ? var.access_policy_id : var.management_access_policy_id
 }
 
 resource "random_id" "tunnel_secret" {
@@ -27,59 +18,47 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "boke_video" {
   tunnel_secret = random_id.tunnel_secret.b64_std
 }
 
-resource "cloudflare_zero_trust_access_application" "frontend_viewer" {
+resource "cloudflare_zero_trust_access_application" "frontend" {
   account_id = var.cloudflare_account_id
-  name       = "boke-video frontend viewer"
+  name       = "boke-video frontend"
   domain     = local.frontend_hostname
   type       = "self_hosted"
 
   policies = [{
-    decision   = "allow"
-    include    = local.viewer_include
-    name       = "Allow viewers"
-    precedence = 1
+    id = var.access_policy_id
   }]
 }
 
-resource "cloudflare_zero_trust_access_application" "frontend_admin" {
+resource "cloudflare_zero_trust_access_application" "frontend_management" {
   account_id = var.cloudflare_account_id
-  name       = "boke-video frontend admin"
+  name       = "boke-video frontend management"
   domain     = "${local.frontend_hostname}/admin*"
   type       = "self_hosted"
 
   policies = [{
-    decision   = "allow"
-    include    = local.admin_include
-    name       = "Allow admins"
-    precedence = 1
+    id = local.management_access_policy_id
   }]
 }
 
-resource "cloudflare_zero_trust_access_application" "backend_viewer" {
+resource "cloudflare_zero_trust_access_application" "backend" {
   account_id = var.cloudflare_account_id
-  name       = "boke-video backend viewer"
+  name       = "boke-video backend"
   domain     = local.stream_hostname
   type       = "self_hosted"
 
   policies = [{
-    decision   = "allow"
-    include    = local.viewer_include
-    name       = "Allow viewers"
-    precedence = 1
+    id = var.access_policy_id
   }]
 }
 
-resource "cloudflare_zero_trust_access_application" "backend_admin" {
+resource "cloudflare_zero_trust_access_application" "backend_management" {
   account_id = var.cloudflare_account_id
-  name       = "boke-video backend admin"
+  name       = "boke-video backend management"
   domain     = "${local.stream_hostname}/api/admin/*"
   type       = "self_hosted"
 
   policies = [{
-    decision   = "allow"
-    include    = local.admin_include
-    name       = "Allow admins"
-    precedence = 1
+    id = local.management_access_policy_id
   }]
 }
 
@@ -95,7 +74,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "boke_video" {
         service  = "http://127.0.0.1:8080"
         origin_request = {
           access = {
-            aud_tag   = [cloudflare_zero_trust_access_application.backend_viewer.aud]
+            aud_tag   = [cloudflare_zero_trust_access_application.backend.aud]
             required  = true
             team_name = var.cloudflare_access_team_name
           }
