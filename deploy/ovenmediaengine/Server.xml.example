@@ -24,7 +24,6 @@
       <WebRTC>
         <Signalling>
           <Port>3333</Port>
-          <TLSPort>443</TLSPort>
           <WorkerCount>1</WorkerCount>
         </Signalling>
         <IceCandidates>
