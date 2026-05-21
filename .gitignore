@@ -19,6 +19,7 @@ backend/*.sqlite3
 backend/*.sqlite3-shm
 backend/*.sqlite3-wal
 backend/data/
+.local/
 .local-demo/
 .playwright-mcp/
 .DS_Store

@@ -28,7 +28,7 @@ function syncLocal(env) {
   const databasePath = envValue(
     env,
     "DATABASE_PATH",
-    "cc-docs/boke-video-local.sqlite3",
+    ".local/boke-video-local.sqlite3",
   );
   const streamSigningSecret = envValue(
     env,

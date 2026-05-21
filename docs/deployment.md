@@ -94,7 +94,7 @@ sudo chmod 600 /etc/boke-video/cloudflared.env
 
 ```text
 APP_DOMAIN=example.com
-ORACLE_IPV4=203.0.113.10
+ORACLE_IPV4=replace-with-oracle-ipv4
 CLOUDFLARE_ACCOUNT_ID=replace-with-account-id
 CLOUDFLARE_ZONE_ID=replace-with-zone-id
 CLOUDFLARE_ACCESS_TEAM_NAME=replace-with-team-name
