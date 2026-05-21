@@ -115,6 +115,7 @@ function syncProduction(env) {
     productionOvenMediaEngineConfig({
       ingestHost,
       omeApiAccessToken,
+      oracleIPv4: required(env, "ORACLE_IPV4"),
       rtcHost,
       streamSigningSecret,
     }),
@@ -222,9 +223,11 @@ function writeText(relativePath, content) {
 function productionOvenMediaEngineConfig({
   ingestHost,
   omeApiAccessToken,
+  oracleIPv4,
   rtcHost,
   streamSigningSecret,
 }) {
+  const publicIpPlaceholder = "$" + "{PublicIP}:10000-10005/udp";
   const templatePath = path.join(
     rootDir,
     "deploy/ovenmediaengine/Server.xml.example",
@@ -245,6 +248,10 @@ function productionOvenMediaEngineConfig({
     .replace(
       "<Name>rtc.example.com</Name>",
       `<Name>${xmlEscape(rtcHost)}</Name>`,
+    )
+    .replaceAll(
+      publicIpPlaceholder,
+      `${xmlEscape(oracleIPv4)}:10000-10005/udp`,
     );
 }
 

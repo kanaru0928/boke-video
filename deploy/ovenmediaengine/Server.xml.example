@@ -157,7 +157,6 @@
           </Providers>
           <Publishers>
             <WebRTC>
-              <BandwidthEstimation>TransportCC</BandwidthEstimation>
               <Rtx>false</Rtx>
               <Ulpfec>false</Ulpfec>
               <JitterBuffer>true</JitterBuffer>

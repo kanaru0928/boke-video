@@ -106,7 +106,7 @@ OME_API_ACCESS_TOKEN=replace-with-api-token
 
 `CLOUDFLARE_ACCESS_AUDIENCE`と`CLOUDFLARE_TUNNEL_TOKEN`はTerraform適用後に`.env.production`へ追記します。
 
-`pnpm env:sync:production`は、`.env.production`から`frontend/.env.production`、`deploy/backend/backend.env`、`deploy/caddy/caddy.env`、`deploy/cloudflared/cloudflared.env`、`deploy/ovenmediaengine/Server.xml`、`infra/cloudflare/terraform.tfvars`を生成します。生成先はgitへ入れません。Terraform適用前の生成ファイルには、`ACCESS_AUDIENCE`と`TUNNEL_TOKEN`が空で出力されます。本番配置へ使う前にTerraform outputを`.env.production`へ反映し、もう一度`pnpm env:sync:production`を実行します。
+`pnpm env:sync:production`は、`.env.production`から`frontend/.env.production`、`deploy/backend/backend.env`、`deploy/caddy/caddy.env`、`deploy/cloudflared/cloudflared.env`、`deploy/ovenmediaengine/Server.xml`、`infra/cloudflare/terraform.tfvars`を生成します。`deploy/ovenmediaengine/Server.xml`には`ORACLE_IPV4`をICE候補として書き込みます。生成先はgitへ入れません。Terraform適用前の生成ファイルには、`ACCESS_AUDIENCE`と`TUNNEL_TOKEN`が空で出力されます。本番配置へ使う前にTerraform outputを`.env.production`へ反映し、もう一度`pnpm env:sync:production`を実行します。
 
 ## OBS
 
