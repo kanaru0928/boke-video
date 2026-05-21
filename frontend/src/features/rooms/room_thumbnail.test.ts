@@ -35,14 +35,15 @@ describe("roomThumbnail", () => {
       createRoom({
         id: "room-1",
         title: "配信",
-        thumbnailUrl: "https://example.test/thumb.jpg",
+        thumbnailUrl: "/api/rooms/room-1/thumbnail",
         thumbnailUpdatedAt: "2026-05-20T10:00:00Z",
         thumbnailRefreshSeconds: 30,
       }),
+      "http://localhost:8080",
     );
     expect(thumbnail.isPending).toBe(false);
     expect(thumbnail.url).toBe(
-      "https://example.test/thumb.jpg?updated=2026-05-20T10%3A00%3A00Z",
+      "http://localhost:8080/api/rooms/room-1/thumbnail?updated=2026-05-20T10%3A00%3A00Z",
     );
   });
 
@@ -55,6 +56,7 @@ describe("roomThumbnail", () => {
         thumbnailUpdatedAt: "2026-05-20T10:00:00Z",
         thumbnailRefreshSeconds: 30,
       }),
+      "http://localhost:8080",
     );
     expect(thumbnail.isPending).toBe(true);
     expect(thumbnail.url).toBeNull();

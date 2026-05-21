@@ -44,6 +44,8 @@ export function WatchPage({ config }: WatchPageProps) {
     selectedRoomId,
   );
   const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? null;
+  const streamStatus =
+    stats?.streamStatus ?? selectedRoom?.streamStatus ?? "waiting";
   const renderAndRecordComment = (message: CommentMessage): void => {
     renderComment(message);
     recordComment(message);
@@ -53,7 +55,12 @@ export function WatchPage({ config }: WatchPageProps) {
     selectedRoomId,
     renderAndRecordComment,
   );
-  const { streamMessage } = useStreamPlayer(config, selectedRoomId, videoRef);
+  const { streamMessage } = useStreamPlayer(
+    config,
+    selectedRoomId,
+    streamStatus,
+    videoRef,
+  );
 
   useEffect(() => {
     if (rooms.length === 0 || selectedRoomId !== "") {
@@ -165,9 +172,7 @@ export function WatchPage({ config }: WatchPageProps) {
             onUpdatePlayerState={updatePlayerState}
             stageRef={stageRef}
             streamMessage={streamMessage}
-            streamStatus={
-              stats?.streamStatus ?? selectedRoom?.streamStatus ?? "waiting"
-            }
+            streamStatus={streamStatus}
             videoRef={videoRef}
           />
           <CommentForm

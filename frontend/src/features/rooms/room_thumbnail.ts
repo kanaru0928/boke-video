@@ -15,12 +15,12 @@ type RoomThumbnail = {
   url: string | null;
 };
 
-export function roomThumbnail(room: Room): RoomThumbnail {
+export function roomThumbnail(room: Room, apiBaseUrl: string): RoomThumbnail {
   const isPending = room.thumbnailUrl === "";
   return {
     isPending,
     toneClassName: thumbnailToneClassNames[thumbnailTone(room.id)],
-    url: isPending ? null : thumbnailImageURL(room),
+    url: isPending ? null : thumbnailImageURL(room, apiBaseUrl),
   };
 }
 
@@ -46,7 +46,12 @@ function thumbnailTone(seed: string): number {
   return hash;
 }
 
-function thumbnailImageURL(room: Room): string {
-  const separator = room.thumbnailUrl.includes("?") ? "&" : "?";
-  return `${room.thumbnailUrl}${separator}updated=${encodeURIComponent(room.thumbnailUpdatedAt)}`;
+function thumbnailImageURL(room: Room, apiBaseUrl: string): string {
+  const url = new URL(room.thumbnailUrl, normalizedBaseURL(apiBaseUrl));
+  url.searchParams.set("updated", room.thumbnailUpdatedAt);
+  return url.toString();
+}
+
+function normalizedBaseURL(apiBaseUrl: string): string {
+  return apiBaseUrl.endsWith("/") ? apiBaseUrl : `${apiBaseUrl}/`;
 }

@@ -1,6 +1,7 @@
 import { type RefObject, useEffect, useRef, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import { OvenMediaEnginePlayer } from "../player/oven_media_engine_player";
+import type { RoomStreamStatus } from "../rooms/room_api";
 import { fetchStreamAccess } from "./stream_access_api";
 import { streamStatusMessage } from "./watch_stream";
 
@@ -11,11 +12,14 @@ type UseStreamPlayerResult = {
 export function useStreamPlayer(
   config: AppConfig,
   roomId: string,
+  streamStatus: RoomStreamStatus,
   videoRef: RefObject<HTMLVideoElement | null>,
 ): UseStreamPlayerResult {
   const playerRef = useRef<OvenMediaEnginePlayer | null>(null);
   const attachedRoomIdRef = useRef("");
-  const [streamMessage, setStreamMessage] = useState(streamStatusMessage());
+  const [streamMessage, setStreamMessage] = useState(
+    streamStatusMessage(streamStatus),
+  );
 
   useEffect(() => {
     playerRef.current = new OvenMediaEnginePlayer();
@@ -48,7 +52,12 @@ export function useStreamPlayer(
 
     const attachStreamWhenReady = async (): Promise<void> => {
       if (roomId === "") {
-        setStreamMessage(streamStatusMessage());
+        setStreamMessage(streamStatusMessage(streamStatus));
+        return;
+      }
+      if (streamStatus === "ended") {
+        detachStream();
+        setStreamMessage(streamStatusMessage(streamStatus));
         return;
       }
       if (attachedRoomIdRef.current === roomId) {
@@ -71,7 +80,7 @@ export function useStreamPlayer(
               return;
             }
             detachStream();
-            setStreamMessage(streamStatusMessage());
+            setStreamMessage(streamStatusMessage(streamStatus));
             scheduleReconnect();
           },
         );
@@ -86,7 +95,7 @@ export function useStreamPlayer(
           return;
         }
         detachStream();
-        setStreamMessage(streamStatusMessage());
+        setStreamMessage(streamStatusMessage(streamStatus));
         scheduleReconnect();
       }
     };
@@ -97,7 +106,7 @@ export function useStreamPlayer(
       window.clearTimeout(timerId);
       detachStream();
     };
-  }, [config, roomId, videoRef]);
+  }, [config, roomId, streamStatus, videoRef]);
 
   return { streamMessage };
 }

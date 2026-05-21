@@ -83,36 +83,43 @@ func NewOvenMediaEngineClient(cfg OvenMediaEngineConfig) (*OvenMediaEngineClient
 }
 
 func (c *OvenMediaEngineClient) InspectStream(ctx context.Context, streamName string) (StreamSnapshot, error) {
-	endpoint := c.apiEndpoint("v1", "vhosts", c.vhostName, "apps", c.appName, "streams", streamName)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	streams, err := c.ListStreams(ctx)
 	if err != nil {
 		return StreamSnapshot{}, err
+	}
+	if _, ok := streams[streamName]; !ok {
+		return StreamSnapshot{Active: false}, nil
+	}
+	return StreamSnapshot{Active: true}, nil
+}
+
+func (c *OvenMediaEngineClient) ListStreams(ctx context.Context) (map[string]StreamSnapshot, error) {
+	endpoint := c.apiEndpoint("v1", "vhosts", c.vhostName, "apps", c.appName, "streams")
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
 	}
 	c.authorize(req)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return StreamSnapshot{}, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	switch resp.StatusCode {
-	case http.StatusOK:
-	case http.StatusNotFound:
-		return StreamSnapshot{Active: false}, nil
-	default:
-		return StreamSnapshot{}, fmt.Errorf("inspect stream: %s", resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("list streams: %s", resp.Status)
 	}
 
-	var parsed streamInfoResponse
+	var parsed streamListResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
-		return StreamSnapshot{}, err
+		return nil, err
 	}
-	startedAt, err := parseOvenMediaEngineTime(parsed.Response.Input.CreatedTime)
-	if err != nil {
-		return StreamSnapshot{}, err
+	streams := make(map[string]StreamSnapshot, len(parsed.Response))
+	for _, streamName := range parsed.Response {
+		streams[streamName] = StreamSnapshot{Active: true}
 	}
-	return StreamSnapshot{Active: true, StartedAt: startedAt}, nil
+	return streams, nil
 }
 
 func (c *OvenMediaEngineClient) FetchThumbnail(ctx context.Context, streamName string) (Thumbnail, error) {
@@ -160,12 +167,8 @@ func (c *OvenMediaEngineClient) authorize(req *http.Request) {
 	req.Header.Set("Authorization", "Basic "+credentials)
 }
 
-type streamInfoResponse struct {
-	Response struct {
-		Input struct {
-			CreatedTime string `json:"createdTime"`
-		} `json:"input"`
-	} `json:"response"`
+type streamListResponse struct {
+	Response []string `json:"response"`
 }
 
 func parseBaseURL(rawValue string) (*url.URL, error) {
@@ -177,18 +180,6 @@ func parseBaseURL(rawValue string) (*url.URL, error) {
 		return nil, errors.New("absolute url is required")
 	}
 	return parsed, nil
-}
-
-func parseOvenMediaEngineTime(rawValue string) (*time.Time, error) {
-	if strings.TrimSpace(rawValue) == "" {
-		return nil, nil
-	}
-	parsed, err := time.Parse(time.RFC3339Nano, rawValue)
-	if err != nil {
-		return nil, err
-	}
-	utc := parsed.UTC()
-	return &utc, nil
 }
 
 func joinURLPath(basePath string, parts ...string) string {

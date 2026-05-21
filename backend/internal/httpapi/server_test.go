@@ -283,6 +283,9 @@ func TestServerListsOnlyLiveRoomsAndEndsMissingStreamsAfterGrace(t *testing.T) {
 	server.streamMonitor = fakeMonitor
 	server.streamEndGrace = 90 * time.Second
 	roomID := createTestRoom(t, server, "配信")
+	fakeMonitor.snapshots = map[string]streammonitor.StreamSnapshot{
+		roomID: fakeMonitor.snapshot,
+	}
 
 	listResponse := performRequest(server, http.MethodGet, "/api/rooms", "")
 	if listResponse.Code != http.StatusOK {
@@ -303,6 +306,7 @@ func TestServerListsOnlyLiveRoomsAndEndsMissingStreamsAfterGrace(t *testing.T) {
 	}
 
 	fakeMonitor.snapshot = streammonitor.StreamSnapshot{Active: false}
+	fakeMonitor.snapshots = map[string]streammonitor.StreamSnapshot{}
 	now = now.Add(89 * time.Second)
 	graceResponse := performRequest(server, http.MethodGet, "/api/rooms", "")
 	if graceResponse.Code != http.StatusOK {
@@ -344,6 +348,14 @@ func TestServerReturnsStreamElapsedSecondsFromStreamStartedAt(t *testing.T) {
 		},
 	}
 	roomID := createTestRoom(t, server, "配信")
+	server.streamMonitor = &fakeStreamMonitor{
+		snapshots: map[string]streammonitor.StreamSnapshot{
+			roomID: {
+				Active:    true,
+				StartedAt: &startedAt,
+			},
+		},
+	}
 
 	statsResponse := performRequest(server, http.MethodGet, "/api/rooms/"+roomID+"/stats", "")
 	if statsResponse.Code != http.StatusOK {
@@ -372,14 +384,20 @@ func TestServerProxiesRealThumbnailFromStreamMonitor(t *testing.T) {
 	}
 	startedAt := now.Add(-time.Minute)
 	server.streamMonitor = &fakeStreamMonitor{
-		snapshot: streammonitor.StreamSnapshot{
-			Active:    true,
-			StartedAt: &startedAt,
-		},
 		thumbnailContentType: "image/jpeg",
 		thumbnailBody:        "jpeg",
 	}
 	roomID := createTestRoom(t, server, "配信")
+	server.streamMonitor = &fakeStreamMonitor{
+		snapshots: map[string]streammonitor.StreamSnapshot{
+			roomID: {
+				Active:    true,
+				StartedAt: &startedAt,
+			},
+		},
+		thumbnailContentType: "image/jpeg",
+		thumbnailBody:        "jpeg",
+	}
 
 	response := performRequest(server, http.MethodGet, "/api/rooms/"+roomID+"/thumbnail", "")
 	if response.Code != http.StatusOK {
@@ -533,17 +551,21 @@ func performRequest(server *Server, method string, path string, body string) *ht
 
 type fakeStreamMonitor struct {
 	snapshot             streammonitor.StreamSnapshot
+	snapshots            map[string]streammonitor.StreamSnapshot
 	inspectErr           error
 	thumbnailContentType string
 	thumbnailBody        string
 	thumbnailErr         error
 }
 
-func (f *fakeStreamMonitor) InspectStream(ctx context.Context, streamName string) (streammonitor.StreamSnapshot, error) {
+func (f *fakeStreamMonitor) ListStreams(ctx context.Context) (map[string]streammonitor.StreamSnapshot, error) {
 	if f.inspectErr != nil {
-		return streammonitor.StreamSnapshot{}, f.inspectErr
+		return nil, f.inspectErr
 	}
-	return f.snapshot, nil
+	if f.snapshots != nil {
+		return f.snapshots, nil
+	}
+	return map[string]streammonitor.StreamSnapshot{}, nil
 }
 
 func (f *fakeStreamMonitor) FetchThumbnail(ctx context.Context, streamName string) (streammonitor.Thumbnail, error) {

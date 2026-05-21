@@ -622,14 +622,22 @@ func (s *Server) roomStatsResponseFromStats(stats repository.RoomStats) roomStat
 }
 
 type streamMonitor interface {
-	InspectStream(ctx context.Context, streamName string) (streammonitor.StreamSnapshot, error)
+	ListStreams(ctx context.Context) (map[string]streammonitor.StreamSnapshot, error)
 	FetchThumbnail(ctx context.Context, streamName string) (streammonitor.Thumbnail, error)
 }
 
 func (s *Server) reconcileRooms(ctx context.Context, rooms []repository.Room) ([]repository.Room, error) {
+	if s.streamMonitor == nil {
+		return rooms, nil
+	}
+	snapshots, err := s.streamMonitor.ListStreams(ctx)
+	if err != nil {
+		s.logger.Warn("list streams", "error", err)
+		return rooms, nil
+	}
 	reconciled := make([]repository.Room, 0, len(rooms))
 	for _, room := range rooms {
-		updatedRoom, err := s.reconcileRoom(ctx, room)
+		updatedRoom, err := s.reconcileRoomWithSnapshot(ctx, room, snapshots[room.ID])
 		if err != nil {
 			return nil, err
 		}
@@ -642,11 +650,15 @@ func (s *Server) reconcileRoom(ctx context.Context, room repository.Room) (repos
 	if s.streamMonitor == nil {
 		return room, nil
 	}
-	snapshot, err := s.streamMonitor.InspectStream(ctx, room.ID)
+	snapshots, err := s.streamMonitor.ListStreams(ctx)
 	if err != nil {
-		s.logger.Warn("inspect stream", "room_id", room.ID, "error", err)
+		s.logger.Warn("list streams", "error", err)
 		return room, nil
 	}
+	return s.reconcileRoomWithSnapshot(ctx, room, snapshots[room.ID])
+}
+
+func (s *Server) reconcileRoomWithSnapshot(ctx context.Context, room repository.Room, snapshot streammonitor.StreamSnapshot) (repository.Room, error) {
 	now := s.now().UTC()
 	nextState := repository.RoomStreamState{
 		StreamStatus:            room.StreamStatus,

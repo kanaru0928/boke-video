@@ -6,12 +6,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 )
 
-func TestOvenMediaEngineClientInspectsActiveStream(t *testing.T) {
+func TestOvenMediaEngineClientListsStreams(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/vhosts/default/apps/live/streams/room-1" {
+		if r.URL.Path != "/v1/vhosts/default/apps/live/streams" {
 			t.Fatalf("path = %q", r.URL.Path)
 		}
 		expectedAuth := "Basic " + base64.StdEncoding.EncodeToString([]byte("user:pass"))
@@ -23,11 +22,32 @@ func TestOvenMediaEngineClientInspectsActiveStream(t *testing.T) {
 		_, _ = w.Write([]byte(`{
 			"statusCode": 200,
 			"message": "OK",
-			"response": {
-				"input": {
-					"createdTime": "2026-05-21T12:34:56.789+09:00"
-				}
-			}
+			"response": ["room-1"]
+		}`))
+	}))
+	defer server.Close()
+
+	client := newTestClient(t, server.URL)
+	streams, err := client.ListStreams(context.Background())
+	if err != nil {
+		t.Fatalf("ListStreams returned error: %v", err)
+	}
+	if !streams["room-1"].Active {
+		t.Fatal("streams[room-1].Active = false")
+	}
+}
+
+func TestOvenMediaEngineClientInspectsActiveStream(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/vhosts/default/apps/live/streams" {
+			t.Fatalf("path = %q", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{
+			"statusCode": 200,
+			"message": "OK",
+			"response": ["room-1"]
 		}`))
 	}))
 	defer server.Close()
@@ -40,15 +60,23 @@ func TestOvenMediaEngineClientInspectsActiveStream(t *testing.T) {
 	if !snapshot.Active {
 		t.Fatal("snapshot.Active = false")
 	}
-	expectedStartedAt := time.Date(2026, 5, 21, 3, 34, 56, 789000000, time.UTC)
-	if snapshot.StartedAt == nil || !snapshot.StartedAt.Equal(expectedStartedAt) {
+	if snapshot.StartedAt != nil {
 		t.Fatalf("snapshot.StartedAt = %v", snapshot.StartedAt)
 	}
 }
 
 func TestOvenMediaEngineClientTreatsMissingStreamAsInactive(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotFound)
+		if r.URL.Path != "/v1/vhosts/default/apps/live/streams" {
+			t.Fatalf("path = %q", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{
+			"statusCode": 200,
+			"message": "OK",
+			"response": []
+		}`))
 	}))
 	defer server.Close()
 
