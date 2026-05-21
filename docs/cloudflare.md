@@ -16,9 +16,7 @@ Terraformで管理する場合は`docs/terraform.md`を参照します。
 | `ingest.example.com` | Oracle IPへのDNS-only A/AAAA |
 | `rtc.example.com` | Oracle IPへのDNS-only A/AAAA |
 
-`ingest.example.com`と`rtc.example.com`はCloudflare proxyを使いません。Oracle VCNとOS firewallで公開ポートを`443/tcp`と`10000-10005/udp`に限定します。`3333/tcp`は公開しません。
-
-`443/tcp`はOracle上のCaddyが受けます。`ingest.example.com`はGoバックエンド`127.0.0.1:8080`へ転送し、`rtc.example.com`はOvenMediaEngine`127.0.0.1:3333`へ転送します。
+公開ポートとOracle上の転送先は`docs/deployment.md`を参照します。
 
 ## Access
 
@@ -29,7 +27,7 @@ Access Applicationはdeny by defaultにします。
 | フロントエンド | `bokevideo.example.com` | 既存ポリシー |
 | バックエンド | `stream.example.com` | 既存ポリシー |
 
-GoバックエンドはAccess JWTの署名、`aud`、`iss`、`exp`、`sub`を検証します。`sub`は動画枠所有者とユーザー設定の紐づけに使います。コメント表示名はユーザー設定で保存した`displayName`だけを使用します。プロフィール未作成時はUUIDv4を初期表示名として生成して保存します。メールアドレス、Access JWTの`name`、`sub`へのフォールバックはしません。メールアドレスは保存しません。
+JWT検証とユーザー識別子の扱いは`docs/auth-and-security.md`を参照します。
 
 ## Tunnel
 

@@ -62,13 +62,7 @@ Caddyの実ホスト名は`/etc/boke-video/caddy.env`で指定します。system
 
 ## 認証
 
-Cloudflare Accessは`bokevideo.example.com`と`stream.example.com`を保護します。Goバックエンドは`Cf-Access-Jwt-Assertion`を検証し、署名、`aud`、`iss`、`exp`、`sub`を必須にします。
-
-コメント表示名はユーザー設定で保存した`displayName`だけを使用します。プロフィール未作成時はUUIDv4を初期表示名として生成して保存します。メールアドレス、Access JWTの`name`、`sub`へのフォールバックはしません。メールアドレスは保存しません。
-
-管理画面と管理APIへ到達できるユーザーはCloudflare Accessの既存ポリシーで制限します。アプリケーション独自の管理者ロールは持ちません。動画枠の更新、削除、コメント削除、WHIP Token再発行は、動画枠を作成したJWTの`sub`だけに許可します。
-
-OBS入力はCloudflare Accessを通しません。Goの`/live/*`でWHIPの`Authorization: Bearer`を検証し、正しい動画枠のTokenだけをOvenMediaEngineへ転送します。Token平文は作成時または再発行時だけ返し、DBにはハッシュだけを保存します。
+Cloudflare Accessは`bokevideo.example.com`と`stream.example.com`を保護します。管理画面と管理APIへ到達できるユーザーもAccessの既存ポリシーで制限します。認証境界の詳細は`docs/auth-and-security.md`を参照します。
 
 ## Cloudflare設定
 
@@ -144,7 +138,7 @@ OME_API_ACCESS_TOKEN=replace-with-api-token
 | サーバー | `https://ingest.example.com/live/<roomId>?direction=whip` |
 | Bearer Token | 管理画面で作成または再発行したToken |
 
-OBSの初期設定はH.264、Opus、30fps、キーフレーム間隔1秒、Bフレーム0、CBR、Simulcast3レイヤーです。
+OBSの設定詳細は`docs/streaming.md`を参照します。
 
 ## 配置ファイル
 

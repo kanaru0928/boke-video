@@ -30,7 +30,7 @@ Cloudflare Workersで静的アセットとして配信します。
 
 API、OBS入力、コメントWebSocketの接続先はビルド時のVite環境変数で設定します。本番の設定値は`docs/deployment.md`を正本にします。
 
-`/user`で自分の表示名を設定します。初期表示名はUUIDv4です。コメント投稿時は保存済みの表示名だけを使い、別の値へフォールバックしません。
+`/user`で自分の表示名を設定します。表示名とフォールバック禁止の仕様は`docs/auth-and-security.md`を参照します。
 
 ## デプロイ
 
