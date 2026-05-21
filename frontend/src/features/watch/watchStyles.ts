@@ -1,5 +1,4 @@
 import { cn } from "../../shared/ui/classNames";
-import { buttonClassName } from "../../shared/ui/styles";
 
 export const programBoardClassName = cn(
   "mb-[10px] grid grid-cols-[minmax(0,1fr)_minmax(220px,330px)] items-center gap-3",
@@ -109,10 +108,8 @@ export const commentFormClassName = "grid gap-[5px] pt-1.5";
 export const commentComposeClassName =
   "grid grid-cols-[minmax(0,1fr)_118px] gap-[5px] max-[520px]:grid-cols-[minmax(0,1fr)_110px]";
 
-export const commentSubmitButtonClassName = buttonClassName({
-  className: "min-h-[42px] max-[520px]:min-h-[38px]",
-  primary: true,
-});
+export const commentSubmitButtonClassName =
+  "min-h-[42px] max-[520px]:min-h-[38px]";
 
 export const commentOptionsClassName = cn(
   "grid grid-cols-[minmax(180px,1fr)_minmax(150px,0.8fr)_minmax(170px,auto)] items-start gap-2",

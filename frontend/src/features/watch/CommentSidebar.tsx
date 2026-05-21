@@ -1,5 +1,6 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRef } from "react";
+import { Button } from "../../shared/ui/Button";
 import { cn } from "../../shared/ui/classNames";
 import { commentAuthorLabel } from "../comments/comment_author";
 import type { CommentMessage } from "../comments/types";
@@ -66,9 +67,7 @@ export function CommentSidebar({
         </span>
       </div>
       <div className={tabRowClassName}>
-        <button type="button" className={activeTabButtonClassName}>
-          コメント
-        </button>
+        <Button className={activeTabButtonClassName}>コメント</Button>
       </div>
       <ol
         className={commentLogClassName}
@@ -77,14 +76,13 @@ export function CommentSidebar({
       >
         {hasOlderComments ? (
           <li className="sticky top-0 z-10 grid min-h-[34px] place-items-center border-b border-[#d6d6d6] bg-[#f7f7f7] p-[3px]">
-            <button
-              className="min-h-[26px] rounded-sm border border-[#8c8c8c] bg-[linear-gradient(#ffffff,#d9d9d9)] px-3 text-xs font-extrabold shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#9a9a9a] disabled:opacity-60"
+            <Button
+              className="min-h-[26px] px-3 text-xs font-extrabold disabled:opacity-60"
               disabled={isLoadingOlderComments}
-              type="button"
               onClick={() => void onLoadOlderComments()}
             >
               {isLoadingOlderComments ? "読み込み中" : "過去コメント"}
-            </button>
+            </Button>
           </li>
         ) : null}
         <li

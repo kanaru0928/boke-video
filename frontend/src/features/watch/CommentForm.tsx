@@ -1,7 +1,8 @@
 import { Send } from "lucide-react";
 import type { KeyboardEvent } from "react";
+import { Button } from "../../shared/ui/Button";
 import { cn } from "../../shared/ui/classNames";
-import { buttonClassName, textareaClassName } from "../../shared/ui/styles";
+import { textareaClassName } from "../../shared/ui/styles";
 import { directionLabel } from "../comments/comment_labels";
 import {
   type CommentDirection,
@@ -74,10 +75,10 @@ export function CommentForm({
           required
           value={body}
         />
-        <button className={commentSubmitButtonClassName} type="submit">
+        <Button className={commentSubmitButtonClassName} primary type="submit">
           <Send aria-hidden="true" size={18} />
           コメント
-        </button>
+        </Button>
       </div>
       <div className={commentOptionsClassName}>
         <fieldset className={choiceFieldClassName}>
@@ -112,16 +113,15 @@ export function CommentForm({
         </fieldset>
         <div className={colorRowClassName}>
           {commentColors.map((color) => (
-            <button
+            <Button
               aria-label={color}
               className={cn(
-                buttonClassName({ className: colorButtonClassName }),
+                colorButtonClassName,
                 color === selectedColor && selectedColorButtonClassName,
               )}
               key={color}
               onClick={() => onColorChange(color)}
               style={{ backgroundColor: color }}
-              type="button"
             />
           ))}
         </div>
