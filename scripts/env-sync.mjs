@@ -122,11 +122,6 @@ function syncProduction(env) {
     oracle_ipv6: envValue(env, "ORACLE_IPV6", ""),
     cloudflare_access_team_name: accessTeamName,
     access_policy_id: required(env, "CLOUDFLARE_ACCESS_POLICY_ID"),
-    management_access_policy_id: envValue(
-      env,
-      "CLOUDFLARE_MANAGEMENT_ACCESS_POLICY_ID",
-      "",
-    ),
     worker_service_name: envValue(
       env,
       "WORKER_SERVICE_NAME",

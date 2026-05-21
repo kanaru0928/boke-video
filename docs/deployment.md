@@ -77,9 +77,7 @@ Access Applicationはdeny by defaultにします。
 | 対象 | Application domain | Access Policy |
 | --- | --- | --- |
 | フロントエンド | `bokevideo.example.com` | 既存ポリシー |
-| 管理画面 | `bokevideo.example.com/admin*` | 既存ポリシー |
 | バックエンド | `stream.example.com` | 既存ポリシー |
-| 管理画面用API | `stream.example.com/api/admin/*` | 既存ポリシー |
 
 Tunnelは`stream.example.com`だけをGoへ転送します。Terraformのremote Tunnel configを使うため、Oracle上のcloudflaredはtokenで起動します。
 
@@ -99,7 +97,6 @@ CLOUDFLARE_ACCOUNT_ID=replace-with-account-id
 CLOUDFLARE_ZONE_ID=replace-with-zone-id
 CLOUDFLARE_ACCESS_TEAM_NAME=replace-with-team-name
 CLOUDFLARE_ACCESS_POLICY_ID=replace-with-access-policy-id
-CLOUDFLARE_MANAGEMENT_ACCESS_POLICY_ID=
 CLOUDFLARE_API_TOKEN=replace-with-cloudflare-api-token
 STREAM_SIGNING_SECRET=replace-with-strong-secret
 OME_API_ACCESS_TOKEN=replace-with-api-token

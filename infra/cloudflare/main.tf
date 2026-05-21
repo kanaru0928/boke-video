@@ -3,8 +3,6 @@ locals {
   stream_hostname   = "stream.${var.zone_name}"
   ingest_hostname   = "ingest.${var.zone_name}"
   rtc_hostname      = "rtc.${var.zone_name}"
-
-  management_access_policy_id = var.management_access_policy_id == "" ? var.access_policy_id : var.management_access_policy_id
 }
 
 resource "random_id" "tunnel_secret" {
@@ -29,17 +27,6 @@ resource "cloudflare_zero_trust_access_application" "frontend" {
   }]
 }
 
-resource "cloudflare_zero_trust_access_application" "frontend_management" {
-  account_id = var.cloudflare_account_id
-  name       = "boke-video frontend management"
-  domain     = "${local.frontend_hostname}/admin*"
-  type       = "self_hosted"
-
-  policies = [{
-    id = local.management_access_policy_id
-  }]
-}
-
 resource "cloudflare_zero_trust_access_application" "backend" {
   account_id = var.cloudflare_account_id
   name       = "boke-video backend"
@@ -48,17 +35,6 @@ resource "cloudflare_zero_trust_access_application" "backend" {
 
   policies = [{
     id = var.access_policy_id
-  }]
-}
-
-resource "cloudflare_zero_trust_access_application" "backend_management" {
-  account_id = var.cloudflare_account_id
-  name       = "boke-video backend management"
-  domain     = "${local.stream_hostname}/api/admin/*"
-  type       = "self_hosted"
-
-  policies = [{
-    id = local.management_access_policy_id
   }]
 }
 

@@ -27,9 +27,7 @@ Access Applicationはdeny by defaultにします。
 | 対象 | Application domain | Access Policy |
 | --- | --- | --- |
 | フロントエンド | `bokevideo.example.com` | 既存ポリシー |
-| 管理画面 | `bokevideo.example.com/admin*` | 既存ポリシー |
 | バックエンド | `stream.example.com` | 既存ポリシー |
-| 管理画面用API | `stream.example.com/api/admin/*` | 既存ポリシー |
 
 GoバックエンドはAccess JWTの署名、`aud`、`iss`、`exp`、`sub`を検証します。`sub`は動画枠所有者とユーザー設定の紐づけに使います。コメント表示名はユーザー設定で保存した`displayName`だけを使用します。プロフィール未作成時はUUIDv4を初期表示名として生成して保存します。メールアドレス、Access JWTの`name`、`sub`へのフォールバックはしません。メールアドレスは保存しません。
 

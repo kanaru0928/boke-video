@@ -40,7 +40,7 @@ pnpm env:sync:production
 
 `.env.production`に実値を書きます。`CLOUDFLARE_ACCESS_TEAM_NAME`は`https://<team_name>.cloudflareaccess.com`の`<team_name>`だけを書きます。
 
-`CLOUDFLARE_ACCESS_POLICY_ID`には既存のCloudflare Access Policy IDを書きます。`/admin*`と`/api/admin/*`だけ別ポリシーへ分ける場合は、`CLOUDFLARE_MANAGEMENT_ACCESS_POLICY_ID`も書きます。空の場合は`CLOUDFLARE_ACCESS_POLICY_ID`を再利用します。
+`CLOUDFLARE_ACCESS_POLICY_ID`には既存のCloudflare Access Policy IDを書きます。フロントエンドとバックエンドのAccess Applicationに同じPolicy IDを紐づけます。
 
 IPv6を使う場合は`ORACLE_IPV6`を追加します。Worker名、Worker environment、Tunnel名を既定値から変える場合は`WORKER_SERVICE_NAME`、`WORKER_ENVIRONMENT`、`TUNNEL_NAME`を追加します。
 

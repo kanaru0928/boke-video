@@ -35,12 +35,6 @@ variable "access_policy_id" {
   description = "Existing Cloudflare Access policy ID for the frontend and backend applications."
 }
 
-variable "management_access_policy_id" {
-  type        = string
-  description = "Existing Cloudflare Access policy ID for /admin* and /api/admin/*. Empty string reuses access_policy_id."
-  default     = ""
-}
-
 variable "worker_service_name" {
   type        = string
   description = "Cloudflare Workers service name created by wrangler deploy."
