@@ -38,6 +38,7 @@ export function WatchPage({ config }: WatchPageProps) {
   const [selectedSize, setSelectedSize] = useState<CommentFontSize>("medium");
   const [selectedColor, setSelectedColor] = useState<string>(commentColors[0]);
   const [commentsVisible, setCommentsVisible] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedQualityId, setSelectedQualityId] = useState(autoQualityId);
   const { rooms } = useRooms(config);
   const { clearComments, commentsLayerRef, renderComment } =
@@ -88,6 +89,16 @@ export function WatchPage({ config }: WatchPageProps) {
       );
     }
   }, [rooms, selectedRoomId]);
+
+  useEffect(() => {
+    const updateFullscreenState = (): void => {
+      setIsFullscreen(document.fullscreenElement === stageRef.current);
+    };
+    document.addEventListener("fullscreenchange", updateFullscreenState);
+    return () => {
+      document.removeEventListener("fullscreenchange", updateFullscreenState);
+    };
+  }, []);
 
   const updatePlayerState = (): void => {
     const video = videoRef.current;
@@ -179,6 +190,7 @@ export function WatchPage({ config }: WatchPageProps) {
             elapsedSeconds={elapsedSeconds}
             isMuted={isMuted}
             isPaused={isPaused}
+            isFullscreen={isFullscreen}
             isStreamLoading={isStreamLoading}
             playbackQualities={playbackQualities}
             selectedQualityId={selectedQualityId}

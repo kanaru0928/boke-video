@@ -1,5 +1,6 @@
 import {
   Maximize,
+  Minimize,
   Pause,
   Play,
   RefreshCw,
@@ -7,7 +8,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../../shared/ui/Button";
 import { cn } from "../../shared/ui/classNames";
 import type { RoomStreamStatus } from "../rooms/room_api";
@@ -25,6 +26,7 @@ type PlayerControlsProps = {
   commentsVisible: boolean;
   controlsVisible: boolean;
   elapsedSeconds: number;
+  isFullscreen: boolean;
   isMuted: boolean;
   isPaused: boolean;
   onCommentsVisibleChange: (visible: boolean) => void;
@@ -41,6 +43,7 @@ export function PlayerControls({
   commentsVisible,
   controlsVisible,
   elapsedSeconds,
+  isFullscreen,
   isMuted,
   isPaused,
   onCommentsVisibleChange,
@@ -53,6 +56,31 @@ export function PlayerControls({
   streamStatus,
 }: PlayerControlsProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!settingsOpen) {
+      return;
+    }
+    const closeSettingsOnOutsidePointerDown = (event: PointerEvent): void => {
+      const settings = settingsRef.current;
+      if (
+        settings === null ||
+        !(event.target instanceof Node) ||
+        settings.contains(event.target)
+      ) {
+        return;
+      }
+      setSettingsOpen(false);
+    };
+    document.addEventListener("pointerdown", closeSettingsOnOutsidePointerDown);
+    return () => {
+      document.removeEventListener(
+        "pointerdown",
+        closeSettingsOnOutsidePointerDown,
+      );
+    };
+  }, [settingsOpen]);
 
   return (
     <div
@@ -103,15 +131,19 @@ export function PlayerControls({
           <RefreshCw aria-hidden="true" size={18} />
         </Button>
         <Button
-          aria-label="全画面"
+          aria-label={isFullscreen ? "全画面を解除" : "全画面"}
           className="max-[520px]:hidden"
           id="fullscreen-toggle"
           square
           onClick={onToggleFullscreen}
         >
-          <Maximize aria-hidden="true" size={18} />
+          {isFullscreen ? (
+            <Minimize aria-hidden="true" size={18} />
+          ) : (
+            <Maximize aria-hidden="true" size={18} />
+          )}
         </Button>
-        <div className="relative">
+        <div className="relative" ref={settingsRef}>
           <PlayerSettingsPopover
             commentsVisible={commentsVisible}
             isOpen={settingsOpen}

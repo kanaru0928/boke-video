@@ -31,6 +31,7 @@ type WatchPlayerProps = {
   commentsLayerRef: RefObject<HTMLDivElement | null>;
   commentsVisible: boolean;
   elapsedSeconds: number;
+  isFullscreen: boolean;
   isMuted: boolean;
   isPaused: boolean;
   isStreamLoading: boolean;
@@ -56,6 +57,7 @@ export function WatchPlayer({
   commentsLayerRef,
   commentsVisible,
   elapsedSeconds,
+  isFullscreen,
   isMuted,
   isPaused,
   isStreamLoading,
@@ -151,6 +153,7 @@ export function WatchPlayer({
         commentsVisible={commentsVisible}
         controlsVisible={controlsVisible}
         elapsedSeconds={elapsedSeconds}
+        isFullscreen={isFullscreen}
         isMuted={isMuted}
         isPaused={isPaused}
         playbackQualities={playbackQualities}
