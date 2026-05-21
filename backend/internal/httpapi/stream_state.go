@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"database/sql"
 	"net/url"
 	"time"
 
@@ -26,9 +27,12 @@ func (s *Server) reconcileRooms(ctx context.Context, rooms []repository.Room) ([
 	}
 	reconciled := make([]repository.Room, 0, len(rooms))
 	for _, room := range rooms {
-		updatedRoom, err := s.reconcileRoomWithSnapshot(ctx, room, snapshots[room.ID])
+		updatedRoom, exists, err := s.reconcileRoomWithSnapshot(ctx, room, snapshots[room.ID])
 		if err != nil {
 			return nil, err
+		}
+		if !exists {
+			continue
 		}
 		reconciled = append(reconciled, updatedRoom)
 	}
@@ -44,10 +48,17 @@ func (s *Server) reconcileRoom(ctx context.Context, room repository.Room) (repos
 		s.logger.Warn("list streams", "error", err)
 		return room, nil
 	}
-	return s.reconcileRoomWithSnapshot(ctx, room, snapshots[room.ID])
+	updatedRoom, exists, err := s.reconcileRoomWithSnapshot(ctx, room, snapshots[room.ID])
+	if err != nil {
+		return repository.Room{}, err
+	}
+	if !exists {
+		return repository.Room{}, sql.ErrNoRows
+	}
+	return updatedRoom, nil
 }
 
-func (s *Server) reconcileRoomWithSnapshot(ctx context.Context, room repository.Room, snapshot streammonitor.StreamSnapshot) (repository.Room, error) {
+func (s *Server) reconcileRoomWithSnapshot(ctx context.Context, room repository.Room, snapshot streammonitor.StreamSnapshot) (repository.Room, bool, error) {
 	now := s.now().UTC()
 	nextState := repository.RoomStreamState{
 		StreamStatus:            room.StreamStatus,
@@ -81,26 +92,24 @@ func (s *Server) reconcileRoomWithSnapshot(ctx context.Context, room repository.
 			lastSeenAt = room.StreamLastSeenAt.UTC()
 		}
 		if now.Sub(lastSeenAt) > s.streamEndGrace {
-			endedAt := lastSeenAt.Add(s.streamEndGrace)
-			nextState.StreamStatus = "ended"
-			nextState.StreamLastSeenAt = &lastSeenAt
-			nextState.StreamEndedAt = &endedAt
-			nextState.ThumbnailURL = ""
-			nextState.ThumbnailUpdatedAt = now
+			if err := s.repository.DeleteRoomByID(ctx, room.ID); err != nil {
+				return repository.Room{}, false, err
+			}
+			return repository.Room{}, false, nil
 		}
 	}
 
 	if !roomStreamStateChanged(room, nextState) {
-		return room, nil
+		return room, true, nil
 	}
 	if err := s.repository.UpdateRoomStreamState(ctx, room.ID, nextState); err != nil {
-		return repository.Room{}, err
+		return repository.Room{}, false, err
 	}
 	updated, err := s.repository.GetRoom(ctx, room.ID)
 	if err != nil {
-		return repository.Room{}, err
+		return repository.Room{}, false, err
 	}
-	return updated, nil
+	return updated, true, nil
 }
 
 func thumbnailEndpoint(roomID string) string {

@@ -3,6 +3,7 @@ package httpapi
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"io"
@@ -410,6 +411,48 @@ func TestServerListsOnlyLiveRoomsAndEndsMissingStreamsAfterGrace(t *testing.T) {
 	}
 	if len(endedRooms) != 0 {
 		t.Fatalf("len(endedRooms) = %d", len(endedRooms))
+	}
+	if _, err := server.repository.GetRoom(context.Background(), roomID); !errors.Is(err, sql.ErrNoRows) {
+		t.Fatalf("GetRoom after stream ended error = %v", err)
+	}
+	nextRoomResponse := performRequest(server, http.MethodPost, "/api/admin/rooms", `{"id":"next-room","title":"次の配信"}`)
+	if nextRoomResponse.Code != http.StatusCreated {
+		t.Fatalf("next room status = %d, body = %s", nextRoomResponse.Code, nextRoomResponse.Body.String())
+	}
+}
+
+func TestServerDeletesOwnedRoomAfterStreamEndGrace(t *testing.T) {
+	server := newTestServer(t)
+	now := time.Unix(2000, 0).UTC()
+	server.now = func() time.Time {
+		return now
+	}
+	server.streamEndGrace = 90 * time.Second
+	roomID := createTestRoom(t, server, "配信")
+	server.streamMonitor = &fakeStreamMonitor{
+		snapshots: map[string]streammonitor.StreamSnapshot{
+			roomID: {
+				Active: true,
+			},
+		},
+	}
+	firstResponse := performRequest(server, http.MethodGet, "/api/admin/rooms", "")
+	if firstResponse.Code != http.StatusOK {
+		t.Fatalf("first owned rooms status = %d, body = %s", firstResponse.Code, firstResponse.Body.String())
+	}
+
+	now = now.Add(91 * time.Second)
+	server.streamMonitor = &fakeStreamMonitor{snapshots: map[string]streammonitor.StreamSnapshot{}}
+	endedResponse := performRequest(server, http.MethodGet, "/api/admin/rooms", "")
+	if endedResponse.Code != http.StatusOK {
+		t.Fatalf("ended owned rooms status = %d, body = %s", endedResponse.Code, endedResponse.Body.String())
+	}
+	var rooms []repository.Room
+	if err := json.NewDecoder(endedResponse.Body).Decode(&rooms); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if len(rooms) != 0 {
+		t.Fatalf("len(rooms) = %d", len(rooms))
 	}
 }
 

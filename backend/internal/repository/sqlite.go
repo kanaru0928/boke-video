@@ -218,19 +218,30 @@ func (s *SQLite) UpdateRoomStreamState(ctx context.Context, roomID string, state
 }
 
 func (s *SQLite) DeleteRoom(ctx context.Context, roomID string, ownerSub string) error {
+	return s.deleteRoom(ctx, `id = ? AND owner_sub = ?`, roomID, ownerSub)
+}
+
+func (s *SQLite) DeleteRoomByID(ctx context.Context, roomID string) error {
+	return s.deleteRoom(ctx, `id = ?`, roomID)
+}
+
+func (s *SQLite) deleteRoom(ctx context.Context, whereClause string, args ...any) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	if _, err := tx.ExecContext(ctx, `DELETE FROM comments WHERE room_id IN (SELECT id FROM rooms WHERE id = ? AND owner_sub = ?)`, roomID, ownerSub); err != nil {
+	selectArgs := append([]any{}, args...)
+	if _, err := tx.ExecContext(ctx, `DELETE FROM comments WHERE room_id IN (SELECT id FROM rooms WHERE `+whereClause+`)`, selectArgs...); err != nil {
 		return err
 	}
-	if _, err := tx.ExecContext(ctx, `DELETE FROM room_visits WHERE room_id IN (SELECT id FROM rooms WHERE id = ? AND owner_sub = ?)`, roomID, ownerSub); err != nil {
+	selectArgs = append([]any{}, args...)
+	if _, err := tx.ExecContext(ctx, `DELETE FROM room_visits WHERE room_id IN (SELECT id FROM rooms WHERE `+whereClause+`)`, selectArgs...); err != nil {
 		return err
 	}
-	result, err := tx.ExecContext(ctx, `DELETE FROM rooms WHERE id = ? AND owner_sub = ?`, roomID, ownerSub)
+	deleteArgs := append([]any{}, args...)
+	result, err := tx.ExecContext(ctx, `DELETE FROM rooms WHERE `+whereClause, deleteArgs...)
 	if err != nil {
 		return err
 	}

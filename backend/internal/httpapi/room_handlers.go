@@ -48,6 +48,16 @@ func (s *Server) handleListOwnedRooms(w http.ResponseWriter, r *http.Request) {
 		s.writeServerError(w, err)
 		return
 	}
+	rooms, err = s.reconcileRooms(r.Context(), rooms)
+	if err != nil {
+		s.writeServerError(w, err)
+		return
+	}
+	rooms, err = s.repository.ListRoomsByOwner(r.Context(), principal.Subject)
+	if err != nil {
+		s.writeServerError(w, err)
+		return
+	}
 	writeJSON(w, http.StatusOK, rooms)
 }
 

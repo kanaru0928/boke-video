@@ -1,5 +1,5 @@
 import { Bot, MonitorPlay, Newspaper } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import { AppHeader } from "../../shared/ui/AppHeader";
 import { Board } from "../../shared/ui/Board";
@@ -67,6 +67,11 @@ type RoomCardProps = {
 
 function RoomCard({ config, room }: RoomCardProps) {
   const thumbnail = roomThumbnail(room, config);
+  const [failedThumbnailUrl, setFailedThumbnailUrl] = useState<string | null>(
+    null,
+  );
+  const visibleThumbnailUrl =
+    thumbnail.url === failedThumbnailUrl ? null : thumbnail.url;
 
   return (
     <article className="grid grid-rows-[auto_minmax(92px,1fr)] gap-0 border border-[#a7a7a7] bg-white">
@@ -81,7 +86,7 @@ function RoomCard({ config, room }: RoomCardProps) {
             thumbnail.toneClassName,
           )}
         >
-          {thumbnail.url === null ? (
+          {visibleThumbnailUrl === null ? (
             <div className="grid h-full grid-rows-[1fr_auto] p-3 text-white [text-shadow:1px_1px_0_#000000] max-[520px]:p-2">
               <Bot aria-hidden="true" size={34} />
               <span className="col-span-full border-t border-[rgb(255_255_255_/_55%)] pt-[3px] font-[Arial,sans-serif] text-[11px] tracking-normal">
@@ -92,7 +97,8 @@ function RoomCard({ config, room }: RoomCardProps) {
             <img
               alt=""
               className="block h-full w-full object-cover"
-              src={thumbnail.url}
+              src={visibleThumbnailUrl}
+              onError={() => setFailedThumbnailUrl(visibleThumbnailUrl)}
             />
           )}
         </div>
