@@ -2,6 +2,8 @@
 
 本番の正本は`docs/deployment.md`です。このファイルはCloudflare作業だけを補足します。
 
+このdocsの`example.com`はプレースホルダーです。Cloudflare上では実ドメインの既存Access ApplicationとTunnel設定に合わせます。
+
 ## DNS
 
 | ホスト名 | 設定 |
@@ -12,6 +14,8 @@
 | `rtc.example.com` | Oracle IPへのDNS-only A/AAAA |
 
 `ingest.example.com`と`rtc.example.com`はCloudflare proxyを使いません。Oracle VCNとOS firewallで公開ポートを`443/tcp`と`10000-10005/udp`に限定します。`3333/tcp`は公開しません。
+
+`443/tcp`はOracle上のCaddyが受けます。`ingest.example.com`はGoバックエンド`127.0.0.1:8080`へ転送し、`rtc.example.com`はOvenMediaEngine`127.0.0.1:3333`へ転送します。
 
 ## Access
 
@@ -55,3 +59,5 @@ ingress:
 - Cloudflare exposed origin IP addresses: https://developers.cloudflare.com/dns/manage-dns-records/troubleshooting/exposed-ip-address/
 - Cloudflare Access JWT validation: https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/
 - Cloudflare Access application paths: https://developers.cloudflare.com/cloudflare-one/access-controls/policies/app-paths/
+- Caddy Automatic HTTPS: https://caddyserver.com/docs/automatic-https
+- Caddy reverse_proxy: https://caddyserver.com/docs/caddyfile/directives/reverse_proxy

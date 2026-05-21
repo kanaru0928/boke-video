@@ -1,6 +1,10 @@
 node_modules/
 frontend/node_modules/
 frontend/dist/
+*.env
+*.env.production
+!*.env.example
+!*.env.production.example
 backend/*.sqlite3
 backend/*.sqlite3-shm
 backend/*.sqlite3-wal
