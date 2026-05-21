@@ -35,9 +35,7 @@ GoバックエンドはAccess JWTの署名、`aud`、`iss`、`exp`、`sub`を検
 
 ## Tunnel
 
-Tunnelは`stream.example.com`だけをGoバックエンドへ転送します。Terraformではremote Tunnel configを管理し、Oracle上のcloudflaredはtokenで起動します。
-
-ローカル管理のYAMLを使う場合は`deploy/cloudflared/boke-video.yml.example`を参照します。ただしTerraformのremote Tunnel configと同時には使いません。
+Tunnelは`stream.example.com`だけをGoバックエンドへ転送します。Terraformではremote Tunnel configを管理し、Oracle上のcloudflaredはtokenで起動します。ローカル管理のYAMLは使いません。
 
 ## 参考
 

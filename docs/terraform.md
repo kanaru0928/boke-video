@@ -38,6 +38,8 @@ pnpm env:sync:production
 
 `.env.production`に実値を書きます。`CLOUDFLARE_ACCESS_TEAM_NAME`は`https://<team_name>.cloudflareaccess.com`の`<team_name>`だけを書きます。
 
+`VIEWER_EMAILS`と`ADMIN_EMAILS`はカンマ区切りです。メールドメインで許可する場合は、`.env.production`に`VIEWER_EMAIL_DOMAINS`または`ADMIN_EMAIL_DOMAINS`を追加します。IPv6を使う場合は`ORACLE_IPV6`を追加します。Worker名、Worker environment、Tunnel名を既定値から変える場合は`WORKER_SERVICE_NAME`、`WORKER_ENVIRONMENT`、`TUNNEL_NAME`を追加します。
+
 ## 適用
 
 ```sh
