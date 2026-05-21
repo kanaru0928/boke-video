@@ -110,6 +110,16 @@ function syncProduction(env) {
     RTC_HOST: rtcHost,
   });
 
+  writeText(
+    "deploy/ovenmediaengine/Server.xml",
+    productionOvenMediaEngineConfig({
+      ingestHost,
+      omeApiAccessToken,
+      rtcHost,
+      streamSigningSecret,
+    }),
+  );
+
   writeEnv("deploy/cloudflared/cloudflared.env", {
     TUNNEL_TOKEN: envValue(env, "CLOUDFLARE_TUNNEL_TOKEN", ""),
   });
@@ -207,4 +217,42 @@ function writeText(relativePath, content) {
   const filePath = path.join(rootDir, relativePath);
   mkdirSync(path.dirname(filePath), { recursive: true });
   writeFileSync(filePath, content);
+}
+
+function productionOvenMediaEngineConfig({
+  ingestHost,
+  omeApiAccessToken,
+  rtcHost,
+  streamSigningSecret,
+}) {
+  const templatePath = path.join(
+    rootDir,
+    "deploy/ovenmediaengine/Server.xml.example",
+  );
+  return readFileSync(templatePath, "utf8")
+    .replace(
+      "<AccessToken>replace-with-api-token</AccessToken>",
+      `<AccessToken>${xmlEscape(omeApiAccessToken)}</AccessToken>`,
+    )
+    .replace(
+      "<SecretKey>replace-with-strong-secret</SecretKey>",
+      `<SecretKey>${xmlEscape(streamSigningSecret)}</SecretKey>`,
+    )
+    .replace(
+      "<Name>ingest.example.com</Name>",
+      `<Name>${xmlEscape(ingestHost)}</Name>`,
+    )
+    .replace(
+      "<Name>rtc.example.com</Name>",
+      `<Name>${xmlEscape(rtcHost)}</Name>`,
+    );
+}
+
+function xmlEscape(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
 }

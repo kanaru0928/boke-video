@@ -9,6 +9,7 @@ frontend/dist/
 !.env.local.example
 !.env.production.example
 !*.env.production.example
+deploy/ovenmediaengine/Server.xml
 *.tfvars
 *.tfvars.json
 !*.tfvars.example
