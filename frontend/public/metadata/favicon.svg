@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Boke Video icon</title>
+  <desc id="desc">A rounded TV mascot face icon for Boke Video.</desc>
+
+  <g fill="none" stroke="#111111" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="14" y="30" width="228" height="196" rx="44" fill="#ffffff" />
+    <rect x="50" y="72" width="156" height="108" rx="28" />
+    <circle cx="96" cy="120" r="7.5" fill="#111111" stroke="none" />
+    <circle cx="160" cy="120" r="7.5" fill="#111111" stroke="none" />
+    <path d="M108 143 Q128 158 148 143" />
+    <circle cx="224" cy="90" r="6.5" fill="#111111" stroke="none" />
+    <circle cx="224" cy="120" r="6.5" fill="#111111" stroke="none" />
+  </g>
+</svg>
