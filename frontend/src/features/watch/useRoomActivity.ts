@@ -100,6 +100,7 @@ export function useRoomActivity(
         return;
       }
       setLoadedStats(nextStats);
+      setRealtimeCommentCount(0);
       setElapsedSeconds(nextStats.elapsedSeconds);
     };
     const timerId = window.setInterval(() => {

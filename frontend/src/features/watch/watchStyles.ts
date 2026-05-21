@@ -134,7 +134,7 @@ export const selectedColorButtonClassName =
   "outline-2 outline-offset-2 outline-[#006bd6]";
 
 export const sidePanelClassName =
-  "grid min-h-[360px] grid-rows-[auto_auto_minmax(0,1fr)] border border-[#8c8c8c] bg-white shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#b8b8b8] max-[860px]:h-[min(420px,calc(100vh-24px))] max-[860px]:min-h-[280px] max-[520px]:h-[min(360px,calc(100vh-18px))] max-[520px]:min-h-[230px]";
+  "grid grid-rows-[auto_auto_minmax(0,1fr)] border border-[#8c8c8c] bg-white shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#b8b8b8] max-[860px]:h-[min(420px,calc(100vh-24px))] max-[860px]:min-h-[280px] max-[520px]:h-[min(360px,calc(100vh-18px))] max-[520px]:min-h-[230px]";
 
 export const counterStripClassName =
   "grid grid-cols-3 border-b border-[#d2d2d2] bg-white [&_span]:border-l [&_span]:border-[#e2e2e2] [&_span]:px-1 [&_span]:py-[7px] [&_span]:text-center [&_span]:text-xs [&_span]:leading-[1.35] [&_span]:text-[#777777] [&_span:first-child]:border-l-0 max-[520px]:[&_span]:py-[5px]";
@@ -146,7 +146,9 @@ export const activeTabButtonClassName =
   "min-h-[34px] rounded-none border-0 border-b-2 border-b-[#111111] bg-white font-extrabold shadow-none max-[520px]:min-h-[29px]";
 
 export const commentLogClassName =
-  "relative m-0 h-full min-h-0 list-none overflow-auto bg-white p-0";
+  "relative h-[calc(100dvh-250px)] min-h-[260px] overflow-auto bg-white max-[860px]:h-full max-[860px]:min-h-0";
+
+export const commentLogVirtualListClassName = "relative m-0 list-none p-0";
 
 export const commentLogItemClassName =
   "absolute left-0 top-0 grid min-h-[52px] w-full grid-cols-[38px_minmax(0,1fr)] border-b border-[#eeeeee] max-[520px]:min-h-[44px]";
