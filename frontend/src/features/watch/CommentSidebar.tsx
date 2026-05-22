@@ -8,7 +8,6 @@ import type { RoomStats } from "../rooms/room_api";
 import {
   commentLogNumber,
   formatCommentSentAt,
-  formatElapsedTime,
   isCommentLogScrolledToBottom,
 } from "./room_activity";
 import {
@@ -28,7 +27,6 @@ import {
 
 type CommentSidebarProps = {
   comments: CommentMessage[];
-  elapsedSeconds: number;
   hasOlderComments: boolean;
   isLoadingOlderComments: boolean;
   onLoadOlderComments: () => Promise<void>;
@@ -37,7 +35,6 @@ type CommentSidebarProps = {
 
 export function CommentSidebar({
   comments,
-  elapsedSeconds,
   hasOlderComments,
   isLoadingOlderComments,
   onLoadOlderComments,
@@ -100,21 +97,16 @@ export function CommentSidebar({
     <aside className={sidePanelClassName}>
       <div className={counterStripClassName}>
         <span>
-          同接
+          人数
           <br />
           {stats !== null
-            ? `${stats.currentViewerCount} / 最大${stats.maxConcurrentViewerCount}`
-            : "0/0"}
+            ? `現在: ${stats.currentViewerCount} / 最大: ${stats.maxConcurrentViewerCount}`
+            : "現在: 0 / 最大: 0"}
         </span>
         <span>
           コメント
           <br />
           {stats?.commentCount ?? comments.length}
-        </span>
-        <span>
-          経過
-          <br />
-          {formatElapsedTime(elapsedSeconds)}
         </span>
       </div>
       <div className={tabRowClassName}>

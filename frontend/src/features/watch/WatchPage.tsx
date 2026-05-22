@@ -200,7 +200,6 @@ export function WatchPage({ config }: WatchPageProps) {
         </main>
         <CommentSidebar
           comments={comments}
-          elapsedSeconds={elapsedSeconds}
           hasOlderComments={hasOlderComments}
           isLoadingOlderComments={isLoadingOlderComments}
           onLoadOlderComments={loadOlderComments}

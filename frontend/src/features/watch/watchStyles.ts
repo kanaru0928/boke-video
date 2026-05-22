@@ -145,7 +145,7 @@ export const sidePanelClassName =
   "grid min-w-0 grid-rows-[auto_auto_minmax(0,1fr)] border border-[#8c8c8c] bg-white shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#b8b8b8] max-[1040px]:h-[min(420px,calc(100vh-24px))] max-[1040px]:min-h-[280px] max-[520px]:h-[min(360px,calc(100vh-18px))] max-[520px]:min-h-[230px]";
 
 export const counterStripClassName =
-  "grid grid-cols-3 border-b border-[#d2d2d2] bg-white [&_span]:border-l [&_span]:border-[#e2e2e2] [&_span]:px-1 [&_span]:py-[7px] [&_span]:text-center [&_span]:text-xs [&_span]:leading-[1.35] [&_span]:text-[#777777] [&_span:first-child]:border-l-0 max-[520px]:[&_span]:py-[5px]";
+  "grid grid-cols-2 border-b border-[#d2d2d2] bg-white [&_span]:border-l [&_span]:border-[#e2e2e2] [&_span]:px-1 [&_span]:py-[7px] [&_span]:text-center [&_span]:text-xs [&_span]:leading-[1.35] [&_span]:text-[#777777] [&_span:first-child]:border-l-0 max-[520px]:[&_span]:py-[5px]";
 
 export const tabRowClassName =
   "grid grid-cols-1 bg-[#f7f7f7] [&_button]:min-h-[34px] [&_button]:rounded-none [&_button]:border-0 [&_button]:border-r [&_button]:border-b [&_button]:border-[#d2d2d2] [&_button]:bg-[#f7f7f7] [&_button]:font-extrabold [&_button]:shadow-none [&_button:last-child]:border-r-0 max-[520px]:[&_button]:min-h-[29px]";
