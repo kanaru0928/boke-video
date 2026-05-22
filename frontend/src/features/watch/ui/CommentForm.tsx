@@ -1,5 +1,5 @@
 import { Send } from "lucide-react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, PointerEvent } from "react";
 import { Button } from "../../../shared/ui/Button";
 import { cn } from "../../../shared/ui/classNames";
 import { Textarea } from "../../../shared/ui/FormControl";
@@ -40,6 +40,13 @@ const choiceChipTextClassName = cn(
   "max-[520px]:min-h-6 max-[520px]:px-[5px] max-[520px]:py-[3px]",
 );
 
+export function shouldFocusTextareaWithoutScroll(
+  activeElement: Element | null,
+  textarea: HTMLTextAreaElement,
+): boolean {
+  return activeElement !== textarea;
+}
+
 export function CommentForm({
   body,
   disabled,
@@ -53,6 +60,17 @@ export function CommentForm({
   onSizeChange,
   onSubmit,
 }: CommentFormProps) {
+  const focusTextareaWithoutScroll = (
+    event: PointerEvent<HTMLTextAreaElement>,
+  ): void => {
+    const textarea = event.currentTarget;
+    if (!shouldFocusTextareaWithoutScroll(document.activeElement, textarea)) {
+      return;
+    }
+    event.preventDefault();
+    textarea.focus({ preventScroll: true });
+  };
+
   return (
     <form
       className="grid gap-[5px] pt-1.5"
@@ -70,6 +88,7 @@ export function CommentForm({
           maxLength={100}
           onChange={(event) => onBodyChange(event.currentTarget.value)}
           onKeyDown={onShortcut}
+          onPointerDown={focusTextareaWithoutScroll}
           placeholder={disabled ? "配信は終了しました" : "コメント"}
           required
           value={body}
