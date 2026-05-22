@@ -14,6 +14,8 @@ type UseRoomsResult = {
   updateRoomTitleById: (roomId: string, title: string) => Promise<void>;
 };
 
+const publicRoomRefreshIntervalMs = 5000;
+
 export function useRooms(config: AppConfig): UseRoomsResult {
   const [rooms, setRooms] = useState<PublicRoom[]>([]);
 
@@ -45,6 +47,13 @@ export function useRooms(config: AppConfig): UseRoomsResult {
 
   useEffect(() => {
     void refreshRooms();
+  }, [refreshRooms]);
+
+  useEffect(() => {
+    const timerId = window.setInterval(() => {
+      void refreshRooms();
+    }, publicRoomRefreshIntervalMs);
+    return () => window.clearInterval(timerId);
   }, [refreshRooms]);
 
   return { createRoomFromTitle, refreshRooms, rooms, updateRoomTitleById };
