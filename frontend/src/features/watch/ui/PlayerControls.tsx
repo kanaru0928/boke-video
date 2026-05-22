@@ -12,6 +12,7 @@ import {
 import { Button } from "../../../shared/ui/Button";
 import { cn } from "../../../shared/ui/classNames";
 import type { RoomStreamStatus } from "../../rooms/api/room_api";
+import { audioToggleLabel } from "../lib/autoplay_audio";
 import { formatElapsedTime } from "../lib/room_activity";
 import type { PlaybackQualityOption } from "../lib/stream_quality";
 import { useSettingsPopover } from "../model/useSettingsPopover";
@@ -91,7 +92,7 @@ export function PlayerControls({
           )}
         </Button>
         <Button
-          aria-label={isMuted ? "消音中" : "音声"}
+          aria-label={audioToggleLabel(isMuted)}
           id="mute-toggle"
           square
           onClick={onToggleMuted}

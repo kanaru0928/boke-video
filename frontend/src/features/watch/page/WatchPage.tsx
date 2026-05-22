@@ -1,4 +1,3 @@
-import { Volume2 } from "lucide-react";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import type { AppConfig } from "../../../shared/config/config";
 import { AppHeader } from "../../../shared/ui/AppHeader";
@@ -14,6 +13,10 @@ import {
 import { NotFoundPage } from "../../notFound/page/NotFoundPage";
 import { startVideoPlayback } from "../../player/lib/oven_media_engine_player";
 import { useRooms } from "../../rooms/model/useRooms";
+import {
+  autoplayNoticeDevice,
+  mutedAutoplayNotice,
+} from "../lib/autoplay_audio";
 import { isCommentSubmitShortcut } from "../lib/comment_shortcuts";
 import { autoQualityId } from "../lib/stream_quality";
 import { useCommentRenderer } from "../model/useCommentRenderer";
@@ -106,6 +109,10 @@ export function WatchPage({ config }: WatchPageProps) {
     isPictureInPicture,
     togglePictureInPicture,
   } = usePictureInPicture(videoRef);
+  const autoplayAudioNotice = mutedAutoplayNotice(
+    isMutedAutoplay,
+    autoplayNoticeDevice(navigator),
+  );
 
   useEffect(() => {
     if (selectedRoomId !== "") {
@@ -207,30 +214,17 @@ export function WatchPage({ config }: WatchPageProps) {
         selectedRoom={visibleRoom}
         streamStatus={streamStatus}
       />
-      {isMutedAutoplay ? (
+      {autoplayAudioNotice !== null ? (
         <section
           className={cn(
-            "mx-auto mb-2 grid w-[min(720px,100%)] grid-cols-[minmax(0,1fr)_auto] items-center gap-2",
+            "mx-auto mb-2 w-[min(720px,100%)]",
             "border border-[#777777] bg-[#111111] px-3 py-2 text-white",
             "shadow-[2px_2px_0_rgb(0_0_0_/_25%),inset_1px_1px_0_rgb(255_255_255_/_16%)]",
-            "max-[640px]:grid-cols-1 max-[640px]:gap-1.5 max-[640px]:px-2 max-[640px]:py-1.5",
           )}
         >
           <p className="m-0 min-w-0 text-xs leading-[1.45] font-extrabold [overflow-wrap:anywhere] [text-shadow:1px_1px_0_#000000]">
-            音声なしで再生中です。次回から音声ありで自動再生したい場合は、アドレスバー左のサイト設定で音声を許可してください。
+            {autoplayAudioNotice.message}
           </p>
-          <button
-            className={cn(
-              "inline-flex min-h-7 items-center justify-center gap-1 whitespace-nowrap rounded-sm border border-[#7fbdff]",
-              "bg-[linear-gradient(#4dc7ff,#006fd8)] px-2 py-1 text-xs font-extrabold text-white [text-shadow:1px_1px_0_#003064]",
-              "shadow-[inset_1px_1px_0_rgb(255_255_255_/_38%),inset_-1px_-1px_0_rgb(0_0_0_/_32%)]",
-            )}
-            type="button"
-            onClick={toggleMuted}
-          >
-            <Volume2 aria-hidden="true" size={16} />
-            音声をオン
-          </button>
         </section>
       ) : null}
       <section className="grid grid-cols-[minmax(0,1fr)_360px] gap-2 max-[1040px]:grid-cols-1">
@@ -245,6 +239,7 @@ export function WatchPage({ config }: WatchPageProps) {
             commentsLayerRef={commentsLayerRef}
             elapsedSeconds={elapsedSeconds}
             isMuted={isMuted}
+            isMutedAutoplay={isMutedAutoplay}
             isPaused={isPaused}
             canToggleFullscreen={canToggleFullscreen}
             canTogglePictureInPicture={canTogglePictureInPicture}
