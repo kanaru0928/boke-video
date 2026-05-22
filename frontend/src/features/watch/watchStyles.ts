@@ -52,6 +52,22 @@ export const streamLoadingIconClassName =
 
 export const streamLoadingTextClassName = "text-sm font-extrabold leading-none";
 
+export const mutedAutoplayNoticeClassName = cn(
+  "mx-auto mb-2 grid w-[min(720px,100%)] grid-cols-[minmax(0,1fr)_auto] items-center gap-2",
+  "border border-[#777777] bg-[#111111] px-3 py-2 text-white",
+  "shadow-[2px_2px_0_rgb(0_0_0_/_25%),inset_1px_1px_0_rgb(255_255_255_/_16%)]",
+  "max-[640px]:grid-cols-1 max-[640px]:gap-1.5 max-[640px]:px-2 max-[640px]:py-1.5",
+);
+
+export const mutedAutoplayNoticeTextClassName =
+  "m-0 min-w-0 text-xs font-extrabold leading-[1.45] [overflow-wrap:anywhere] [text-shadow:1px_1px_0_#000000]";
+
+export const mutedAutoplayButtonClassName = cn(
+  "inline-flex min-h-7 items-center justify-center gap-1 whitespace-nowrap rounded-sm border border-[#7fbdff]",
+  "bg-[linear-gradient(#4dc7ff,#006fd8)] px-2 py-1 text-xs font-extrabold text-white [text-shadow:1px_1px_0_#003064]",
+  "shadow-[inset_1px_1px_0_rgb(255_255_255_/_38%),inset_-1px_-1px_0_rgb(0_0_0_/_32%)]",
+);
+
 export const manualPlaybackOverlayClassName = cn(
   "pointer-events-auto absolute inset-0 z-20 grid place-items-center bg-[#020202]",
   "border-0 p-0 text-white",

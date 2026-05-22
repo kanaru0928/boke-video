@@ -15,8 +15,10 @@ import {
 import { streamStatusMessage } from "./watch_stream";
 
 type UseStreamPlayerResult = {
+  dismissMutedAutoplayNotice: () => void;
   isStreamLoading: boolean;
   isManualPlaybackRequired: boolean;
+  isMutedAutoplay: boolean;
   playbackQualities: PlaybackQualityOption[];
   streamMessage: string;
 };
@@ -37,6 +39,10 @@ export function useStreamPlayer(
   const [isStreamLoading, setIsStreamLoading] = useState(false);
   const [isManualPlaybackRequired, setIsManualPlaybackRequired] =
     useState(false);
+  const [isMutedAutoplay, setIsMutedAutoplay] = useState(false);
+  const dismissMutedAutoplayNotice = (): void => {
+    setIsMutedAutoplay(false);
+  };
   const [streamMessage, setStreamMessage] = useState(
     streamStatusMessage(streamStatus),
   );
@@ -58,9 +64,16 @@ export function useStreamPlayer(
       setIsManualPlaybackRequired(false);
       setStreamMessage("");
     };
+    const hideMutedAutoplayNotice = (): void => {
+      if (!video.muted) {
+        setIsMutedAutoplay(false);
+      }
+    };
     video.addEventListener("play", clearPlaybackMessage);
+    video.addEventListener("volumechange", hideMutedAutoplayNotice);
     return () => {
       video.removeEventListener("play", clearPlaybackMessage);
+      video.removeEventListener("volumechange", hideMutedAutoplayNotice);
     };
   }, [videoRef]);
 
@@ -91,6 +104,7 @@ export function useStreamPlayer(
         setPlaybackQualities([]);
         setIsStreamLoading(false);
         setIsManualPlaybackRequired(false);
+        setIsMutedAutoplay(false);
         setStreamMessage(streamStatusMessage(streamStatus));
         return;
       }
@@ -99,6 +113,7 @@ export function useStreamPlayer(
         setPlaybackQualities([]);
         setIsStreamLoading(false);
         setIsManualPlaybackRequired(false);
+        setIsMutedAutoplay(false);
         setStreamMessage(streamStatusMessage(streamStatus));
         return;
       }
@@ -113,10 +128,12 @@ export function useStreamPlayer(
         if (videoRef.current === null) {
           setIsStreamLoading(false);
           setIsManualPlaybackRequired(false);
+          setIsMutedAutoplay(false);
           return;
         }
         setIsStreamLoading(true);
         setIsManualPlaybackRequired(false);
+        setIsMutedAutoplay(false);
         const streamAccess = await fetchStreamAccess(config, roomId);
         if (streamAccess === null) {
           throw new Error("stream access was not issued");
@@ -149,6 +166,7 @@ export function useStreamPlayer(
         attachedQualityIdRef.current = quality.id;
         setIsStreamLoading(false);
         setIsManualPlaybackRequired(false);
+        setIsMutedAutoplay(false);
         setStreamMessage("");
         void startVideoPlayback(video, {
           allowMutedAutoplay: true,
@@ -161,6 +179,7 @@ export function useStreamPlayer(
             setIsManualPlaybackRequired(
               playbackStartResult === "manualPlaybackRequired",
             );
+            setIsMutedAutoplay(playbackStartResult === "mutedPlaying");
             setStreamMessage(playbackStartMessage(playbackStartResult));
           })
           .catch(() => {
@@ -169,6 +188,7 @@ export function useStreamPlayer(
             }
             detachStream();
             setIsManualPlaybackRequired(false);
+            setIsMutedAutoplay(false);
             setStreamMessage(streamStatusMessage(streamStatus));
             scheduleReconnect();
           });
@@ -181,6 +201,7 @@ export function useStreamPlayer(
         setPlaybackQualities([]);
         setIsStreamLoading(false);
         setIsManualPlaybackRequired(false);
+        setIsMutedAutoplay(false);
         setStreamMessage(streamStatusMessage(streamStatus));
         scheduleReconnect();
       }
@@ -195,7 +216,9 @@ export function useStreamPlayer(
   }, [config, roomId, selectedQualityId, streamStatus, videoRef]);
 
   return {
+    dismissMutedAutoplayNotice,
     isManualPlaybackRequired,
+    isMutedAutoplay,
     isStreamLoading,
     playbackQualities,
     streamMessage,

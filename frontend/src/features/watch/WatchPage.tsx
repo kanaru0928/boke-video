@@ -1,3 +1,4 @@
+import { Volume2 } from "lucide-react";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import { AppHeader } from "../../shared/ui/AppHeader";
@@ -23,7 +24,13 @@ import { useRoomActivity } from "./useRoomActivity";
 import { useStreamPlayer } from "./useStreamPlayer";
 import { WatchPlayer } from "./WatchPlayer";
 import { WatchProgramHeader } from "./WatchProgramHeader";
-import { playerColumnClassName, watchGridClassName } from "./watchStyles";
+import {
+  mutedAutoplayButtonClassName,
+  mutedAutoplayNoticeClassName,
+  mutedAutoplayNoticeTextClassName,
+  playerColumnClassName,
+  watchGridClassName,
+} from "./watchStyles";
 
 type WatchPageProps = {
   config: AppConfig;
@@ -81,7 +88,9 @@ export function WatchPage({ config }: WatchPageProps) {
     updatePresence,
   );
   const {
+    dismissMutedAutoplayNotice,
     isManualPlaybackRequired,
+    isMutedAutoplay,
     isStreamLoading,
     playbackQualities,
     streamMessage,
@@ -169,6 +178,9 @@ export function WatchPage({ config }: WatchPageProps) {
       return;
     }
     video.muted = !video.muted;
+    if (!video.muted) {
+      dismissMutedAutoplayNotice();
+    }
     updatePlayerState();
   };
 
@@ -190,6 +202,21 @@ export function WatchPage({ config }: WatchPageProps) {
         selectedRoom={visibleRoom}
         streamStatus={streamStatus}
       />
+      {isMutedAutoplay ? (
+        <section className={mutedAutoplayNoticeClassName}>
+          <p className={mutedAutoplayNoticeTextClassName}>
+            音声なしで再生中です。次回から音声ありで自動再生したい場合は、アドレスバー左のサイト設定で音声を許可してください。
+          </p>
+          <button
+            className={mutedAutoplayButtonClassName}
+            type="button"
+            onClick={toggleMuted}
+          >
+            <Volume2 aria-hidden="true" size={16} />
+            音声をオン
+          </button>
+        </section>
+      ) : null}
       <section className={watchGridClassName}>
         <main className={playerColumnClassName}>
           <WatchPlayer
