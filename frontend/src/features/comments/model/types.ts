@@ -27,6 +27,12 @@ export type PresenceMessage = {
   maxConcurrentViewerCount: number;
 };
 
+export type OwnerProfileMessage = {
+  type: "ownerProfile";
+  roomId: string;
+  ownerDisplayName: string;
+};
+
 export type CommentAuthor = {
   subject: string;
   displayName: string;

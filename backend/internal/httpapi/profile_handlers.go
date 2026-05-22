@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"boke-video/backend/internal/comment"
 	"boke-video/backend/internal/repository"
 
 	"github.com/google/uuid"
@@ -53,7 +54,23 @@ func (s *Server) handleUpdateMe(w http.ResponseWriter, r *http.Request) {
 		s.writeServerError(w, err)
 		return
 	}
+	s.broadcastOwnerProfileUpdate(r.Context(), profile)
 	writeJSON(w, http.StatusOK, profile)
+}
+
+func (s *Server) broadcastOwnerProfileUpdate(ctx context.Context, profile repository.UserProfile) {
+	rooms, err := s.repository.ListRoomsByOwner(ctx, profile.Subject)
+	if err != nil {
+		s.logger.Warn("list rooms for profile broadcast", "error", err)
+		return
+	}
+	for _, room := range rooms {
+		s.commentHub.BroadcastOwnerProfile(comment.OwnerProfileMessage{
+			Type:             "ownerProfile",
+			RoomID:           room.ID,
+			OwnerDisplayName: profile.DisplayName,
+		})
+	}
 }
 
 func (s *Server) getOrCreateUserProfile(ctx context.Context, subject string) (repository.UserProfile, error) {

@@ -12,6 +12,7 @@ type Hub struct {
 	register   chan subscription
 	unregister chan subscription
 	broadcast  chan Message
+	profile    chan OwnerProfileMessage
 
 	mu    sync.RWMutex
 	rooms map[string]map[*websocket.Conn]struct{}
@@ -35,6 +36,7 @@ func NewHub() *Hub {
 		register:   make(chan subscription),
 		unregister: make(chan subscription),
 		broadcast:  make(chan Message, 256),
+		profile:    make(chan OwnerProfileMessage, 32),
 		rooms:      map[string]map[*websocket.Conn]struct{}{},
 		peaks:      map[string]int{},
 	}
@@ -67,6 +69,8 @@ func (h *Hub) Run(ctx context.Context) {
 			h.writePresenceToRoom(ctx, sub.roomID, count, peak)
 		case msg := <-h.broadcast:
 			h.writeToRoom(ctx, msg)
+		case msg := <-h.profile:
+			h.writeOwnerProfileToRoom(ctx, msg)
 		}
 	}
 }
@@ -81,6 +85,10 @@ func (h *Hub) Unregister(roomID string, conn *websocket.Conn) {
 
 func (h *Hub) Broadcast(msg Message) {
 	h.broadcast <- msg
+}
+
+func (h *Hub) BroadcastOwnerProfile(msg OwnerProfileMessage) {
+	h.profile <- msg
 }
 
 func (h *Hub) CurrentViewerCount(roomID string) int {
@@ -129,6 +137,19 @@ func (h *Hub) writePresenceToRoom(ctx context.Context, roomID string, currentVie
 		CurrentViewerCount:       currentViewerCount,
 		MaxConcurrentViewerCount: maxConcurrentViewerCount,
 	}
+	for _, conn := range conns {
+		_ = wsjsonWrite(ctx, conn, msg)
+	}
+}
+
+func (h *Hub) writeOwnerProfileToRoom(ctx context.Context, msg OwnerProfileMessage) {
+	h.mu.RLock()
+	conns := make([]*websocket.Conn, 0, len(h.rooms[msg.RoomID]))
+	for conn := range h.rooms[msg.RoomID] {
+		conns = append(conns, conn)
+	}
+	h.mu.RUnlock()
+
 	for _, conn := range conns {
 		_ = wsjsonWrite(ctx, conn, msg)
 	}

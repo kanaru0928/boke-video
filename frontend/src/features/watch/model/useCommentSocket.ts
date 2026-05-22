@@ -4,6 +4,7 @@ import { CommentClient } from "../../comments/api/comment_client";
 import type {
   CommentCreateRequest,
   CommentMessage,
+  OwnerProfileMessage,
   PresenceMessage,
 } from "../../comments/model/types";
 
@@ -15,15 +16,21 @@ export function useCommentSocket(
   config: AppConfig,
   roomId: string,
   onMessage: (message: CommentMessage) => void,
+  onOwnerProfile: (message: OwnerProfileMessage) => void,
   onPresence: (message: PresenceMessage) => void,
 ): UseCommentSocketResult {
   const clientRef = useRef<CommentClient | null>(null);
   const onMessageRef = useRef(onMessage);
+  const onOwnerProfileRef = useRef(onOwnerProfile);
   const onPresenceRef = useRef(onPresence);
 
   useEffect(() => {
     onMessageRef.current = onMessage;
   }, [onMessage]);
+
+  useEffect(() => {
+    onOwnerProfileRef.current = onOwnerProfile;
+  }, [onOwnerProfile]);
 
   useEffect(() => {
     onPresenceRef.current = onPresence;
@@ -36,6 +43,10 @@ export function useCommentSocket(
     const client = new CommentClient(config, (message) => {
       if (message.type === "comment") {
         onMessageRef.current(message);
+        return;
+      }
+      if (message.type === "ownerProfile") {
+        onOwnerProfileRef.current(message);
         return;
       }
       onPresenceRef.current(message);
