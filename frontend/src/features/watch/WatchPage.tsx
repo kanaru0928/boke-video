@@ -156,7 +156,7 @@ export function WatchPage({ config }: WatchPageProps) {
       return;
     }
     if (video.paused) {
-      await startVideoPlayback(video);
+      await startVideoPlayback(video, { sound: "unmute" });
     } else {
       video.pause();
     }

@@ -3,8 +3,10 @@ type ConnectionClosedHandler = () => void;
 export type PlaybackStartResult = "playing" | "manualPlaybackRequired";
 
 type PlaybackStartOptions = {
-  mutedFallback?: boolean;
+  sound?: "preserve" | "unmute";
 };
+
+type PlayableMediaElement = Pick<HTMLVideoElement, "muted" | "play">;
 
 type OmeSessionDescription = {
   sdp: string;
@@ -103,27 +105,12 @@ export class OvenMediaEnginePlayer {
 }
 
 export async function startVideoPlayback(
-  video: HTMLVideoElement,
+  video: PlayableMediaElement,
   options: PlaybackStartOptions = {},
 ): Promise<PlaybackStartResult> {
-  try {
-    await video.play();
-    return "playing";
-  } catch (error) {
-    if (requiresManualPlayback(error)) {
-      if (options.mutedFallback && !video.muted) {
-        return startMutedPlayback(video);
-      }
-      return "manualPlaybackRequired";
-    }
-    throw error;
+  if (options.sound === "unmute") {
+    video.muted = false;
   }
-}
-
-async function startMutedPlayback(
-  video: HTMLVideoElement,
-): Promise<PlaybackStartResult> {
-  video.muted = true;
   try {
     await video.play();
     return "playing";
