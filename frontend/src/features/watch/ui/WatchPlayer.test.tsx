@@ -14,6 +14,7 @@ import {
 describe("WatchPlayer", () => {
   it("動画領域を16:9にする", () => {
     expect(stageClassName).toContain("aspect-video");
+    expect(stageClassName).not.toContain("sticky");
     expect(stageClassName).toContain("[&:fullscreen]:aspect-auto");
     expect(stageClassName).not.toContain("border-[5px]");
     expect(videoElementClassName).toContain("aspect-video");
