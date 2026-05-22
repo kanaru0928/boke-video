@@ -17,6 +17,7 @@ export { isCommentMessage } from "../../comments/lib/comment_message";
 export type Room = {
   id: string;
   title: string;
+  ownerDisplayName?: string;
   createdAt: string;
   thumbnailUrl: string;
   thumbnailUpdatedAt: string;
