@@ -7,9 +7,17 @@ import {
   normalizeAdminRoomTitle,
 } from "../lib/admin_room_title";
 import { normalizeIngestClipboardValue } from "../lib/copy_ingest_value";
+import {
+  configureObsWhipStream,
+  formatObsConnectionError,
+} from "../lib/obs_stream_service";
 import { AdminCommentList } from "./AdminCommentList";
 import { AdminRoomActions } from "./AdminRoomActions";
-import { type IngestCopyTarget, IngestSettings } from "./IngestSettings";
+import {
+  type IngestCopyTarget,
+  IngestSettings,
+  type ObsApplyStatus,
+} from "./IngestSettings";
 
 type AdminRoomProps = {
   comments: AdminCommentState | null;
@@ -46,6 +54,10 @@ export function AdminRoom({
   const [copiedTarget, setCopiedTarget] = useState<IngestCopyTarget | null>(
     null,
   );
+  const [obsWebsocketUrl, setObsWebsocketUrl] = useState("");
+  const [obsWebsocketPassword, setObsWebsocketPassword] = useState("");
+  const [obsApplyStatus, setObsApplyStatus] = useState<ObsApplyStatus>("idle");
+  const [obsApplyError, setObsApplyError] = useState<string | null>(null);
   useEffect(() => {
     setTitle(room.title);
   }, [room.title]);
@@ -61,6 +73,26 @@ export function AdminRoom({
     setCopiedTarget(target);
   };
 
+  const applyObsSettings = async (): Promise<void> => {
+    if (whipBearerToken === null) {
+      return;
+    }
+    setObsApplyStatus("applying");
+    setObsApplyError(null);
+    try {
+      await configureObsWhipStream({
+        bearerToken: whipBearerToken,
+        serverUrl,
+        websocketPassword: obsWebsocketPassword,
+        websocketUrl: obsWebsocketUrl,
+      });
+      setObsApplyStatus("applied");
+    } catch (error) {
+      setObsApplyError(formatObsConnectionError(error));
+      setObsApplyStatus("failed");
+    }
+  };
+
   return (
     <article className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 border border-[#a7a7a7] bg-white p-[7px] max-[860px]:grid-cols-1">
       <div className="grid min-w-0 gap-[5px]">
@@ -73,9 +105,16 @@ export function AdminRoom({
         />
         <IngestSettings
           copiedTarget={copiedTarget}
+          obsApplyError={obsApplyError}
+          obsApplyStatus={obsApplyStatus}
+          obsWebsocketPassword={obsWebsocketPassword}
+          obsWebsocketUrl={obsWebsocketUrl}
           serverUrl={serverUrl}
           whipBearerToken={whipBearerToken}
+          onApplyObs={applyObsSettings}
           onCopy={copyIngestValue}
+          onObsWebsocketPasswordChange={setObsWebsocketPassword}
+          onObsWebsocketUrlChange={setObsWebsocketUrl}
         />
       </div>
       <AdminRoomActions
