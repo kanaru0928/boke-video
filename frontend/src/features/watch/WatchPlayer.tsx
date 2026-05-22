@@ -73,11 +73,14 @@ export function WatchPlayer({
 }: WatchPlayerProps) {
   const { controlsVisible, hideControls, revealControlsUntilIdle } =
     usePlayerControlsVisibility(stageRef);
+  const isPlaybackEnded = streamStatus === "ended";
   const shouldShowLoading = isStreamLoading;
   const shouldHideVideoFrame = isManualPlaybackRequired;
-  const shouldPromptManualPlayback =
+  const shouldShowStreamStatus =
     !shouldShowLoading && !shouldHideVideoFrame && streamMessage !== "";
-  const shouldEnablePointerControls = !shouldHideVideoFrame;
+  const shouldShowPlayerControls = !isPlaybackEnded;
+  const shouldEnablePointerControls =
+    shouldShowPlayerControls && !shouldHideVideoFrame;
 
   return (
     <section
@@ -128,25 +131,27 @@ export function WatchPlayer({
             <span className={streamLoadingTextClassName}>読み込み中</span>
           </div>
         </div>
-      ) : shouldPromptManualPlayback ? (
+      ) : shouldShowStreamStatus ? (
         <div className={streamStatusClassName}>{streamMessage}</div>
       ) : null}
-      <PlayerControls
-        commentsVisible={commentsVisible}
-        controlsVisible={controlsVisible}
-        elapsedSeconds={elapsedSeconds}
-        isFullscreen={isFullscreen}
-        isMuted={isMuted}
-        isPaused={isPaused}
-        playbackQualities={playbackQualities}
-        selectedQualityId={selectedQualityId}
-        streamStatus={streamStatus}
-        onCommentsVisibleChange={onCommentsVisibleChange}
-        onQualityChange={onQualityChange}
-        onToggleFullscreen={onToggleFullscreen}
-        onToggleMuted={onToggleMuted}
-        onTogglePlayback={onTogglePlayback}
-      />
+      {shouldShowPlayerControls ? (
+        <PlayerControls
+          commentsVisible={commentsVisible}
+          controlsVisible={controlsVisible}
+          elapsedSeconds={elapsedSeconds}
+          isFullscreen={isFullscreen}
+          isMuted={isMuted}
+          isPaused={isPaused}
+          playbackQualities={playbackQualities}
+          selectedQualityId={selectedQualityId}
+          streamStatus={streamStatus}
+          onCommentsVisibleChange={onCommentsVisibleChange}
+          onQualityChange={onQualityChange}
+          onToggleFullscreen={onToggleFullscreen}
+          onToggleMuted={onToggleMuted}
+          onTogglePlayback={onTogglePlayback}
+        />
+      ) : null}
     </section>
   );
 }
