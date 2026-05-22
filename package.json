@@ -8,6 +8,7 @@
     "backend:vet": "cd backend && go vet ./...",
     "check": "pnpm run knip && pnpm --dir frontend run typecheck && pnpm --dir frontend run test && pnpm --dir frontend run build && pnpm run backend:vet && pnpm run backend:test",
     "dev": "pnpm env:sync:local && scripts/local-dev.sh",
+    "dev:whip": "pnpm env:sync:local && scripts/local-whip.sh",
     "env:sync:local": "node scripts/env-sync.mjs local",
     "env:sync:production": "node scripts/env-sync.mjs production",
     "hooks:install": "lefthook install",

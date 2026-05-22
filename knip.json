@@ -11,5 +11,11 @@
       "project": ["*.json", "*.yaml", "*.yml"]
     }
   },
-  "ignoreBinaries": ["go", "gofmt", "scripts/local-dev.sh"]
+  "ignoreBinaries": [
+    "go",
+    "gofmt",
+    "scripts/deploy-backend.sh",
+    "scripts/local-dev.sh",
+    "scripts/local-whip.sh"
+  ]
 }
