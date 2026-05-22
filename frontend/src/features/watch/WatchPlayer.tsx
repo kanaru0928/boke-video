@@ -77,15 +77,20 @@ export function WatchPlayer({
   const shouldHideVideoFrame = isManualPlaybackRequired;
   const shouldPromptManualPlayback =
     !shouldShowLoading && !shouldHideVideoFrame && streamMessage !== "";
+  const shouldEnablePointerControls = !shouldHideVideoFrame;
 
   return (
     <section
       ref={stageRef}
       className={stageClassName}
       onContextMenu={preventPlayerContextMenu}
-      onPointerEnter={revealControlsUntilIdle}
-      onPointerLeave={hideControls}
-      onPointerMove={revealControlsUntilIdle}
+      onPointerEnter={
+        shouldEnablePointerControls ? revealControlsUntilIdle : undefined
+      }
+      onPointerLeave={shouldEnablePointerControls ? hideControls : undefined}
+      onPointerMove={
+        shouldEnablePointerControls ? revealControlsUntilIdle : undefined
+      }
       role="application"
     >
       <video
