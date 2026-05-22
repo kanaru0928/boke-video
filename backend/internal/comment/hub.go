@@ -14,9 +14,10 @@ type Hub struct {
 	broadcast  chan Message
 	profile    chan OwnerProfileMessage
 
-	mu    sync.RWMutex
-	rooms map[string]map[*websocket.Conn]struct{}
-	peaks map[string]int
+	mu      sync.RWMutex
+	rooms   map[string]map[*websocket.Conn]string
+	viewers map[string]map[string]int
+	peaks   map[string]int
 }
 
 type PresenceMessage struct {
@@ -27,8 +28,9 @@ type PresenceMessage struct {
 }
 
 type subscription struct {
-	roomID string
-	conn   *websocket.Conn
+	roomID  string
+	subject string
+	conn    *websocket.Conn
 }
 
 func NewHub() *Hub {
@@ -37,7 +39,8 @@ func NewHub() *Hub {
 		unregister: make(chan subscription),
 		broadcast:  make(chan Message, 256),
 		profile:    make(chan OwnerProfileMessage, 32),
-		rooms:      map[string]map[*websocket.Conn]struct{}{},
+		rooms:      map[string]map[*websocket.Conn]string{},
+		viewers:    map[string]map[string]int{},
 		peaks:      map[string]int{},
 	}
 }
@@ -49,22 +52,14 @@ func (h *Hub) Run(ctx context.Context) {
 			return
 		case sub := <-h.register:
 			h.mu.Lock()
-			if h.rooms[sub.roomID] == nil {
-				h.rooms[sub.roomID] = map[*websocket.Conn]struct{}{}
-			}
-			h.rooms[sub.roomID][sub.conn] = struct{}{}
-			count := len(h.rooms[sub.roomID])
+			count := h.registerSubscription(sub)
 			peak := h.updatePeak(sub.roomID, count)
 			h.mu.Unlock()
 			h.writePresenceToRoom(ctx, sub.roomID, count, peak)
 		case sub := <-h.unregister:
 			h.mu.Lock()
-			delete(h.rooms[sub.roomID], sub.conn)
-			count := len(h.rooms[sub.roomID])
+			count := h.unregisterSubscription(sub)
 			peak := h.peaks[sub.roomID]
-			if len(h.rooms[sub.roomID]) == 0 {
-				delete(h.rooms, sub.roomID)
-			}
 			h.mu.Unlock()
 			h.writePresenceToRoom(ctx, sub.roomID, count, peak)
 		case msg := <-h.broadcast:
@@ -75,8 +70,8 @@ func (h *Hub) Run(ctx context.Context) {
 	}
 }
 
-func (h *Hub) Register(roomID string, conn *websocket.Conn) {
-	h.register <- subscription{roomID: roomID, conn: conn}
+func (h *Hub) Register(roomID string, subject string, conn *websocket.Conn) {
+	h.register <- subscription{roomID: roomID, subject: subject, conn: conn}
 }
 
 func (h *Hub) Unregister(roomID string, conn *websocket.Conn) {
@@ -94,7 +89,7 @@ func (h *Hub) BroadcastOwnerProfile(msg OwnerProfileMessage) {
 func (h *Hub) CurrentViewerCount(roomID string) int {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	return len(h.rooms[roomID])
+	return len(h.viewers[roomID])
 }
 
 func (h *Hub) MaxConcurrentViewerCount(roomID string) int {
@@ -108,6 +103,45 @@ func (h *Hub) updatePeak(roomID string, currentViewerCount int) int {
 		h.peaks[roomID] = currentViewerCount
 	}
 	return h.peaks[roomID]
+}
+
+func (h *Hub) registerSubscription(sub subscription) int {
+	if h.rooms[sub.roomID] == nil {
+		h.rooms[sub.roomID] = map[*websocket.Conn]string{}
+	}
+	if h.viewers[sub.roomID] == nil {
+		h.viewers[sub.roomID] = map[string]int{}
+	}
+	if oldSubject, ok := h.rooms[sub.roomID][sub.conn]; ok {
+		h.decrementViewer(sub.roomID, oldSubject)
+	}
+	h.rooms[sub.roomID][sub.conn] = sub.subject
+	h.viewers[sub.roomID][sub.subject]++
+	return len(h.viewers[sub.roomID])
+}
+
+func (h *Hub) unregisterSubscription(sub subscription) int {
+	subject, ok := h.rooms[sub.roomID][sub.conn]
+	if !ok {
+		return len(h.viewers[sub.roomID])
+	}
+	delete(h.rooms[sub.roomID], sub.conn)
+	if len(h.rooms[sub.roomID]) == 0 {
+		delete(h.rooms, sub.roomID)
+	}
+	h.decrementViewer(sub.roomID, subject)
+	return len(h.viewers[sub.roomID])
+}
+
+func (h *Hub) decrementViewer(roomID string, subject string) {
+	h.viewers[roomID][subject]--
+	if h.viewers[roomID][subject] > 0 {
+		return
+	}
+	delete(h.viewers[roomID], subject)
+	if len(h.viewers[roomID]) == 0 {
+		delete(h.viewers, roomID)
+	}
 }
 
 func (h *Hub) writeToRoom(ctx context.Context, msg Message) {

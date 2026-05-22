@@ -94,7 +94,7 @@ func (s *Server) handleCommentWebSocket(w http.ResponseWriter, r *http.Request) 
 	}
 	defer conn.Close(websocket.StatusNormalClosure, "")
 
-	s.commentHub.Register(roomID, conn)
+	s.commentHub.Register(roomID, principal.Subject, conn)
 	defer s.commentHub.Unregister(roomID, conn)
 
 	for {
