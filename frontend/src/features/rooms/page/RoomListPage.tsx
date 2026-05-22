@@ -38,6 +38,7 @@ export function RoomListPage({ config }: RoomListPageProps) {
         links={[
           { href: "/admin", label: "管理" },
           { href: "/user", label: "ユーザー" },
+          { href: "/support", label: "サポート" },
         ]}
       />
       <Board

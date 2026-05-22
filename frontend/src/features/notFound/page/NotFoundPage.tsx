@@ -8,7 +8,13 @@ import { Mascot } from "../../../shared/ui/Mascot";
 export function NotFoundPage() {
   return (
     <AppShell>
-      <AppHeader section="404" links={[{ href: "/", label: "枠一覧" }]} />
+      <AppHeader
+        section="404"
+        links={[
+          { href: "/", label: "枠一覧" },
+          { href: "/support", label: "サポート" },
+        ]}
+      />
       <Board
         className="grid min-h-[calc(100vh-96px)] grid-rows-[auto_minmax(0,1fr)]"
         icon={SearchX}

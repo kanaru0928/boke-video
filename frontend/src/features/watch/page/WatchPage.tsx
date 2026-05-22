@@ -190,6 +190,7 @@ export function WatchPage({ config }: WatchPageProps) {
           { href: "/", label: "枠一覧" },
           { href: "/admin", label: "管理" },
           { href: "/user", label: "ユーザー" },
+          { href: "/support", label: "サポート" },
         ]}
       />
       <WatchProgramHeader
