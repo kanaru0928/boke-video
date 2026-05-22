@@ -1,5 +1,5 @@
-import { requestJSON } from "../../shared/api/http_client";
-import type { AppConfig } from "../../shared/config/config";
+import { requestJSON } from "../../../shared/api/http_client";
+import type { AppConfig } from "../../../shared/config/config";
 
 type UserProfile = {
   subject: string;

@@ -1,9 +1,9 @@
 import { SearchX } from "lucide-react";
-import { AppHeader } from "../../shared/ui/AppHeader";
-import { AppShell } from "../../shared/ui/AppShell";
-import { Board } from "../../shared/ui/Board";
-import { ButtonLink } from "../../shared/ui/Button";
-import { Mascot } from "../../shared/ui/Mascot";
+import { AppHeader } from "../../../shared/ui/AppHeader";
+import { AppShell } from "../../../shared/ui/AppShell";
+import { Board } from "../../../shared/ui/Board";
+import { ButtonLink } from "../../../shared/ui/Button";
+import { Mascot } from "../../../shared/ui/Mascot";
 
 export function NotFoundPage() {
   return (

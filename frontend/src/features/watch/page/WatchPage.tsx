@@ -11,7 +11,7 @@ import {
   type CommentMessage,
   commentColors,
 } from "../../comments/types";
-import { NotFoundPage } from "../../notFound/NotFoundPage";
+import { NotFoundPage } from "../../notFound/page/NotFoundPage";
 import { startVideoPlayback } from "../../player/oven_media_engine_player";
 import { useRooms } from "../../rooms/model/useRooms";
 import { isCommentSubmitShortcut } from "../lib/comment_shortcuts";

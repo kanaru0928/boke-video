@@ -1,12 +1,12 @@
 import { Save, UserRound } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
-import type { AppConfig } from "../../shared/config/config";
-import { AppHeader } from "../../shared/ui/AppHeader";
-import { AppShell } from "../../shared/ui/AppShell";
-import { Board } from "../../shared/ui/Board";
-import { Button } from "../../shared/ui/Button";
-import { TextInput } from "../../shared/ui/FormControl";
-import { fetchUserProfile, updateUserProfile } from "./user_api";
+import type { AppConfig } from "../../../shared/config/config";
+import { AppHeader } from "../../../shared/ui/AppHeader";
+import { AppShell } from "../../../shared/ui/AppShell";
+import { Board } from "../../../shared/ui/Board";
+import { Button } from "../../../shared/ui/Button";
+import { TextInput } from "../../../shared/ui/FormControl";
+import { fetchUserProfile, updateUserProfile } from "../api/user_api";
 
 type UserPageProps = {
   config: AppConfig;

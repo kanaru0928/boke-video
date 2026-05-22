@@ -1,7 +1,7 @@
 import { AdminPage } from "./features/admin/page/AdminPage";
-import { NotFoundPage } from "./features/notFound/NotFoundPage";
+import { NotFoundPage } from "./features/notFound/page/NotFoundPage";
 import { RoomListPage } from "./features/rooms/page/RoomListPage";
-import { UserPage } from "./features/user/UserPage";
+import { UserPage } from "./features/user/page/UserPage";
 import { WatchPage } from "./features/watch/page/WatchPage";
 import type { AppConfig } from "./shared/config/config";
 
