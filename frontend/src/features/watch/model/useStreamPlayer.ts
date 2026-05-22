@@ -95,7 +95,10 @@ export function useStreamPlayer(
       }
       void startVideoPlayback(video, { sound: "preserve" }).catch(() => {});
     };
-    document.addEventListener("visibilitychange", restorePlaybackAfterTabReturn);
+    document.addEventListener(
+      "visibilitychange",
+      restorePlaybackAfterTabReturn,
+    );
     return () => {
       document.removeEventListener(
         "visibilitychange",
