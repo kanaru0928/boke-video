@@ -13,10 +13,10 @@ export const programTitleClassName =
   "m-0 text-[19px] font-extrabold tracking-normal max-[520px]:text-base";
 
 export const watchGridClassName =
-  "grid grid-cols-[minmax(0,1fr)_350px] gap-2 max-[860px]:grid-cols-1";
+  "grid grid-cols-[minmax(0,1fr)_360px] gap-2 max-[1040px]:grid-cols-1";
 
 export const playerColumnClassName = cn(
-  "relative border border-[#8c8c8c] bg-[#eeeeee] p-[5px]",
+  "relative min-w-0 border border-[#8c8c8c] bg-[#eeeeee] p-[5px]",
   "shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#b8b8b8]",
 );
 
@@ -114,14 +114,14 @@ export const settingsChipEmptyClassName =
 export const commentFormClassName = "grid gap-[5px] pt-1.5";
 
 export const commentComposeClassName =
-  "grid grid-cols-[minmax(0,1fr)_118px] gap-[5px] max-[520px]:grid-cols-[minmax(0,1fr)_110px]";
+  "grid min-w-0 grid-cols-[minmax(0,1fr)_118px] gap-[5px] max-[520px]:grid-cols-1";
 
 export const commentSubmitButtonClassName =
-  "min-h-[42px] max-[520px]:min-h-[38px]";
+  "min-h-[42px] min-w-0 max-w-full px-2 text-[15px] max-[520px]:min-h-[38px] max-[520px]:gap-[4px] max-[520px]:px-2 max-[520px]:text-sm";
 
 export const commentOptionsClassName = cn(
-  "grid grid-cols-[minmax(180px,1fr)_minmax(150px,0.8fr)_minmax(170px,auto)] items-start gap-2",
-  "max-[860px]:grid-cols-1 max-[520px]:grid-cols-[1fr_0.86fr] max-[520px]:gap-[5px]",
+  "grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(150px,0.8fr)_minmax(150px,auto)] items-start gap-2",
+  "max-[640px]:grid-cols-1 max-[640px]:gap-[5px]",
 );
 
 export const choiceFieldClassName =
@@ -133,7 +133,7 @@ export const directionChoiceGridClassName =
 export const sizeChoiceGridClassName = "grid grid-cols-3 gap-1";
 
 export const colorRowClassName =
-  "flex flex-wrap gap-[5px] border border-[#b0b0b0] bg-[#f8f8f8] p-1.5 max-[520px]:col-span-full max-[520px]:p-1";
+  "flex min-w-0 flex-wrap gap-[5px] border border-[#b0b0b0] bg-[#f8f8f8] p-1.5 max-[640px]:p-1";
 
 export const colorButtonClassName =
   "h-[25px] min-h-[25px] w-[25px] border-[#777777] bg-none p-0 shadow-[inset_1px_1px_0_rgb(255_255_255_/_70%),inset_-1px_-1px_0_rgb(0_0_0_/_35%)] max-[520px]:h-[22px] max-[520px]:min-h-[22px] max-[520px]:w-[22px]";
@@ -142,7 +142,7 @@ export const selectedColorButtonClassName =
   "outline-2 outline-offset-2 outline-[#006bd6]";
 
 export const sidePanelClassName =
-  "grid grid-rows-[auto_auto_minmax(0,1fr)] border border-[#8c8c8c] bg-white shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#b8b8b8] max-[860px]:h-[min(420px,calc(100vh-24px))] max-[860px]:min-h-[280px] max-[520px]:h-[min(360px,calc(100vh-18px))] max-[520px]:min-h-[230px]";
+  "grid min-w-0 grid-rows-[auto_auto_minmax(0,1fr)] border border-[#8c8c8c] bg-white shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#b8b8b8] max-[1040px]:h-[min(420px,calc(100vh-24px))] max-[1040px]:min-h-[280px] max-[520px]:h-[min(360px,calc(100vh-18px))] max-[520px]:min-h-[230px]";
 
 export const counterStripClassName =
   "grid grid-cols-3 border-b border-[#d2d2d2] bg-white [&_span]:border-l [&_span]:border-[#e2e2e2] [&_span]:px-1 [&_span]:py-[7px] [&_span]:text-center [&_span]:text-xs [&_span]:leading-[1.35] [&_span]:text-[#777777] [&_span:first-child]:border-l-0 max-[520px]:[&_span]:py-[5px]";
@@ -181,7 +181,7 @@ export const choiceChipInputClassName =
   "peer pointer-events-none absolute m-0 h-px w-px opacity-0";
 
 export const choiceChipTextClassName = cn(
-  "grid min-h-[26px] cursor-pointer select-none place-items-center whitespace-nowrap rounded-sm border border-[#8c8c8c]",
+  "grid min-h-[26px] min-w-0 cursor-pointer select-none place-items-center overflow-hidden whitespace-nowrap rounded-sm border border-[#8c8c8c]",
   "bg-[linear-gradient(#ffffff,#d9d9d9)] px-1.5 py-1 text-center text-xs",
   "peer-checked:border-[#006bd6] peer-checked:bg-[linear-gradient(#e4f5ff,#79bcff)] peer-checked:font-extrabold peer-checked:text-[#001b37]",
   "peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-[#006bd6]",
