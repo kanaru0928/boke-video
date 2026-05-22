@@ -1,7 +1,9 @@
-import { LoaderCircle, Play } from "lucide-react";
+import { LoaderCircle, Play, Volume2 } from "lucide-react";
 import type { RefObject } from "react";
+import { Button } from "../../../shared/ui/Button";
 import { cn } from "../../../shared/ui/classNames";
 import type { RoomStreamStatus } from "../../rooms/api/room_api";
+import { unmuteAutoplayButtonLabel } from "../lib/autoplay_audio";
 import type { PlaybackQualityOption } from "../lib/stream_quality";
 import { playerStatusMessage } from "../lib/watch_stream";
 import { usePlayerControlsVisibility } from "../model/usePlayerControlsVisibility";
@@ -134,6 +136,19 @@ export function WatchPlayer({
           />
         </button>
       ) : null}
+      {isMutedAutoplay ? (
+        <Button
+          className={cn(
+            "absolute top-2 right-2 z-30 min-h-8 border-[#7fbdff] px-3 text-xs",
+            "max-[520px]:top-1.5 max-[520px]:right-1.5 max-[520px]:min-h-7 max-[520px]:px-2",
+          )}
+          primary
+          onClick={onToggleMuted}
+        >
+          <Volume2 aria-hidden="true" size={16} />
+          {unmuteAutoplayButtonLabel}
+        </Button>
+      ) : null}
       {shouldShowLoading ? (
         <div
           className={cn(
@@ -173,7 +188,6 @@ export function WatchPlayer({
           elapsedSeconds={elapsedSeconds}
           isFullscreen={isFullscreen}
           isMuted={isMuted}
-          isMutedAutoplay={isMutedAutoplay}
           isPaused={isPaused}
           playbackQualities={playbackQualities}
           selectedQualityId={selectedQualityId}

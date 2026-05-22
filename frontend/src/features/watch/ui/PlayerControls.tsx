@@ -23,7 +23,6 @@ type PlayerControlsProps = {
   elapsedSeconds: number;
   isFullscreen: boolean;
   isMuted: boolean;
-  isMutedAutoplay: boolean;
   isPaused: boolean;
   onCommentsVisibleChange: (visible: boolean) => void;
   onQualityChange: (qualityId: string) => void;
@@ -51,7 +50,6 @@ export function PlayerControls({
   elapsedSeconds,
   isFullscreen,
   isMuted,
-  isMutedAutoplay,
   isPaused,
   onCommentsVisibleChange,
   onQualityChange,
@@ -85,9 +83,8 @@ export function PlayerControls({
           )}
         </Button>
         <Button
-          aria-label={audioToggleLabel({ isMuted, isMutedAutoplay })}
+          aria-label={audioToggleLabel(isMuted)}
           id="mute-toggle"
-          primary={isMutedAutoplay}
           square
           onClick={onToggleMuted}
         >
