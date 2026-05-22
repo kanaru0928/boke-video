@@ -7,6 +7,7 @@ import type { PlaybackQualityOption } from "./stream_quality";
 import { usePlayerControlsVisibility } from "./usePlayerControlsVisibility";
 import {
   commentsLayerClassName,
+  manualPlaybackOverlayClassName,
   stageClassName,
   streamLoadingClassName,
   streamLoadingIconClassName,
@@ -71,6 +72,10 @@ export function WatchPlayer({
 }: WatchPlayerProps) {
   const { controlsVisible, hideControls, revealControlsUntilIdle } =
     usePlayerControlsVisibility(stageRef);
+  const shouldShowLoading = isStreamLoading;
+  const shouldHideVideoFrame = isManualPlaybackRequired;
+  const shouldPromptManualPlayback =
+    !shouldShowLoading && !shouldHideVideoFrame && streamMessage !== "";
 
   return (
     <section
@@ -79,7 +84,6 @@ export function WatchPlayer({
       onContextMenu={preventPlayerContextMenu}
       onPointerEnter={revealControlsUntilIdle}
       onPointerLeave={hideControls}
-      onPointerDown={isManualPlaybackRequired ? onTogglePlayback : undefined}
       onPointerMove={revealControlsUntilIdle}
       role="application"
     >
@@ -98,7 +102,17 @@ export function WatchPlayer({
         ref={commentsLayerRef}
         className={cn(commentsLayerClassName, !commentsVisible && "hidden")}
       />
-      {isStreamLoading ? (
+      {shouldHideVideoFrame ? (
+        <button
+          aria-label="再生"
+          className={manualPlaybackOverlayClassName}
+          type="button"
+          onClick={onTogglePlayback}
+        >
+          {streamMessage}
+        </button>
+      ) : null}
+      {shouldShowLoading ? (
         <div className={streamLoadingClassName}>
           <div className={streamLoadingPanelClassName}>
             <LoaderCircle
@@ -108,7 +122,7 @@ export function WatchPlayer({
             <span className={streamLoadingTextClassName}>読み込み中</span>
           </div>
         </div>
-      ) : streamMessage !== "" ? (
+      ) : shouldPromptManualPlayback ? (
         <div className={streamStatusClassName}>{streamMessage}</div>
       ) : null}
       <PlayerControls

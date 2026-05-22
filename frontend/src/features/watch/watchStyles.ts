@@ -52,6 +52,11 @@ export const streamLoadingIconClassName =
 
 export const streamLoadingTextClassName = "text-sm font-extrabold leading-none";
 
+export const manualPlaybackOverlayClassName = cn(
+  "pointer-events-auto absolute inset-0 z-20 grid place-items-center bg-[#020202] p-5 text-center text-[28px] font-extrabold text-white",
+  "[text-shadow:2px_2px_0_#000000,-1px_-1px_0_#000000] max-[520px]:text-[23px]",
+);
+
 export const playerControlsClassName = cn(
   "pointer-events-none absolute inset-x-0 bottom-0 z-20 flex min-h-[45px] items-center justify-between gap-2 opacity-0",
   "border-t border-t-[rgb(255_255_255_/_28%)] bg-[linear-gradient(rgb(0_0_0_/_10%),rgb(0_0_0_/_72%))] px-[10px] py-[6px] text-white",
