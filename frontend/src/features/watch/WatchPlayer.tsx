@@ -1,4 +1,4 @@
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Play } from "lucide-react";
 import type { RefObject } from "react";
 import { cn } from "../../shared/ui/classNames";
 import type { RoomStreamStatus } from "../rooms/room_api";
@@ -7,6 +7,7 @@ import type { PlaybackQualityOption } from "./stream_quality";
 import { usePlayerControlsVisibility } from "./usePlayerControlsVisibility";
 import {
   commentsLayerClassName,
+  manualPlaybackIconClassName,
   manualPlaybackOverlayClassName,
   stageClassName,
   streamLoadingClassName,
@@ -109,7 +110,7 @@ export function WatchPlayer({
           type="button"
           onClick={onTogglePlayback}
         >
-          {streamMessage}
+          <Play aria-hidden="true" className={manualPlaybackIconClassName} />
         </button>
       ) : null}
       {shouldShowLoading ? (
