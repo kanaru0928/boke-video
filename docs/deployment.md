@@ -62,7 +62,7 @@ Caddyの実ホスト名は`/etc/boke-video/caddy.env`で指定します。system
 
 ## 認証
 
-Cloudflare Accessは`bokevideo.example.com`と`stream.example.com`を保護します。管理画面と管理APIへ到達できるユーザーもAccessの既存ポリシーで制限します。認証境界の詳細は`docs/auth-and-security.md`を参照します。
+Cloudflare Accessは`bokevideo.example.com`と`stream.example.com`を同じAccess Applicationで保護します。管理画面と管理APIへ到達できるユーザーもAccessの既存ポリシーで制限します。認証境界の詳細は`docs/auth-and-security.md`を参照します。
 
 ## Cloudflare設定
 
@@ -70,10 +70,11 @@ Cloudflare側の設定はTerraformで管理します。詳細は`docs/terraform.
 
 Access Applicationはdeny by defaultにします。
 
-| 対象 | Application domain | Access Policy |
+| 対象 | Application domains | Access Policy |
 | --- | --- | --- |
-| フロントエンド | `bokevideo.example.com` | 既存ポリシー |
-| バックエンド | `stream.example.com` | 既存ポリシー |
+| WebとAPI | `bokevideo.example.com`、`stream.example.com` | 既存ポリシー |
+
+Cloudflare Accessのmulti-domain applicationにすることで、初回認証時にフロントエンドとAPIの`CF_Authorization`cookieを発行します。Access保護下のCORS requestはAPI側domainの有効なcookieを必要とするため、frontend/backendを別Applicationへ分けません。
 
 Tunnelは`stream.example.com`だけをGoへ転送します。Terraformのremote Tunnel configを使うため、Oracle上のcloudflaredはtokenで起動します。
 

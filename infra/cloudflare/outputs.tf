@@ -15,7 +15,7 @@ output "rtc_hostname" {
 }
 
 output "backend_access_audience" {
-  value = cloudflare_zero_trust_access_application.backend.aud
+  value = cloudflare_zero_trust_access_application.boke_video.aud
 }
 
 output "access_issuer" {

@@ -22,10 +22,11 @@ Terraformで管理する場合は`docs/terraform.md`を参照します。
 
 Access Applicationはdeny by defaultにします。
 
-| 対象 | Application domain | Access Policy |
+| 対象 | Application domains | Access Policy |
 | --- | --- | --- |
-| フロントエンド | `bokevideo.example.com` | 既存ポリシー |
-| バックエンド | `stream.example.com` | 既存ポリシー |
+| WebとAPI | `bokevideo.example.com`、`stream.example.com` | 既存ポリシー |
+
+`bokevideo.example.com`と`stream.example.com`は同じAccess Applicationで保護します。Cloudflare Accessは5ドメイン以下のmulti-domain applicationでは初回認証時に各domainの`CF_Authorization`cookieを事前発行するため、フロントエンドの初回表示直後でも`stream.example.com`へのCORS requestがAccessを通過できます。
 
 JWT検証とユーザー識別子の扱いは`docs/auth-and-security.md`を参照します。
 
@@ -41,6 +42,8 @@ Tunnelは`stream.example.com`だけをGoバックエンドへ転送します。T
 - Cloudflare DNS proxy status: https://developers.cloudflare.com/dns/manage-dns-records/reference/proxied-dns-records/
 - Cloudflare exposed origin IP addresses: https://developers.cloudflare.com/dns/manage-dns-records/troubleshooting/exposed-ip-address/
 - Cloudflare Access JWT validation: https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/
+- Cloudflare Access authorization cookie: https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/
+- Cloudflare Access CORS: https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/cors/
 - Cloudflare Access application paths: https://developers.cloudflare.com/cloudflare-one/access-controls/policies/app-paths/
 - Caddy Automatic HTTPS: https://caddyserver.com/docs/automatic-https
 - Caddy reverse_proxy: https://caddyserver.com/docs/caddyfile/directives/reverse_proxy

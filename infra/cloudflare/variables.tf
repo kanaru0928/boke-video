@@ -32,7 +32,7 @@ variable "cloudflare_access_team_name" {
 
 variable "access_policy_id" {
   type        = string
-  description = "Existing Cloudflare Access policy ID for the frontend and backend applications."
+  description = "Existing Cloudflare Access policy ID for the boke-video application."
 }
 
 variable "worker_service_name" {
