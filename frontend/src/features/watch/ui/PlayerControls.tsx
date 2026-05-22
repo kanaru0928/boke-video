@@ -106,10 +106,12 @@ export function PlayerControls({
         <span
           className={cn(
             "min-w-[104px] rounded-xl border border-[#898989] px-[10px] py-1 text-center font-extrabold text-white",
-            "bg-[linear-gradient(#464646,#111111_52%,#565656)] shadow-[inset_1px_1px_0_#8c8c8c] max-[520px]:hidden",
+            "bg-[linear-gradient(#464646,#111111_52%,#565656)] shadow-[inset_1px_1px_0_#8c8c8c]",
+            "max-[520px]:min-w-[58px] max-[520px]:px-[6px] max-[520px]:text-xs",
           )}
         >
-          経過時間　{formatElapsedTime(elapsedSeconds)}
+          <span className="max-[520px]:hidden">経過時間　</span>
+          {formatElapsedTime(elapsedSeconds)}
         </span>
         {streamStatus === "live" ? (
           <span className="font-[Arial,sans-serif] text-[13px] font-extrabold tracking-normal text-[#ff134f] [text-shadow:1px_1px_0_#000000]">

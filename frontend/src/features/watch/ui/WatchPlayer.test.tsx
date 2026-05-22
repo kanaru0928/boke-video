@@ -34,6 +34,7 @@ describe("WatchPlayer", () => {
     expect(playerControlsClassName).toContain(
       "[@media(pointer:coarse)]:opacity-100",
     );
+    expect(playerControlsClassName).not.toContain("max-[520px]:hidden");
   });
 
   it("コンテキストメニューを抑止する", () => {
