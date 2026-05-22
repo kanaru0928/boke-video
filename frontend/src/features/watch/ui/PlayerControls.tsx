@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "../../../shared/ui/Button";
 import { cn } from "../../../shared/ui/classNames";
-import type { RoomStreamStatus } from "../../rooms/room_api";
+import type { RoomStreamStatus } from "../../rooms/api/room_api";
 import { formatElapsedTime } from "../lib/room_activity";
 import type { PlaybackQualityOption } from "../lib/stream_quality";
 import { useSettingsPopover } from "../model/useSettingsPopover";

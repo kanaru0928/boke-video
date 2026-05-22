@@ -4,7 +4,7 @@ import { Button } from "../../../shared/ui/Button";
 import { cn } from "../../../shared/ui/classNames";
 import { commentAuthorLabel } from "../../comments/comment_author";
 import type { CommentMessage } from "../../comments/types";
-import type { RoomStats } from "../../rooms/room_api";
+import type { RoomStats } from "../../rooms/api/room_api";
 import {
   commentLogNumber,
   formatCommentSentAt,

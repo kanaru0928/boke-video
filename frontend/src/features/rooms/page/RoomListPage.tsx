@@ -1,17 +1,17 @@
 import { Bot, MonitorPlay, Newspaper } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { AppConfig } from "../../shared/config/config";
-import { AppHeader } from "../../shared/ui/AppHeader";
-import { AppShell } from "../../shared/ui/AppShell";
-import { Board } from "../../shared/ui/Board";
-import { cn } from "../../shared/ui/classNames";
-import { EmptyRooms } from "./EmptyRooms";
-import type { Room } from "./room_api";
+import type { AppConfig } from "../../../shared/config/config";
+import { AppHeader } from "../../../shared/ui/AppHeader";
+import { AppShell } from "../../../shared/ui/AppShell";
+import { Board } from "../../../shared/ui/Board";
+import { cn } from "../../../shared/ui/classNames";
+import type { Room } from "../api/room_api";
 import {
   roomThumbnail,
   roomThumbnailRefreshMilliseconds,
-} from "./room_thumbnail";
-import { useRooms } from "./useRooms";
+} from "../lib/room_thumbnail";
+import { useRooms } from "../model/useRooms";
+import { EmptyRooms } from "../ui/EmptyRooms";
 
 type RoomListPageProps = {
   config: AppConfig;

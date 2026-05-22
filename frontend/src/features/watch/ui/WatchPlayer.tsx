@@ -1,7 +1,7 @@
 import { LoaderCircle, Play } from "lucide-react";
 import type { RefObject } from "react";
 import { cn } from "../../../shared/ui/classNames";
-import type { RoomStreamStatus } from "../../rooms/room_api";
+import type { RoomStreamStatus } from "../../rooms/api/room_api";
 import type { PlaybackQualityOption } from "../lib/stream_quality";
 import { playerStatusMessage } from "../lib/watch_stream";
 import { usePlayerControlsVisibility } from "../model/usePlayerControlsVisibility";

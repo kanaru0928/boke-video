@@ -1,6 +1,6 @@
-import { roomThumbnailEndpoint } from "../../shared/api/endpoints";
-import type { AppConfig } from "../../shared/config/config";
-import type { Room } from "./room_api";
+import { roomThumbnailEndpoint } from "../../../shared/api/endpoints";
+import type { AppConfig } from "../../../shared/config/config";
+import type { Room } from "../api/room_api";
 
 const thumbnailToneClassNames = [
   "bg-[linear-gradient(135deg,#4b4b4b,#101010_55%,#d74a4a)]",

@@ -2,17 +2,17 @@ import {
   adminCommentPath,
   adminRoomPath,
   apiRoomPath,
-} from "../../shared/api/endpoints";
+} from "../../../shared/api/endpoints";
 import {
   requestJSON,
   requestJSONWithStatus,
   requestOK,
-} from "../../shared/api/http_client";
-import type { AppConfig } from "../../shared/config/config";
-import { isCommentMessage } from "../comments/comment_message";
-import type { CommentMessage } from "../comments/types";
+} from "../../../shared/api/http_client";
+import type { AppConfig } from "../../../shared/config/config";
+import { isCommentMessage } from "../../comments/comment_message";
+import type { CommentMessage } from "../../comments/types";
 
-export { isCommentMessage } from "../comments/comment_message";
+export { isCommentMessage } from "../../comments/comment_message";
 
 export type Room = {
   id: string;

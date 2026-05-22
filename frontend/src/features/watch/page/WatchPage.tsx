@@ -13,7 +13,7 @@ import {
 } from "../../comments/types";
 import { NotFoundPage } from "../../notFound/NotFoundPage";
 import { startVideoPlayback } from "../../player/oven_media_engine_player";
-import { useRooms } from "../../rooms/useRooms";
+import { useRooms } from "../../rooms/model/useRooms";
 import { isCommentSubmitShortcut } from "../lib/comment_shortcuts";
 import { autoQualityId } from "../lib/stream_quality";
 import { useCommentRenderer } from "../model/useCommentRenderer";

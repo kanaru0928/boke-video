@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import type { AppConfig } from "../../shared/config/config";
-import { createRoom, fetchRooms, type Room, updateRoomTitle } from "./room_api";
+import type { AppConfig } from "../../../shared/config/config";
+import {
+  createRoom,
+  fetchRooms,
+  type Room,
+  updateRoomTitle,
+} from "../api/room_api";
 
 type UseRoomsResult = {
   createRoomFromTitle: (title: string) => Promise<void>;

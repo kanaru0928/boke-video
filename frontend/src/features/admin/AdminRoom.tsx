@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { TextInput } from "../../shared/ui/FormControl";
 import type { CommentMessage } from "../comments/types";
-import type { Room } from "../rooms/room_api";
+import type { Room } from "../rooms/api/room_api";
 import { AdminCommentList } from "./AdminCommentList";
 import { AdminRoomActions } from "./AdminRoomActions";
 import {

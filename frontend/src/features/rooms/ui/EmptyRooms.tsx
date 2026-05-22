@@ -1,6 +1,6 @@
 import { Settings } from "lucide-react";
-import { ButtonLink } from "../../shared/ui/Button";
-import { Mascot } from "../../shared/ui/Mascot";
+import { ButtonLink } from "../../../shared/ui/Button";
+import { Mascot } from "../../../shared/ui/Mascot";
 
 export function EmptyRooms() {
   return (

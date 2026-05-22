@@ -5,7 +5,7 @@ import {
   type PlaybackStartResult,
   startVideoPlayback,
 } from "../../player/oven_media_engine_player";
-import type { RoomStreamStatus } from "../../rooms/room_api";
+import type { RoomStreamStatus } from "../../rooms/api/room_api";
 import { fetchStreamAccess } from "../api/stream_access_api";
 import {
   type PlaybackQualityOption,

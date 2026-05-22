@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { AppConfig } from "../../shared/config/config";
+import type { AppConfig } from "../../../shared/config/config";
 import {
   type CreatedRoom,
   createRoom,
@@ -8,7 +8,7 @@ import {
   type Room,
   rotateRoomIngestToken,
   updateRoomTitle,
-} from "./room_api";
+} from "../api/room_api";
 
 type UseAdminRoomsResult = {
   createRoomFromTitle: (title: string) => Promise<CreatedRoom | null>;

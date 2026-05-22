@@ -6,7 +6,7 @@ import {
   fetchCommentPage,
   fetchRoomStatsResult,
   type RoomStats,
-} from "../../rooms/room_api";
+} from "../../rooms/api/room_api";
 
 type UseRoomActivityResult = {
   comments: CommentMessage[];

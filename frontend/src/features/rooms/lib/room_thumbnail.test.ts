@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { AppConfig } from "../../shared/config/config";
-import type { Room } from "./room_api";
+import type { AppConfig } from "../../../shared/config/config";
+import type { Room } from "../api/room_api";
 import {
   roomThumbnail,
   roomThumbnailRefreshMilliseconds,

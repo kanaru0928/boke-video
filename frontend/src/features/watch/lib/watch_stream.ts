@@ -1,4 +1,4 @@
-import type { RoomStreamStatus } from "../../rooms/room_api";
+import type { RoomStreamStatus } from "../../rooms/api/room_api";
 
 export function streamStatusMessage(streamStatus: RoomStreamStatus): string {
   if (streamStatus === "ended") {
