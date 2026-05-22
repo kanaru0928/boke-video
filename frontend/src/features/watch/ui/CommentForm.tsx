@@ -47,6 +47,14 @@ export function shouldFocusTextareaWithoutScroll(
   return activeElement !== textarea;
 }
 
+export function playerScrollTopAfterCommentFocus(
+  stageTop: number,
+  viewportScrollY: number,
+): number {
+  const topMargin = 10;
+  return Math.max(0, stageTop + viewportScrollY - topMargin);
+}
+
 export function CommentForm({
   body,
   disabled,
@@ -69,6 +77,19 @@ export function CommentForm({
     }
     event.preventDefault();
     textarea.focus({ preventScroll: true });
+    const stage = textarea.closest("main")?.querySelector("section");
+    if (!(stage instanceof HTMLElement)) {
+      return;
+    }
+    window.setTimeout(() => {
+      window.scrollTo({
+        behavior: "smooth",
+        top: playerScrollTopAfterCommentFocus(
+          stage.getBoundingClientRect().top,
+          window.scrollY,
+        ),
+      });
+    }, 100);
   };
 
   return (
