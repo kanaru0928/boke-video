@@ -5,6 +5,7 @@ import type { RoomStreamStatus } from "../rooms/room_api";
 import { PlayerControls } from "./PlayerControls";
 import type { PlaybackQualityOption } from "./stream_quality";
 import { usePlayerControlsVisibility } from "./usePlayerControlsVisibility";
+import { playerStatusMessage } from "./watch_stream";
 import {
   commentsLayerClassName,
   manualPlaybackIconClassName,
@@ -74,10 +75,11 @@ export function WatchPlayer({
   const { controlsVisible, hideControls, revealControlsUntilIdle } =
     usePlayerControlsVisibility(stageRef);
   const isPlaybackEnded = streamStatus === "ended";
+  const displayStreamMessage = playerStatusMessage(streamStatus, streamMessage);
   const shouldShowLoading = isStreamLoading;
   const shouldHideVideoFrame = isManualPlaybackRequired;
   const shouldShowStreamStatus =
-    !shouldShowLoading && !shouldHideVideoFrame && streamMessage !== "";
+    !shouldShowLoading && !shouldHideVideoFrame && displayStreamMessage !== "";
   const shouldShowPlayerControls = !isPlaybackEnded;
   const shouldEnablePointerControls =
     shouldShowPlayerControls && !shouldHideVideoFrame;
@@ -132,7 +134,7 @@ export function WatchPlayer({
           </div>
         </div>
       ) : shouldShowStreamStatus ? (
-        <div className={streamStatusClassName}>{streamMessage}</div>
+        <div className={streamStatusClassName}>{displayStreamMessage}</div>
       ) : null}
       {shouldShowPlayerControls ? (
         <PlayerControls

@@ -7,6 +7,16 @@ export function streamStatusMessage(streamStatus: RoomStreamStatus): string {
   return "配信を準備しています";
 }
 
+export function playerStatusMessage(
+  streamStatus: RoomStreamStatus,
+  streamMessage: string,
+): string {
+  if (streamStatus === "ended") {
+    return streamStatusMessage(streamStatus);
+  }
+  return streamMessage;
+}
+
 export function streamStatusLabel(streamStatus: RoomStreamStatus): string {
   if (streamStatus === "live") {
     return "ON AIR";

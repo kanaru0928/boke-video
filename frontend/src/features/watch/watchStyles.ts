@@ -33,7 +33,7 @@ export const commentsLayerClassName =
   "pointer-events-none absolute inset-0 z-10 overflow-hidden";
 
 export const streamStatusClassName = cn(
-  "pointer-events-none absolute inset-0 z-0 grid place-items-center p-5 text-center text-[28px] font-extrabold text-white",
+  "pointer-events-none absolute inset-0 z-20 grid place-items-center p-5 text-center text-[28px] font-extrabold text-white",
   "[text-shadow:2px_2px_0_#000000,-1px_-1px_0_#000000] max-[520px]:text-[23px]",
 );
 
