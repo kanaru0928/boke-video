@@ -16,6 +16,11 @@ export function ObsSettings() {
           注: 出力 &gt; 配信 &gt;
           エンコーダ設定で「Bフレームを使用する」をオフにしてください。
         </p>
+        <p className="m-0 border border-[#d6d6d6] bg-white px-2 py-[6px] text-sm leading-snug text-[#333333]">
+          サイマルキャスト対応です。OBSの設定 &gt; 配信 &gt; サイマルキャスト
+          &gt;
+          合計レイヤー数で1から4を選べます。このサービスでは3レイヤー推奨です。
+        </p>
       </section>
     </Board>
   );
