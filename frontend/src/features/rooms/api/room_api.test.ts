@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { isCommentMessage, isRoom, isRoomStats } from "./room_api";
+import {
+  isCommentMessage,
+  isPublicRoom,
+  isRoom,
+  isRoomStats,
+} from "./room_api";
 
 describe("isRoom", () => {
   it("ルーム形式の値だけを受け入れる", () => {
@@ -18,6 +23,47 @@ describe("isRoom", () => {
       }),
     ).toBe(true);
     expect(isRoom({ id: "room-1", title: "配信" })).toBe(false);
+  });
+});
+
+describe("isPublicRoom", () => {
+  it("公開ルーム一覧形式の値だけを受け入れる", () => {
+    expect(
+      isPublicRoom({
+        id: "room-1",
+        title: "配信",
+        thumbnailUrl: "",
+        thumbnailUpdatedAt: "2026-05-09T00:00:00Z",
+        thumbnailRefreshSeconds: 15,
+        streamStatus: "live",
+        streamStartedAt: "2026-05-09T00:00:00Z",
+        streamLastSeenAt: "2026-05-09T00:00:00Z",
+        streamEndedAt: null,
+        createdAt: "2026-05-09T00:00:00Z",
+        ownerDisplayName: "配信者",
+        currentViewerCount: 3,
+        maxConcurrentViewerCount: 4,
+        elapsedSeconds: 125,
+      }),
+    ).toBe(true);
+    expect(
+      isPublicRoom({
+        id: "room-1",
+        title: "配信",
+        thumbnailUrl: "",
+        thumbnailUpdatedAt: "2026-05-09T00:00:00Z",
+        thumbnailRefreshSeconds: 15,
+        streamStatus: "live",
+        streamStartedAt: "2026-05-09T00:00:00Z",
+        streamLastSeenAt: "2026-05-09T00:00:00Z",
+        streamEndedAt: null,
+        createdAt: "2026-05-09T00:00:00Z",
+        ownerDisplayName: "配信者",
+        currentViewerCount: "3",
+        maxConcurrentViewerCount: 4,
+        elapsedSeconds: 125,
+      }),
+    ).toBe(false);
   });
 });
 

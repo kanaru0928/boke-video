@@ -3,19 +3,19 @@ import type { AppConfig } from "../../../shared/config/config";
 import {
   createRoom,
   fetchRooms,
-  type Room,
+  type PublicRoom,
   updateRoomTitle,
 } from "../api/room_api";
 
 type UseRoomsResult = {
   createRoomFromTitle: (title: string) => Promise<void>;
   refreshRooms: () => Promise<void>;
-  rooms: Room[];
+  rooms: PublicRoom[];
   updateRoomTitleById: (roomId: string, title: string) => Promise<void>;
 };
 
 export function useRooms(config: AppConfig): UseRoomsResult {
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [rooms, setRooms] = useState<PublicRoom[]>([]);
 
   const refreshRooms = useCallback(async (): Promise<void> => {
     setRooms(await fetchRooms(config));

@@ -27,6 +27,13 @@ export type Room = {
   streamEndedAt: string | null;
 };
 
+export type PublicRoom = Room & {
+  ownerDisplayName: string;
+  currentViewerCount: number;
+  maxConcurrentViewerCount: number;
+  elapsedSeconds: number;
+};
+
 export type RoomStreamStatus = "waiting" | "live" | "ended";
 
 export type RoomStats = {
@@ -57,12 +64,12 @@ type IngestToken = {
   whipBearerToken: string;
 };
 
-export async function fetchRooms(config: AppConfig): Promise<Room[]> {
+export async function fetchRooms(config: AppConfig): Promise<PublicRoom[]> {
   const parsed = await requestJSON(config, "GET", "/api/rooms");
   if (!Array.isArray(parsed)) {
     return [];
   }
-  return parsed.filter(isRoom);
+  return parsed.filter(isPublicRoom);
 }
 
 export async function fetchAdminRooms(config: AppConfig): Promise<Room[]> {
@@ -183,6 +190,22 @@ export function isRoom(value: unknown): value is Room {
     isNullableString(room.streamStartedAt) &&
     isNullableString(room.streamLastSeenAt) &&
     isNullableString(room.streamEndedAt)
+  );
+}
+
+export function isPublicRoom(value: unknown): value is PublicRoom {
+  if (!isRoom(value)) {
+    return false;
+  }
+  const room = value as Record<string, unknown>;
+  return (
+    typeof room.ownerDisplayName === "string" &&
+    typeof room.currentViewerCount === "number" &&
+    Number.isInteger(room.currentViewerCount) &&
+    typeof room.maxConcurrentViewerCount === "number" &&
+    Number.isInteger(room.maxConcurrentViewerCount) &&
+    typeof room.elapsedSeconds === "number" &&
+    Number.isInteger(room.elapsedSeconds)
   );
 }
 
