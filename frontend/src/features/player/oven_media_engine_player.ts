@@ -1,5 +1,7 @@
 type ConnectionClosedHandler = () => void;
 
+export type PlaybackStartResult = "playing" | "manualPlaybackRequired";
+
 type OmeSessionDescription = {
   sdp: string;
   type: RTCSdpType;
@@ -86,7 +88,6 @@ export class OvenMediaEnginePlayer {
         sdp: localDescription,
       }),
     );
-    await video.play();
   }
 
   destroy(): void {
@@ -95,6 +96,27 @@ export class OvenMediaEnginePlayer {
     this.connection?.close();
     this.connection = null;
   }
+}
+
+export async function startVideoPlayback(
+  video: HTMLVideoElement,
+): Promise<PlaybackStartResult> {
+  try {
+    await video.play();
+    return "playing";
+  } catch (error) {
+    if (requiresManualPlayback(error)) {
+      return "manualPlaybackRequired";
+    }
+    throw error;
+  }
+}
+
+function requiresManualPlayback(error: unknown): boolean {
+  return (
+    error instanceof DOMException &&
+    (error.name === "NotAllowedError" || error.name === "AbortError")
+  );
 }
 
 function requestOffer(playbackUrl: string): Promise<OfferResponse> {

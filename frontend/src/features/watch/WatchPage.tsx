@@ -9,6 +9,7 @@ import {
   type CommentMessage,
   commentColors,
 } from "../comments/types";
+import { startVideoPlayback } from "../player/oven_media_engine_player";
 import { useRooms } from "../rooms/useRooms";
 import { CommentForm } from "./CommentForm";
 import { CommentSidebar } from "./CommentSidebar";
@@ -122,13 +123,13 @@ export function WatchPage({ config }: WatchPageProps) {
     event.currentTarget.form?.requestSubmit();
   };
 
-  const togglePlayback = (): void => {
+  const togglePlayback = async (): Promise<void> => {
     const video = videoRef.current;
     if (video === null) {
       return;
     }
     if (video.paused) {
-      void video.play();
+      await startVideoPlayback(video);
     } else {
       video.pause();
     }

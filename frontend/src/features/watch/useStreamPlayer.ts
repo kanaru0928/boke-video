@@ -1,6 +1,10 @@
 import { type RefObject, useEffect, useRef, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
-import { OvenMediaEnginePlayer } from "../player/oven_media_engine_player";
+import {
+  OvenMediaEnginePlayer,
+  type PlaybackStartResult,
+  startVideoPlayback,
+} from "../player/oven_media_engine_player";
 import type { RoomStreamStatus } from "../rooms/room_api";
 import { fetchStreamAccess } from "./stream_access_api";
 import {
@@ -107,18 +111,15 @@ export function useStreamPlayer(
           selectedQualityId,
         );
         setPlaybackQualities(qualityOptions);
-        await playerRef.current?.attach(
-          videoRef.current,
-          quality.playbackUrl,
-          () => {
-            if (canceled) {
-              return;
-            }
-            detachStream();
-            setStreamMessage(streamStatusMessage(streamStatus));
-            scheduleReconnect();
-          },
-        );
+        const video = videoRef.current;
+        await playerRef.current?.attach(video, quality.playbackUrl, () => {
+          if (canceled) {
+            return;
+          }
+          detachStream();
+          setStreamMessage(streamStatusMessage(streamStatus));
+          scheduleReconnect();
+        });
         if (canceled) {
           return;
         }
@@ -126,6 +127,21 @@ export function useStreamPlayer(
         attachedQualityIdRef.current = quality.id;
         setIsStreamLoading(false);
         setStreamMessage("");
+        void startVideoPlayback(video)
+          .then((playbackStartResult) => {
+            if (canceled) {
+              return;
+            }
+            setStreamMessage(playbackStartMessage(playbackStartResult));
+          })
+          .catch(() => {
+            if (canceled) {
+              return;
+            }
+            detachStream();
+            setStreamMessage(streamStatusMessage(streamStatus));
+            scheduleReconnect();
+          });
         return;
       } catch {
         if (canceled) {
@@ -148,4 +164,13 @@ export function useStreamPlayer(
   }, [config, roomId, selectedQualityId, streamStatus, videoRef]);
 
   return { isStreamLoading, playbackQualities, streamMessage };
+}
+
+function playbackStartMessage(
+  playbackStartResult: PlaybackStartResult | undefined,
+): string {
+  if (playbackStartResult === "manualPlaybackRequired") {
+    return "再生ボタンを押してください";
+  }
+  return "";
 }
