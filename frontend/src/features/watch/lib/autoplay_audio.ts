@@ -45,7 +45,7 @@ export function autoplayNoticeDevice(
   };
 }
 
-function isMobileDevice(device: AutoplayNoticeDevice): boolean {
+export function isMobileDevice(device: AutoplayNoticeDevice): boolean {
   if (device.userAgentDataMobile !== null) {
     return device.userAgentDataMobile;
   }
