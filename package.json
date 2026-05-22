@@ -2,16 +2,15 @@
   "private": true,
   "packageManager": "pnpm@10.11.0",
   "scripts": {
-    "backend:check": "cd backend && gofmt -w ./cmd ./internal && go test ./...",
-    "backend:lint": "cd backend && go vet ./...",
-    "check": "biome check . && knip && pnpm --dir frontend run typecheck && pnpm --dir frontend run test && pnpm --dir frontend run build && pnpm backend:lint && pnpm backend:check",
+    "backend:format": "cd backend && gofmt -w ./cmd ./internal",
+    "backend:test": "cd backend && go test ./...",
+    "backend:vet": "cd backend && go vet ./...",
+    "check": "pnpm run knip && pnpm --dir frontend run typecheck && pnpm --dir frontend run test && pnpm --dir frontend run build && pnpm run backend:vet && pnpm run backend:test",
     "dev": "pnpm env:sync:local && scripts/local-dev.sh",
-    "deploy:frontend": "pnpm env:sync:production && pnpm --dir frontend run deploy",
     "env:sync:local": "node scripts/env-sync.mjs local",
     "env:sync:production": "node scripts/env-sync.mjs production",
-    "format": "biome format --write . && gofmt -w backend/cmd backend/internal",
     "hooks:install": "lefthook install",
-    "lint": "biome lint . && knip && pnpm backend:lint"
+    "knip": "knip"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.14",

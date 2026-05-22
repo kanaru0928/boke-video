@@ -3,13 +3,15 @@ pre-commit:
   commands:
     biome:
       run: pnpm --dir frontend run biome
+    backend-format:
+      run: pnpm run backend:format
     knip:
-      run: pnpm knip
+      run: pnpm run knip
     typecheck:
       run: pnpm --dir frontend run typecheck
     frontend-test:
       run: pnpm --dir frontend run test
     backend-test:
-      run: cd backend && go test ./...
+      run: pnpm run backend:test
     backend-vet:
-      run: cd backend && go vet ./...
+      run: pnpm run backend:vet
