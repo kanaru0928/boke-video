@@ -180,7 +180,10 @@ func (c *OvenMediaEngineClient) PlaybackPlaylists(ctx context.Context, streamNam
 			})
 		}
 	}
-	return labelSimulcastPlaylists(playlists, masterRenditions), nil
+	return labelSimulcastPlaylists(
+		filterSimulcastPlaylists(playlists, masterRenditions),
+		masterRenditions,
+	), nil
 }
 
 func (c *OvenMediaEngineClient) FetchThumbnail(ctx context.Context, streamName string) (Thumbnail, error) {
@@ -269,6 +272,24 @@ func labelSimulcastPlaylists(
 		playlists[index].Renditions = []string{masterRenditions[renditionIndex]}
 	}
 	return playlists
+}
+
+func filterSimulcastPlaylists(
+	playlists []PlaybackPlaylist,
+	masterRenditions []string,
+) []PlaybackPlaylist {
+	if len(masterRenditions) == 0 {
+		return playlists
+	}
+	filtered := make([]PlaybackPlaylist, 0, len(playlists))
+	for _, playlist := range playlists {
+		renditionIndex, ok := simulcastLayerIndex(playlist.FileName)
+		if ok && renditionIndex >= len(masterRenditions) {
+			continue
+		}
+		filtered = append(filtered, playlist)
+	}
+	return filtered
 }
 
 func simulcastLayerIndex(fileName string) (int, bool) {
