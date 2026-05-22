@@ -34,9 +34,20 @@ done
 
 mkdir -p "${CONF_DIR}" "${LOG_DIR}"
 
+default_interface="$(route -n get default 2>/dev/null | awk '/interface:/{print $2; exit}')"
+host_ip=""
+if [ -n "${default_interface}" ]; then
+  host_ip="$(ipconfig getifaddr "${default_interface}" 2>/dev/null || true)"
+fi
+ice_candidates="          <IceCandidate>127.0.0.1:10000-10005/udp</IceCandidate>"
+if [ -n "${host_ip}" ] && [ "${host_ip}" != "127.0.0.1" ]; then
+  ice_candidates="${ice_candidates}
+          <IceCandidate>${host_ip}:10000-10005/udp</IceCandidate>"
+fi
+
 cp "${ROOT_DIR}/deploy/ovenmediaengine/Server.xml.example" "${CONF_DIR}/Server.xml"
 perl -0pi -e 's/<Name>ingest\.example\.com<\/Name>\n          <Name>rtc\.example\.com<\/Name>/<Name>127.0.0.1<\/Name>\n          <Name>localhost<\/Name>\n          <Name>ingest.example.com<\/Name>\n          <Name>rtc.example.com<\/Name>/' "${CONF_DIR}/Server.xml"
-perl -0pi -e 's/\$\{PublicIP\}:10000-10005\/udp/127.0.0.1:10000-10005\/udp/g' "${CONF_DIR}/Server.xml"
+CANDIDATE_XML="${ice_candidates}" perl -0pi -e 's#          <IceCandidate>\$\{PublicIP\}:10000-10005/udp</IceCandidate>#$ENV{CANDIDATE_XML}#g' "${CONF_DIR}/Server.xml"
 perl -0pi -e 's/replace-with-strong-secret/local-stream-signing-secret/g' "${CONF_DIR}/Server.xml"
 perl -0pi -e 's/replace-with-api-token/local-api-token/g' "${CONF_DIR}/Server.xml"
 
