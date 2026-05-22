@@ -1,6 +1,7 @@
 import { type RefObject, useCallback, useEffect, useState } from "react";
 import {
   canTogglePictureInPicture,
+  enterPictureInPicture,
   isPictureInPictureActive,
   toggleWebKitPictureInPicture,
 } from "../lib/video_presentation";
@@ -66,6 +67,29 @@ export function usePictureInPicture(
       );
     };
   }, [syncPictureInPictureState, videoRef]);
+
+  useEffect(() => {
+    const enterPictureInPictureWhenHidden = (): void => {
+      const video = videoRef.current;
+      if (document.visibilityState !== "hidden" || video === null) {
+        return;
+      }
+      if (video.paused || video.ended) {
+        return;
+      }
+      void enterPictureInPicture(document, video).catch(() => {});
+    };
+    document.addEventListener(
+      "visibilitychange",
+      enterPictureInPictureWhenHidden,
+    );
+    return () => {
+      document.removeEventListener(
+        "visibilitychange",
+        enterPictureInPictureWhenHidden,
+      );
+    };
+  }, [videoRef]);
 
   return {
     canTogglePictureInPicture: canToggle,

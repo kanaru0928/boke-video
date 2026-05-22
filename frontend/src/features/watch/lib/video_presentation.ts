@@ -80,6 +80,20 @@ export function isPictureInPictureActive(
   );
 }
 
+export async function enterPictureInPicture(
+  ownerDocument: Document,
+  video: HTMLVideoElement | null,
+): Promise<void> {
+  if (video === null || isPictureInPictureActive(ownerDocument, video)) {
+    return;
+  }
+  if (canUseStandardPictureInPicture(ownerDocument, video)) {
+    await video.requestPictureInPicture();
+    return;
+  }
+  setWebKitPictureInPictureMode(video);
+}
+
 export function toggleWebKitPictureInPicture(
   video: HTMLVideoElement | null,
 ): void {
@@ -92,6 +106,14 @@ export function toggleWebKitPictureInPicture(
       ? "inline"
       : "picture-in-picture";
   webKitVideo.webkitSetPresentationMode(nextMode);
+}
+
+function setWebKitPictureInPictureMode(video: HTMLVideoElement): void {
+  const webKitVideo = getWebKitPresentationVideo(video);
+  if (typeof webKitVideo?.webkitSetPresentationMode !== "function") {
+    return;
+  }
+  webKitVideo.webkitSetPresentationMode("picture-in-picture");
 }
 
 function getWebKitFullscreenVideo(
