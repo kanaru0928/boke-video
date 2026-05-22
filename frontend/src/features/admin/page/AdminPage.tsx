@@ -165,6 +165,7 @@ export function AdminPage({ config }: AdminPageProps) {
         links={[
           { href: "/", label: "枠一覧" },
           { href: "/user", label: "ユーザー" },
+          { href: "/support", label: "サポート" },
         ]}
       />
       <ObsSettings />

@@ -63,6 +63,7 @@ export function UserPage({ config }: UserPageProps) {
         links={[
           { href: "/", label: "枠一覧" },
           { href: "/admin", label: "管理" },
+          { href: "/support", label: "サポート" },
         ]}
       />
       <Board icon={UserRound} title="ユーザー設定">

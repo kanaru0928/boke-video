@@ -1,6 +1,7 @@
 import { AdminPage } from "./features/admin/page/AdminPage";
 import { NotFoundPage } from "./features/notFound/page/NotFoundPage";
 import { RoomListPage } from "./features/rooms/page/RoomListPage";
+import { SupportPage } from "./features/support/page/SupportPage";
 import { UserPage } from "./features/user/page/UserPage";
 import { WatchPage } from "./features/watch/page/WatchPage";
 import type { AppConfig } from "./shared/config/config";
@@ -19,6 +20,9 @@ export function App({ config }: AppProps) {
   }
   if (pathname === "/user" || pathname.startsWith("/user/")) {
     return <UserPage config={config} />;
+  }
+  if (pathname === "/support" || pathname.startsWith("/support/")) {
+    return <SupportPage />;
   }
   if (pathname === "/watch" || pathname.startsWith("/watch/")) {
     return <WatchPage config={config} />;
