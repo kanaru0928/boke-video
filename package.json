@@ -11,8 +11,8 @@
     "dev:whip": "pnpm env:sync:local && scripts/local-whip.sh",
     "env:sync:local": "node scripts/env-sync.mjs local",
     "env:sync:production": "node scripts/env-sync.mjs production",
-    "hooks:install": "lefthook install",
-    "knip": "knip"
+    "knip": "knip",
+    "postinstall": "lefthook install"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.14",
