@@ -10,6 +10,11 @@ import {
   commentColors,
   commentDirections,
 } from "../../comments/model/types";
+import {
+  type AutoplayNoticeDevice,
+  autoplayNoticeDevice,
+  isMobileDevice,
+} from "../lib/autoplay_audio";
 
 type CommentFormProps = {
   body: string;
@@ -43,8 +48,9 @@ const choiceChipTextClassName = cn(
 export function shouldFocusTextareaWithoutScroll(
   activeElement: Element | null,
   textarea: HTMLTextAreaElement,
+  device: AutoplayNoticeDevice,
 ): boolean {
-  return activeElement !== textarea;
+  return isMobileDevice(device) && activeElement !== textarea;
 }
 
 export function playerScrollTopAfterCommentFocus(
@@ -72,7 +78,13 @@ export function CommentForm({
     event: PointerEvent<HTMLTextAreaElement>,
   ): void => {
     const textarea = event.currentTarget;
-    if (!shouldFocusTextareaWithoutScroll(document.activeElement, textarea)) {
+    if (
+      !shouldFocusTextareaWithoutScroll(
+        document.activeElement,
+        textarea,
+        autoplayNoticeDevice(navigator),
+      )
+    ) {
       return;
     }
     event.preventDefault();
