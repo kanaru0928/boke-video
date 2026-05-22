@@ -1,7 +1,6 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLayoutEffect, useRef } from "react";
 import { Button } from "../../../shared/ui/Button";
-import { cn } from "../../../shared/ui/classNames";
 import { commentAuthorLabel } from "../../comments/lib/comment_author";
 import type { CommentMessage } from "../../comments/model/types";
 import type { RoomStats } from "../../rooms/api/room_api";
@@ -150,13 +149,7 @@ export function CommentSidebar({
                       {formatCommentSentAt(comment.sentAt)}
                     </time>
                   </p>
-                  <p
-                    className={cn(
-                      "m-0 text-[13px] [overflow-wrap:anywhere]",
-                      virtualComment.index === 1 &&
-                        "font-extrabold text-[#ff4b73]",
-                    )}
-                  >
+                  <p className="m-0 text-[13px] [overflow-wrap:anywhere]">
                     {comment.body}
                   </p>
                 </div>
