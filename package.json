@@ -3,6 +3,7 @@
   "packageManager": "pnpm@10.11.0",
   "scripts": {
     "backend:format": "cd backend && gofmt -w ./cmd ./internal",
+    "backend:deploy": "scripts/deploy-backend.sh",
     "backend:test": "cd backend && go test ./...",
     "backend:vet": "cd backend && go vet ./...",
     "check": "pnpm run knip && pnpm --dir frontend run typecheck && pnpm --dir frontend run test && pnpm --dir frontend run build && pnpm run backend:vet && pnpm run backend:test",
