@@ -3,6 +3,7 @@
   "workspaces": {
     "frontend": {
       "entry": ["src/**/*.test.ts"],
+      "ignoreDependencies": ["wrangler"],
       "project": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"]
     },
     ".": {
