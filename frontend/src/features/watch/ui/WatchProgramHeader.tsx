@@ -1,4 +1,5 @@
-import { cn } from "../../../shared/ui/classNames";
+import { MonitorPlay } from "lucide-react";
+import { Board } from "../../../shared/ui/Board";
 import type { Room, RoomStreamStatus } from "../../rooms/api/room_api";
 import { streamStatusLabel } from "../lib/watch_stream";
 
@@ -12,28 +13,21 @@ export function WatchProgramHeader({
   streamStatus,
 }: WatchProgramHeaderProps) {
   return (
-    <section
-      className={cn(
-        "mb-[10px] grid grid-cols-[minmax(0,1fr)_minmax(220px,330px)] items-center gap-3",
-        "border border-[#c29300] bg-[#fffdf2] px-2 py-[5px]",
-        "max-[860px]:grid-cols-1 max-[520px]:mb-[7px] max-[520px]:gap-1.5 max-[520px]:px-[7px] max-[520px]:py-1",
-      )}
+    <Board
+      className="mb-[10px] max-[520px]:mb-[7px]"
+      icon={MonitorPlay}
+      title={selectedRoom?.title ?? "番組取得中"}
     >
-      <div>
-        <div className="mb-[3px] flex min-w-0 flex-wrap items-center gap-[5px]">
-          <p className="m-0 inline-block bg-[#d40000] px-[5px] py-px text-[11px] font-extrabold text-white">
-            {streamStatusLabel(streamStatus)}
+      <div className="flex min-w-0 flex-wrap items-center gap-[5px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] px-2 py-[6px] max-[520px]:px-[7px] max-[520px]:py-[5px]">
+        <p className="m-0 inline-block border border-[#8b0000] bg-[linear-gradient(#ff3636,#b70000)] px-[7px] py-[2px] text-[11px] font-extrabold text-white shadow-[inset_1px_1px_0_rgb(255_255_255_/_55%),inset_-1px_-1px_0_rgb(0_0_0_/_35%)] [text-shadow:1px_1px_0_#640000]">
+          {streamStatusLabel(streamStatus)}
+        </p>
+        {selectedRoom?.ownerDisplayName !== undefined ? (
+          <p className="m-0 min-w-0 truncate text-[12px] font-extrabold text-[#333333]">
+            {selectedRoom.ownerDisplayName}
           </p>
-          {selectedRoom?.ownerDisplayName !== undefined ? (
-            <p className="m-0 min-w-0 truncate border border-[#c8b16b] bg-white px-[5px] py-px text-[11px] font-extrabold text-[#6f5700] shadow-[inset_1px_1px_0_#ffffff]">
-              {selectedRoom.ownerDisplayName}
-            </p>
-          ) : null}
-        </div>
-        <h1 className="m-0 text-[19px] font-extrabold tracking-normal max-[520px]:text-base">
-          {selectedRoom?.title ?? "番組取得中"}
-        </h1>
+        ) : null}
       </div>
-    </section>
+    </Board>
   );
 }
