@@ -8,6 +8,7 @@ import {
 import type { RoomStreamStatus } from "../../rooms/api/room_api";
 import { fetchStreamAccess } from "../api/stream_access_api";
 import {
+  downgradedPlaybackQuality,
   type PlaybackQualityOption,
   playbackQualityOptions,
   selectedPlaybackQuality,
@@ -29,6 +30,7 @@ export function useStreamPlayer(
   streamStatus: RoomStreamStatus,
   videoRef: RefObject<HTMLVideoElement | null>,
   selectedQualityId: string,
+  onQualityChange: (qualityId: string) => void,
 ): UseStreamPlayerResult {
   const playerRef = useRef<OvenMediaEnginePlayer | null>(null);
   const attachedRoomIdRef = useRef("");
@@ -151,14 +153,31 @@ export function useStreamPlayer(
         );
         setPlaybackQualities(qualityOptions);
         const video = videoRef.current;
-        await playerRef.current?.attach(video, quality.playbackUrl, () => {
-          if (canceled) {
-            return;
-          }
-          detachStream();
-          setStreamMessage(streamStatusMessage(streamStatus));
-          scheduleReconnect();
-        });
+        await playerRef.current?.attach(
+          video,
+          quality.playbackUrl,
+          () => {
+            if (canceled) {
+              return;
+            }
+            detachStream();
+            setStreamMessage(streamStatusMessage(streamStatus));
+            scheduleReconnect();
+          },
+          () => {
+            if (canceled) {
+              return;
+            }
+            const downgradedQuality = downgradedPlaybackQuality(
+              qualityOptions,
+              attachedQualityIdRef.current || quality.id,
+            );
+            if (downgradedQuality === null) {
+              return;
+            }
+            onQualityChange(downgradedQuality.id);
+          },
+        );
         if (canceled) {
           return;
         }
@@ -213,7 +232,14 @@ export function useStreamPlayer(
       window.clearTimeout(timerId);
       detachStream();
     };
-  }, [config, roomId, selectedQualityId, streamStatus, videoRef]);
+  }, [
+    config,
+    onQualityChange,
+    roomId,
+    selectedQualityId,
+    streamStatus,
+    videoRef,
+  ]);
 
   return {
     dismissMutedAutoplayNotice,

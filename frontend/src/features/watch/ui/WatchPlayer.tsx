@@ -14,6 +14,8 @@ type PreventableEvent = {
 };
 
 type WatchPlayerProps = {
+  canToggleFullscreen: boolean;
+  canTogglePictureInPicture: boolean;
   commentsLayerRef: RefObject<HTMLDivElement | null>;
   commentsVisible: boolean;
   elapsedSeconds: number;
@@ -22,9 +24,11 @@ type WatchPlayerProps = {
   isMuted: boolean;
   isMutedAutoplay: boolean;
   isPaused: boolean;
+  isPictureInPicture: boolean;
   isStreamLoading: boolean;
   onToggleFullscreen: () => void;
   onToggleMuted: () => void;
+  onTogglePictureInPicture: () => void;
   onTogglePlayback: () => void;
   onUpdatePlayerState: () => void;
   onCommentsVisibleChange: (visible: boolean) => void;
@@ -51,6 +55,8 @@ export function preventPlayerContextMenu(event: PreventableEvent): void {
 }
 
 export function WatchPlayer({
+  canToggleFullscreen,
+  canTogglePictureInPicture,
   commentsLayerRef,
   commentsVisible,
   elapsedSeconds,
@@ -59,9 +65,11 @@ export function WatchPlayer({
   isMuted,
   isMutedAutoplay,
   isPaused,
+  isPictureInPicture,
   isStreamLoading,
   onToggleFullscreen,
   onToggleMuted,
+  onTogglePictureInPicture,
   onTogglePlayback,
   onUpdatePlayerState,
   onCommentsVisibleChange,
@@ -184,11 +192,14 @@ export function WatchPlayer({
       {shouldShowPlayerControls ? (
         <PlayerControls
           commentsVisible={commentsVisible}
+          canToggleFullscreen={canToggleFullscreen}
+          canTogglePictureInPicture={canTogglePictureInPicture}
           controlsVisible={controlsVisible}
           elapsedSeconds={elapsedSeconds}
           isFullscreen={isFullscreen}
           isMuted={isMuted}
           isPaused={isPaused}
+          isPictureInPicture={isPictureInPicture}
           playbackQualities={playbackQualities}
           selectedQualityId={selectedQualityId}
           streamStatus={streamStatus}
@@ -196,6 +207,7 @@ export function WatchPlayer({
           onQualityChange={onQualityChange}
           onToggleFullscreen={onToggleFullscreen}
           onToggleMuted={onToggleMuted}
+          onTogglePictureInPicture={onTogglePictureInPicture}
           onTogglePlayback={onTogglePlayback}
         />
       ) : null}

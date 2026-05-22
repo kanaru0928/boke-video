@@ -22,6 +22,7 @@ import { autoQualityId } from "../lib/stream_quality";
 import { useCommentRenderer } from "../model/useCommentRenderer";
 import { useCommentSocket } from "../model/useCommentSocket";
 import { useFullscreen } from "../model/useFullscreen";
+import { usePictureInPicture } from "../model/usePictureInPicture";
 import { useRoomActivity } from "../model/useRoomActivity";
 import { useStreamPlayer } from "../model/useStreamPlayer";
 import { CommentForm } from "../ui/CommentForm";
@@ -97,8 +98,17 @@ export function WatchPage({ config }: WatchPageProps) {
     streamStatus,
     videoRef,
     selectedQualityId,
+    setSelectedQualityId,
   );
-  const { isFullscreen, toggleFullscreen } = useFullscreen(stageRef);
+  const { canToggleFullscreen, isFullscreen, toggleFullscreen } = useFullscreen(
+    stageRef,
+    videoRef,
+  );
+  const {
+    canTogglePictureInPicture,
+    isPictureInPicture,
+    togglePictureInPicture,
+  } = usePictureInPicture(videoRef);
   const autoplayAudioNotice = mutedAutoplayNotice(
     isMutedAutoplay,
     autoplayNoticeDevice(navigator),
@@ -231,7 +241,10 @@ export function WatchPage({ config }: WatchPageProps) {
             isMuted={isMuted}
             isMutedAutoplay={isMutedAutoplay}
             isPaused={isPaused}
+            canToggleFullscreen={canToggleFullscreen}
+            canTogglePictureInPicture={canTogglePictureInPicture}
             isFullscreen={isFullscreen}
+            isPictureInPicture={isPictureInPicture}
             isManualPlaybackRequired={isManualPlaybackRequired}
             isStreamLoading={isStreamLoading}
             playbackQualities={playbackQualities}
@@ -240,6 +253,7 @@ export function WatchPage({ config }: WatchPageProps) {
             onQualityChange={setSelectedQualityId}
             onToggleFullscreen={toggleFullscreen}
             onToggleMuted={toggleMuted}
+            onTogglePictureInPicture={togglePictureInPicture}
             onTogglePlayback={togglePlayback}
             onUpdatePlayerState={updatePlayerState}
             stageRef={stageRef}

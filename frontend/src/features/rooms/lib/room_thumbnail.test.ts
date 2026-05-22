@@ -43,6 +43,7 @@ describe("roomThumbnail", () => {
       testConfig,
     );
     expect(thumbnail.isPending).toBe(false);
+    expect(thumbnail.crossOrigin).toBe("use-credentials");
     expect(thumbnail.url).toBe(
       "http://localhost:8080/api/rooms/room-1/thumbnail?updated=2026-05-20T10%3A00%3A00Z",
     );
@@ -60,6 +61,7 @@ describe("roomThumbnail", () => {
       testConfig,
     );
     expect(thumbnail.isPending).toBe(true);
+    expect(thumbnail.crossOrigin).toBeUndefined();
     expect(thumbnail.url).toBeNull();
     expect(thumbnail.toneClassName).toContain("linear-gradient");
   });

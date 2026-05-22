@@ -1,4 +1,5 @@
 type ConnectionClosedHandler = () => void;
+type NetworkInsufficientHandler = () => void;
 
 export type PlaybackStartResult =
   | "playing"
@@ -31,20 +32,38 @@ type OfferResponse = {
   socket: WebSocket;
 };
 
+type InboundVideoStats = RTCStats & {
+  kind: "video";
+  packetsLost: number;
+  packetsReceived: number;
+};
+
+type InboundVideoNetworkSample = {
+  packetsLost: number;
+  packetsReceived: number;
+  timestamp: number;
+};
+
 const closedConnectionStates: RTCPeerConnectionState[] = [
   "disconnected",
   "failed",
   "closed",
 ];
+const networkMonitorIntervalMs = 5000;
+const minimumPacketsForQualityDowngrade = 120;
+const networkLossRatioForQualityDowngrade = 0.12;
 
 export class OvenMediaEnginePlayer {
   private connection: RTCPeerConnection | null = null;
+  private networkMonitorTimerId: ReturnType<typeof window.setInterval> | null =
+    null;
   private socket: WebSocket | null = null;
 
   async attach(
     video: HTMLVideoElement,
     playbackUrl: string,
     onConnectionClosed: ConnectionClosedHandler,
+    onNetworkInsufficient?: NetworkInsufficientHandler,
   ): Promise<void> {
     this.destroy();
 
@@ -70,6 +89,9 @@ export class OvenMediaEnginePlayer {
         onConnectionClosed();
       }
     });
+    if (onNetworkInsufficient !== undefined) {
+      this.startNetworkMonitor(connection, onNetworkInsufficient);
+    }
 
     video.srcObject = mediaStream;
     video.autoplay = true;
@@ -101,11 +123,62 @@ export class OvenMediaEnginePlayer {
   }
 
   destroy(): void {
+    if (this.networkMonitorTimerId !== null) {
+      window.clearInterval(this.networkMonitorTimerId);
+      this.networkMonitorTimerId = null;
+    }
     this.socket?.close();
     this.socket = null;
     this.connection?.close();
     this.connection = null;
   }
+
+  private startNetworkMonitor(
+    connection: RTCPeerConnection,
+    onNetworkInsufficient: NetworkInsufficientHandler,
+  ): void {
+    let previousSample: InboundVideoNetworkSample | null = null;
+    let reported = false;
+    this.networkMonitorTimerId = window.setInterval(() => {
+      void collectInboundVideoNetworkSample(connection)
+        .then((currentSample) => {
+          if (currentSample === null || reported) {
+            previousSample = currentSample;
+            return;
+          }
+          if (
+            previousSample !== null &&
+            isNetworkInsufficientForPlayback(previousSample, currentSample)
+          ) {
+            reported = true;
+            onNetworkInsufficient();
+          }
+          previousSample = currentSample;
+        })
+        .catch(() => {
+          previousSample = null;
+        });
+    }, networkMonitorIntervalMs);
+  }
+}
+
+export function isNetworkInsufficientForPlayback(
+  previous: InboundVideoNetworkSample,
+  current: InboundVideoNetworkSample,
+): boolean {
+  if (current.timestamp <= previous.timestamp) {
+    return false;
+  }
+  const packetsLost = Math.max(0, current.packetsLost - previous.packetsLost);
+  const packetsReceived = Math.max(
+    0,
+    current.packetsReceived - previous.packetsReceived,
+  );
+  const totalPackets = packetsLost + packetsReceived;
+  if (packetsLost === 0 || totalPackets < minimumPacketsForQualityDowngrade) {
+    return false;
+  }
+  return packetsLost / totalPackets >= networkLossRatioForQualityDowngrade;
 }
 
 export async function startVideoPlayback(
@@ -260,6 +333,36 @@ function isIceServer(value: unknown): value is RTCIceServer {
   }
   const server = value as Record<string, unknown>;
   return typeof server.urls === "string" || Array.isArray(server.urls);
+}
+
+async function collectInboundVideoNetworkSample(
+  connection: RTCPeerConnection,
+): Promise<InboundVideoNetworkSample | null> {
+  const report = await connection.getStats();
+  for (const stats of report.values()) {
+    if (isInboundVideoStats(stats)) {
+      return {
+        packetsLost: stats.packetsLost,
+        packetsReceived: stats.packetsReceived,
+        timestamp: stats.timestamp,
+      };
+    }
+  }
+  return null;
+}
+
+function isInboundVideoStats(stats: RTCStats): stats is InboundVideoStats {
+  const candidate = stats as {
+    kind?: unknown;
+    packetsLost?: unknown;
+    packetsReceived?: unknown;
+  };
+  return (
+    stats.type === "inbound-rtp" &&
+    candidate.kind === "video" &&
+    typeof candidate.packetsLost === "number" &&
+    typeof candidate.packetsReceived === "number"
+  );
 }
 
 function waitForIceGathering(connection: RTCPeerConnection): Promise<void> {
