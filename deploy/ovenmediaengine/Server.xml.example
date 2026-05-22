@@ -52,6 +52,7 @@
         <Names>
           <Name>ingest.example.com</Name>
           <Name>rtc.example.com</Name>
+          <Name>127.0.0.1</Name>
         </Names>
       </Host>
       <SignedPolicy>
