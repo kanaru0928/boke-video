@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { startVideoPlayback } from "./oven_media_engine_player";
+import {
+  isNetworkInsufficientForPlayback,
+  startVideoPlayback,
+} from "./oven_media_engine_player";
 
 describe("startVideoPlayback", () => {
   it("音ありで再生を開始する", async () => {
@@ -68,6 +71,35 @@ describe("startVideoPlayback", () => {
     );
 
     expect(video.muted).toBe(false);
+  });
+});
+
+describe("isNetworkInsufficientForPlayback", () => {
+  it("受信パケットに対するロスが大きい場合はネットワーク不足にする", () => {
+    expect(
+      isNetworkInsufficientForPlayback(
+        { packetsLost: 10, packetsReceived: 1000, timestamp: 1000 },
+        { packetsLost: 30, packetsReceived: 1100, timestamp: 2000 },
+      ),
+    ).toBe(true);
+  });
+
+  it("ロスが少ない場合はネットワーク不足にしない", () => {
+    expect(
+      isNetworkInsufficientForPlayback(
+        { packetsLost: 10, packetsReceived: 1000, timestamp: 1000 },
+        { packetsLost: 12, packetsReceived: 1120, timestamp: 2000 },
+      ),
+    ).toBe(false);
+  });
+
+  it("サンプル量が少ない場合はネットワーク不足にしない", () => {
+    expect(
+      isNetworkInsufficientForPlayback(
+        { packetsLost: 10, packetsReceived: 1000, timestamp: 1000 },
+        { packetsLost: 20, packetsReceived: 1040, timestamp: 2000 },
+      ),
+    ).toBe(false);
   });
 });
 

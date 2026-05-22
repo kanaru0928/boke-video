@@ -35,3 +35,25 @@ export function selectedPlaybackQuality(
     options.find((option) => option.id === selectedQualityId) ?? options[0]
   );
 }
+
+export function downgradedPlaybackQuality(
+  options: PlaybackQualityOption[],
+  selectedQualityId: string,
+): PlaybackQualityOption | null {
+  const variantOptions = options.filter(
+    (option) => option.id !== autoQualityId,
+  );
+  if (variantOptions.length === 0) {
+    return null;
+  }
+  if (selectedQualityId === autoQualityId) {
+    return variantOptions[0];
+  }
+  const currentIndex = variantOptions.findIndex(
+    (option) => option.id === selectedQualityId,
+  );
+  if (currentIndex < 0 || currentIndex >= variantOptions.length - 1) {
+    return null;
+  }
+  return variantOptions[currentIndex + 1];
+}

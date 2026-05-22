@@ -94,6 +94,7 @@ export function WatchPage({ config }: WatchPageProps) {
     streamStatus,
     videoRef,
     selectedQualityId,
+    setSelectedQualityId,
   );
   const { isFullscreen, toggleFullscreen } = useFullscreen(stageRef);
 
