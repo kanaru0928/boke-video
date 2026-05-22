@@ -12,6 +12,7 @@ const thumbnailToneClassNames = [
 ] as const;
 
 type RoomThumbnail = {
+  crossOrigin: "use-credentials" | undefined;
   isPending: boolean;
   toneClassName: string;
   url: string | null;
@@ -20,6 +21,7 @@ type RoomThumbnail = {
 export function roomThumbnail(room: Room, config: AppConfig): RoomThumbnail {
   const isPending = room.thumbnailUrl === "";
   return {
+    crossOrigin: isPending ? undefined : "use-credentials",
     isPending,
     toneClassName: thumbnailToneClassNames[thumbnailTone(room.id)],
     url: isPending

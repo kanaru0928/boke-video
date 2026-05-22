@@ -104,6 +104,7 @@ function RoomCard({ config, room }: RoomCardProps) {
             <img
               alt=""
               className="block h-full w-full object-cover"
+              crossOrigin={thumbnail.crossOrigin}
               src={visibleThumbnailUrl}
               onError={() => setFailedThumbnailUrl(visibleThumbnailUrl)}
             />
