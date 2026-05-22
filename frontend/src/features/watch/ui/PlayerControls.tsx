@@ -2,6 +2,7 @@ import {
   Maximize,
   Minimize,
   Pause,
+  PictureInPicture,
   Play,
   RefreshCw,
   Settings,
@@ -17,16 +18,20 @@ import { useSettingsPopover } from "../model/useSettingsPopover";
 import { PlayerSettingsPopover } from "./PlayerSettingsPopover";
 
 type PlayerControlsProps = {
+  canToggleFullscreen: boolean;
+  canTogglePictureInPicture: boolean;
   commentsVisible: boolean;
   controlsVisible: boolean;
   elapsedSeconds: number;
   isFullscreen: boolean;
   isMuted: boolean;
   isPaused: boolean;
+  isPictureInPicture: boolean;
   onCommentsVisibleChange: (visible: boolean) => void;
   onQualityChange: (qualityId: string) => void;
   onToggleFullscreen: () => void;
   onToggleMuted: () => void;
+  onTogglePictureInPicture: () => void;
   onTogglePlayback: () => void;
   playbackQualities: PlaybackQualityOption[];
   selectedQualityId: string;
@@ -44,16 +49,20 @@ export const playerControlsClassName = cn(
 export const playerControlsVisibleClassName = "pointer-events-auto opacity-100";
 
 export function PlayerControls({
+  canToggleFullscreen,
+  canTogglePictureInPicture,
   commentsVisible,
   controlsVisible,
   elapsedSeconds,
   isFullscreen,
   isMuted,
   isPaused,
+  isPictureInPicture,
   onCommentsVisibleChange,
   onQualityChange,
   onToggleFullscreen,
   onToggleMuted,
+  onTogglePictureInPicture,
   onTogglePlayback,
   playbackQualities,
   selectedQualityId,
@@ -118,7 +127,7 @@ export function PlayerControls({
         </Button>
         <Button
           aria-label={isFullscreen ? "全画面を解除" : "全画面"}
-          className="max-[520px]:hidden"
+          disabled={!canToggleFullscreen}
           id="fullscreen-toggle"
           square
           onClick={onToggleFullscreen}
@@ -128,6 +137,19 @@ export function PlayerControls({
           ) : (
             <Maximize aria-hidden="true" size={18} />
           )}
+        </Button>
+        <Button
+          aria-label={
+            isPictureInPicture
+              ? "ピクチャインピクチャを解除"
+              : "ピクチャインピクチャ"
+          }
+          disabled={!canTogglePictureInPicture}
+          id="picture-in-picture-toggle"
+          square
+          onClick={onTogglePictureInPicture}
+        >
+          <PictureInPicture aria-hidden="true" size={18} />
         </Button>
         <div className="relative" ref={settingsRef}>
           <PlayerSettingsPopover
