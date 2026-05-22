@@ -2,6 +2,8 @@ import {
   CommentLaneAllocator,
   type CommentLaneAxis,
   type CommentPosition,
+  commentEdgeOffsetPixels,
+  commentFontSizePixels,
   commentLimit,
   horizontalLaneCount,
   horizontalLaneTop,
@@ -29,14 +31,22 @@ export class CommentRenderer {
     }
 
     const element = document.createElement("div");
-    element.className = commentClassName(message.direction, message.fontSize);
+    element.className = commentClassName(message.direction);
     element.textContent = message.body;
     element.style.color = message.color;
+    element.style.fontSize = `${commentFontSizePixels(
+      this.root.clientHeight,
+      message.fontSize,
+    )}px`;
     if (isMovingComment(message.direction)) {
       element.style.maxWidth = "none";
       element.style.width = "max-content";
     }
-    const occupiedLane = this.position(element, message.direction);
+    const occupiedLane = this.position(
+      element,
+      message.direction,
+      message.fontSize,
+    );
 
     this.active.add(element);
     this.root.append(element);
@@ -70,15 +80,20 @@ export class CommentRenderer {
   private position(
     element: HTMLElement,
     direction: CommentMessage["direction"],
+    fontSize: CommentMessage["fontSize"],
   ): OccupiedCommentLane | null {
     switch (direction) {
       case "rightToLeft":
       case "leftToRight": {
         const lane = this.laneAllocator.acquire(
           "horizontal",
-          horizontalLaneCount(this.root.clientHeight),
+          horizontalLaneCount(this.root.clientHeight, fontSize),
         );
-        const position = horizontalLaneTop(lane, this.root.clientHeight);
+        const position = horizontalLaneTop(
+          lane,
+          this.root.clientHeight,
+          fontSize,
+        );
         applyPosition(element, position);
         return { axis: "horizontal", lane };
       }
@@ -86,17 +101,23 @@ export class CommentRenderer {
       case "bottomToTop": {
         const lane = this.laneAllocator.acquire(
           "vertical",
-          verticalLaneCount(this.root.clientWidth),
+          verticalLaneCount(this.root.clientWidth, fontSize),
         );
-        const position = verticalLaneLeft(lane, this.root.clientWidth);
+        const position = verticalLaneLeft(
+          lane,
+          this.root.clientWidth,
+          fontSize,
+        );
         applyPosition(element, position);
         return { axis: "vertical", lane };
       }
       case "fixedTop":
-        element.style.top = "12px";
+        element.style.top = `${commentEdgeOffsetPixels(this.root.clientHeight)}px`;
         return null;
       case "fixedBottom":
-        element.style.bottom = "12px";
+        element.style.bottom = `${commentEdgeOffsetPixels(
+          this.root.clientHeight,
+        )}px`;
         return null;
     }
   }

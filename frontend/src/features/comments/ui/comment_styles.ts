@@ -1,16 +1,10 @@
 import { cn } from "../../../shared/ui/classNames";
-import type { CommentDirection, CommentFontSize } from "../model/types";
+import type { CommentDirection } from "../model/types";
 
 const commentBaseClassName = cn(
   "absolute max-w-[70%] whitespace-nowrap font-extrabold leading-[1.2] will-change-transform",
   "[text-shadow:2px_2px_0_#000000,-1px_-1px_0_#000000,1px_-1px_0_#000000,-1px_1px_0_#000000]",
 );
-
-const commentSizeClassNames: Record<CommentFontSize, string> = {
-  small: "text-[19px] max-[520px]:text-base",
-  medium: "text-[27px] max-[520px]:text-[22px]",
-  large: "text-4xl max-[520px]:text-[29px]",
-};
 
 const commentDirectionClassNames: Record<CommentDirection, string> = {
   bottomToTop: "bottom-0 [writing-mode:vertical-rl]",
@@ -21,13 +15,6 @@ const commentDirectionClassNames: Record<CommentDirection, string> = {
   topToBottom: "top-0 [writing-mode:vertical-rl]",
 };
 
-export function commentClassName(
-  direction: CommentDirection,
-  fontSize: CommentFontSize,
-): string {
-  return cn(
-    commentBaseClassName,
-    commentDirectionClassNames[direction],
-    commentSizeClassNames[fontSize],
-  );
+export function commentClassName(direction: CommentDirection): string {
+  return cn(commentBaseClassName, commentDirectionClassNames[direction]);
 }

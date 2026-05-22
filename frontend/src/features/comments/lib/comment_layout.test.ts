@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   CommentLaneAllocator,
+  commentEdgeOffsetPixels,
+  commentFontSizePixels,
   commentLimit,
   horizontalLaneCount,
   horizontalLaneTop,
@@ -66,49 +68,90 @@ describe("CommentLaneAllocator", () => {
 });
 
 describe("horizontalLaneCount", () => {
-  it("横移動コメントの行数を動画レイヤーの高さから返す", () => {
+  it("横移動コメントの行数をコメントサイズから返す", () => {
     expect(horizontalLaneCount(0)).toBe(1);
-    expect(horizontalLaneCount(180)).toBe(5);
+    expect(horizontalLaneCount(180)).toBe(14);
+    expect(horizontalLaneCount(180, "small")).toBe(18);
+    expect(horizontalLaneCount(180, "large")).toBe(11);
   });
 });
 
 describe("horizontalLaneTop", () => {
-  it("横移動コメントを動画レイヤー内の行に配置する", () => {
+  it("横移動コメントを動画レイヤー内の比率で配置する", () => {
     expect(horizontalLaneTop(0, 180)).toEqual({
       property: "top",
       value: "0px",
     });
     expect(horizontalLaneTop(4, 180)).toEqual({
       property: "top",
-      value: "136px",
+      value: "51.429px",
     });
-    expect(horizontalLaneTop(5, 180)).toEqual({
+    expect(horizontalLaneTop(14, 180)).toEqual({
       property: "top",
       value: "0px",
+    });
+  });
+
+  it("横移動コメントをコメントサイズごとの行に配置する", () => {
+    expect(horizontalLaneTop(1, 180, "small")).toEqual({
+      property: "top",
+      value: "10px",
+    });
+    expect(horizontalLaneTop(1, 180, "large")).toEqual({
+      property: "top",
+      value: "16.364px",
     });
   });
 });
 
 describe("verticalLaneCount", () => {
-  it("縦移動コメントの列数を動画レイヤーの幅から返す", () => {
+  it("縦移動コメントの列数をコメントサイズから返す", () => {
     expect(verticalLaneCount(0)).toBe(1);
-    expect(verticalLaneCount(160)).toBe(4);
+    expect(verticalLaneCount(160)).toBe(18);
+    expect(verticalLaneCount(160, "small")).toBe(24);
+    expect(verticalLaneCount(160, "large")).toBe(14);
   });
 });
 
 describe("verticalLaneLeft", () => {
-  it("縦移動コメントを動画レイヤー内の列に配置する", () => {
+  it("縦移動コメントを動画レイヤー内の比率で配置する", () => {
     expect(verticalLaneLeft(0, 160)).toEqual({
       property: "left",
       value: "0px",
     });
     expect(verticalLaneLeft(3, 160)).toEqual({
       property: "left",
-      value: "120px",
+      value: "26.667px",
     });
-    expect(verticalLaneLeft(4, 160)).toEqual({
+    expect(verticalLaneLeft(18, 160)).toEqual({
       property: "left",
       value: "0px",
     });
+  });
+
+  it("縦移動コメントをコメントサイズごとの列に配置する", () => {
+    expect(verticalLaneLeft(1, 160, "small")).toEqual({
+      property: "left",
+      value: "6.667px",
+    });
+    expect(verticalLaneLeft(1, 160, "large")).toEqual({
+      property: "left",
+      value: "11.429px",
+    });
+  });
+});
+
+describe("commentFontSizePixels", () => {
+  it("コメント文字サイズを動画レイヤーの高さに対する比率から返す", () => {
+    expect(commentFontSizePixels(180, "small")).toBe(8);
+    expect(commentFontSizePixels(180, "medium")).toBeCloseTo(10.286, 3);
+    expect(commentFontSizePixels(180, "large")).toBeCloseTo(13.091, 3);
+  });
+});
+
+describe("commentEdgeOffsetPixels", () => {
+  it("固定コメントの上下余白を動画レイヤーの高さに対する比率から返す", () => {
+    expect(commentEdgeOffsetPixels(180)).toBe(4.5);
+    expect(commentEdgeOffsetPixels(480)).toBe(12);
   });
 });

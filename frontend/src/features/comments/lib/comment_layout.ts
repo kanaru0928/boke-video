@@ -1,3 +1,5 @@
+import type { CommentFontSize } from "../model/types";
+
 export type CommentPosition =
   | { property: "top"; value: string }
   | { property: "bottom"; value: string }
@@ -8,8 +10,16 @@ export type CommentLaneAxis = "horizontal" | "vertical";
 const pcLimit = 120;
 const tabletLimit = 80;
 const mobileLimit = 45;
-const laneHeight = 34;
-const laneWidth = 40;
+const horizontalLaneCounts: Record<CommentFontSize, number> = {
+  small: 18,
+  medium: 14,
+  large: 11,
+};
+const verticalLaneCounts: Record<CommentFontSize, number> = {
+  small: 24,
+  medium: 18,
+  large: 14,
+};
 
 export function commentLimit(viewportWidth: number): number {
   if (viewportWidth < 640) {
@@ -84,30 +94,64 @@ function leastOccupiedLane(
   return selectedLane;
 }
 
-export function horizontalLaneCount(containerHeight: number): number {
-  return Math.max(1, Math.floor(containerHeight / laneHeight));
+export function horizontalLaneCount(
+  containerHeight: number,
+  fontSize: CommentFontSize = "medium",
+): number {
+  if (containerHeight <= 0) {
+    return 1;
+  }
+  return horizontalLaneCounts[fontSize];
 }
 
 export function horizontalLaneTop(
   laneIndex: number,
   containerHeight: number,
+  fontSize: CommentFontSize = "medium",
 ): CommentPosition {
+  const laneCount = horizontalLaneCount(containerHeight, fontSize);
+  const laneHeight = containerHeight / laneCount;
   return {
     property: "top",
-    value: `${(laneIndex % horizontalLaneCount(containerHeight)) * laneHeight}px`,
+    value: formatPixels((laneIndex % laneCount) * laneHeight),
   };
 }
 
-export function verticalLaneCount(containerWidth: number): number {
-  return Math.max(1, Math.floor(containerWidth / laneWidth));
+export function verticalLaneCount(
+  containerWidth: number,
+  fontSize: CommentFontSize = "medium",
+): number {
+  if (containerWidth <= 0) {
+    return 1;
+  }
+  return verticalLaneCounts[fontSize];
 }
 
 export function verticalLaneLeft(
   laneIndex: number,
   containerWidth: number,
+  fontSize: CommentFontSize = "medium",
 ): CommentPosition {
+  const laneCount = verticalLaneCount(containerWidth, fontSize);
+  const laneWidth = containerWidth / laneCount;
   return {
     property: "left",
-    value: `${(laneIndex % verticalLaneCount(containerWidth)) * laneWidth}px`,
+    value: formatPixels((laneIndex % laneCount) * laneWidth),
   };
+}
+
+export function commentFontSizePixels(
+  containerHeight: number,
+  fontSize: CommentFontSize,
+): number {
+  const laneCount = horizontalLaneCount(containerHeight, fontSize);
+  return (containerHeight / laneCount) * 0.8;
+}
+
+export function commentEdgeOffsetPixels(containerHeight: number): number {
+  return containerHeight * 0.025;
+}
+
+function formatPixels(value: number): string {
+  return `${Number(value.toFixed(3))}px`;
 }
