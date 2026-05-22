@@ -12,6 +12,7 @@ import { useAdminRooms } from "../../rooms/model/useAdminRooms";
 import { buildWhipIngestUrl } from "../lib/ingest_url";
 import { AdminRoom } from "../ui/AdminRoom";
 import { ObsSettings } from "../ui/ObsSettings";
+import { ObsWebsocketSettings } from "../ui/ObsWebsocketSettings";
 
 type AdminPageProps = {
   config: AppConfig;
@@ -28,6 +29,8 @@ type CommentMap = Record<string, AdminCommentState>;
 export function AdminPage({ config }: AdminPageProps) {
   const [title, setTitle] = useState("");
   const [commentsByRoomId, setCommentsByRoomId] = useState<CommentMap>({});
+  const [obsWebsocketUrl, setObsWebsocketUrl] = useState("");
+  const [obsWebsocketPassword, setObsWebsocketPassword] = useState("");
   const [whipTokensByRoomId, setWhipTokensByRoomId] = useState<
     Record<string, string>
   >({});
@@ -169,6 +172,12 @@ export function AdminPage({ config }: AdminPageProps) {
         ]}
       />
       <ObsSettings />
+      <ObsWebsocketSettings
+        obsWebsocketPassword={obsWebsocketPassword}
+        obsWebsocketUrl={obsWebsocketUrl}
+        onObsWebsocketPasswordChange={setObsWebsocketPassword}
+        onObsWebsocketUrlChange={setObsWebsocketUrl}
+      />
       <Board icon={MonitorPlay} title="番組管理">
         <form
           className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] gap-[5px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2"
@@ -203,6 +212,8 @@ export function AdminPage({ config }: AdminPageProps) {
               onRemoveRoom={removeRoom}
               onRotateIngestToken={rotateIngestToken}
               onUpdateTitle={updateRoomTitleById}
+              obsWebsocketPassword={obsWebsocketPassword}
+              obsWebsocketUrl={obsWebsocketUrl}
               room={room}
               serverUrl={buildWhipIngestUrl(config, room.id)}
               whipBearerToken={whipTokensByRoomId[room.id] ?? null}

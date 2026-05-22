@@ -1,7 +1,5 @@
 import { Check, Clipboard, RadioTower } from "lucide-react";
 import { Button } from "../../../shared/ui/Button";
-import { TextInput } from "../../../shared/ui/FormControl";
-import { defaultObsWebsocketUrl } from "../lib/obs_stream_service";
 
 export type IngestCopyTarget = "serverUrl" | "bearerToken";
 export type ObsApplyStatus = "idle" | "applying" | "applied" | "failed";
@@ -10,12 +8,8 @@ type IngestSettingsProps = {
   copiedTarget: IngestCopyTarget | null;
   obsApplyError: string | null;
   obsApplyStatus: ObsApplyStatus;
-  obsWebsocketPassword: string;
-  obsWebsocketUrl: string;
   onApplyObs: () => Promise<void>;
   onCopy: (target: IngestCopyTarget, value: string) => Promise<void>;
-  onObsWebsocketPasswordChange: (value: string) => void;
-  onObsWebsocketUrlChange: (value: string) => void;
   serverUrl: string;
   whipBearerToken: string | null;
 };
@@ -24,12 +18,8 @@ export function IngestSettings({
   copiedTarget,
   obsApplyError,
   obsApplyStatus,
-  obsWebsocketPassword,
-  obsWebsocketUrl,
   onApplyObs,
   onCopy,
-  onObsWebsocketPasswordChange,
-  onObsWebsocketUrlChange,
   serverUrl,
   whipBearerToken,
 }: IngestSettingsProps) {
@@ -41,7 +31,7 @@ export function IngestSettings({
       <div className="flex flex-wrap gap-[5px]">
         <Button
           className="mr-2 w-[126px] select-none text-sm disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={whipBearerToken === null || obsApplyStatus === "applying"}
+          disabled={obsApplyStatus === "applying"}
           onClick={() => void onApplyObs()}
         >
           <RadioTower aria-hidden="true" size={17} />
@@ -61,26 +51,6 @@ export function IngestSettings({
               ? Promise.resolve()
               : onCopy("bearerToken", whipBearerToken)
           }
-        />
-      </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,180px)] gap-[5px] max-[760px]:grid-cols-1">
-        <TextInput
-          aria-label="OBS WebSocket URL"
-          onChange={(event) =>
-            onObsWebsocketUrlChange(event.currentTarget.value)
-          }
-          placeholder={defaultObsWebsocketUrl}
-          type="text"
-          value={obsWebsocketUrl}
-        />
-        <TextInput
-          aria-label="OBS WebSocketパスワード"
-          onChange={(event) =>
-            onObsWebsocketPasswordChange(event.currentTarget.value)
-          }
-          placeholder="パスワード"
-          type="password"
-          value={obsWebsocketPassword}
         />
       </div>
       {whipBearerToken === null ? (

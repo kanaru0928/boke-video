@@ -27,6 +27,8 @@ type AdminRoomProps = {
   onRemoveRoom: (roomId: string) => Promise<void>;
   onRotateIngestToken: (roomId: string) => Promise<void>;
   onUpdateTitle: (roomId: string, title: string) => Promise<void>;
+  obsWebsocketPassword: string;
+  obsWebsocketUrl: string;
   room: Room;
   serverUrl: string;
   whipBearerToken: string | null;
@@ -46,6 +48,8 @@ export function AdminRoom({
   onRemoveRoom,
   onRotateIngestToken,
   onUpdateTitle,
+  obsWebsocketPassword,
+  obsWebsocketUrl,
   room,
   serverUrl,
   whipBearerToken,
@@ -54,8 +58,6 @@ export function AdminRoom({
   const [copiedTarget, setCopiedTarget] = useState<IngestCopyTarget | null>(
     null,
   );
-  const [obsWebsocketUrl, setObsWebsocketUrl] = useState("");
-  const [obsWebsocketPassword, setObsWebsocketPassword] = useState("");
   const [obsApplyStatus, setObsApplyStatus] = useState<ObsApplyStatus>("idle");
   const [obsApplyError, setObsApplyError] = useState<string | null>(null);
   useEffect(() => {
@@ -75,6 +77,8 @@ export function AdminRoom({
 
   const applyObsSettings = async (): Promise<void> => {
     if (whipBearerToken === null) {
+      setObsApplyError("Bearer Tokenを再発行してからOBSへ反映してください。");
+      setObsApplyStatus("failed");
       return;
     }
     setObsApplyStatus("applying");
@@ -107,14 +111,10 @@ export function AdminRoom({
           copiedTarget={copiedTarget}
           obsApplyError={obsApplyError}
           obsApplyStatus={obsApplyStatus}
-          obsWebsocketPassword={obsWebsocketPassword}
-          obsWebsocketUrl={obsWebsocketUrl}
           serverUrl={serverUrl}
           whipBearerToken={whipBearerToken}
           onApplyObs={applyObsSettings}
           onCopy={copyIngestValue}
-          onObsWebsocketPasswordChange={setObsWebsocketPassword}
-          onObsWebsocketUrlChange={setObsWebsocketUrl}
         />
       </div>
       <AdminRoomActions
