@@ -1,5 +1,6 @@
 import { Check, Clipboard, RadioTower } from "lucide-react";
 import { Button } from "../../../shared/ui/Button";
+import { AdminStatusLine } from "./AdminStatusLine";
 
 export type IngestCopyTarget = "serverUrl" | "bearerToken";
 export type ObsApplyStatus = "idle" | "applying" | "applied" | "failed";
@@ -23,10 +24,17 @@ export function IngestSettings({
   serverUrl,
   whipBearerToken,
 }: IngestSettingsProps) {
+  const status = ingestStatusMessage({
+    copiedTarget,
+    obsApplyError,
+    obsApplyStatus,
+    whipBearerToken,
+  });
+
   return (
     <section
       aria-label="配信枠のOBS入力"
-      className="grid select-none gap-[6px] border border-[#c9c9c9] bg-[#f7f7f7] p-[6px]"
+      className="relative grid select-none gap-[6px] border border-[#c9c9c9] bg-[#f7f7f7] p-[6px]"
     >
       <div className="flex flex-wrap gap-[5px]">
         <Button
@@ -53,17 +61,11 @@ export function IngestSettings({
           }
         />
       </div>
-      {whipBearerToken === null ? (
-        <p className="m-0 text-xs text-[#555555]">
-          Tokenは作成時または再発行時にコピーできます。
-        </p>
-      ) : null}
-      {obsApplyStatus === "applied" ? (
-        <p className="m-0 text-xs text-[#0b5f24]">OBSへ反映しました。</p>
-      ) : null}
-      {obsApplyStatus === "failed" && obsApplyError !== null ? (
-        <p className="m-0 text-xs text-[#b00020]">{obsApplyError}</p>
-      ) : null}
+      <AdminStatusLine
+        className="absolute left-2 bottom-[calc(100%+4px)] z-10 max-w-[min(520px,calc(100vw-48px))]"
+        message={status.message}
+        tone={status.tone}
+      />
     </section>
   );
 }
@@ -83,7 +85,7 @@ function IngestCopyButton({
 }: IngestCopyButtonProps) {
   return (
     <Button
-      className="select-none text-sm disabled:cursor-not-allowed disabled:opacity-60"
+      className="w-[176px] select-none text-sm disabled:cursor-not-allowed disabled:opacity-60"
       disabled={disabled}
       onClick={() => void onCopy()}
     >
@@ -95,4 +97,31 @@ function IngestCopyButton({
       {copied ? "コピー済み" : label}
     </Button>
   );
+}
+
+function ingestStatusMessage({
+  copiedTarget,
+  obsApplyError,
+  obsApplyStatus,
+  whipBearerToken,
+}: Pick<
+  IngestSettingsProps,
+  "copiedTarget" | "obsApplyError" | "obsApplyStatus" | "whipBearerToken"
+>): { message: string; tone: "neutral" | "success" | "error" } {
+  if (obsApplyStatus === "failed" && obsApplyError !== null) {
+    return { message: obsApplyError, tone: "error" };
+  }
+  if (obsApplyStatus === "applied") {
+    return { message: "OBSへ反映しました。", tone: "success" };
+  }
+  if (copiedTarget === "serverUrl") {
+    return { message: "サーバーURLをコピーしました。", tone: "success" };
+  }
+  if (copiedTarget === "bearerToken") {
+    return { message: "Bearer Tokenをコピーしました。", tone: "success" };
+  }
+  if (whipBearerToken === null) {
+    return { message: "", tone: "neutral" };
+  }
+  return { message: "", tone: "neutral" };
 }

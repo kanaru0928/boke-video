@@ -62,6 +62,24 @@ export function AdminRoom({
   useEffect(() => {
     setTitle(room.title);
   }, [room.title]);
+  useEffect(() => {
+    if (copiedTarget === null) {
+      return;
+    }
+    const timeoutId = window.setTimeout(() => {
+      setCopiedTarget(null);
+    }, 3200);
+    return () => window.clearTimeout(timeoutId);
+  }, [copiedTarget]);
+  useEffect(() => {
+    if (obsApplyStatus !== "applied") {
+      return;
+    }
+    const timeoutId = window.setTimeout(() => {
+      setObsApplyStatus("idle");
+    }, 3200);
+    return () => window.clearTimeout(timeoutId);
+  }, [obsApplyStatus]);
 
   const trimmedTitle = normalizeAdminRoomTitle(title);
   const canSaveTitle = canSaveAdminRoomTitle(title, room.title);

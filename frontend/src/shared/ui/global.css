@@ -1,0 +1,9 @@
+@keyframes admin-status-fade {
+  0%,
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

@@ -58,6 +58,16 @@ export function AdminPage({ config }: AdminPageProps) {
     );
   }, []);
 
+  useEffect(() => {
+    if (!isObsWebsocketConnectionSaved) {
+      return;
+    }
+    const timeoutId = window.setTimeout(() => {
+      setIsObsWebsocketConnectionSaved(false);
+    }, 3200);
+    return () => window.clearTimeout(timeoutId);
+  }, [isObsWebsocketConnectionSaved]);
+
   const submitRoom = async (
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {

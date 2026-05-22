@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { appConfig } from "./shared/config/config";
+import "./shared/ui/global.css";
 import "tailwindcss/index.css";
 
 const app = document.querySelector("#app");
