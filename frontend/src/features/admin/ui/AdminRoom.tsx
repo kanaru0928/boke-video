@@ -11,6 +11,7 @@ import {
   configureObsWhipStream,
   formatObsConnectionError,
 } from "../lib/obs_stream_service";
+import type { ObsWebsocketConnectionSettings } from "../lib/obs_websocket_connection";
 import { AdminCommentList } from "./AdminCommentList";
 import { AdminRoomActions } from "./AdminRoomActions";
 import {
@@ -27,6 +28,7 @@ type AdminRoomProps = {
   onRemoveRoom: (roomId: string) => Promise<void>;
   onRotateIngestToken: (roomId: string) => Promise<void>;
   onUpdateTitle: (roomId: string, title: string) => Promise<void>;
+  obsWebsocketConnection: ObsWebsocketConnectionSettings;
   room: Room;
   serverUrl: string;
   whipBearerToken: string | null;
@@ -46,6 +48,7 @@ export function AdminRoom({
   onRemoveRoom,
   onRotateIngestToken,
   onUpdateTitle,
+  obsWebsocketConnection,
   room,
   serverUrl,
   whipBearerToken,
@@ -54,13 +57,29 @@ export function AdminRoom({
   const [copiedTarget, setCopiedTarget] = useState<IngestCopyTarget | null>(
     null,
   );
-  const [obsWebsocketUrl, setObsWebsocketUrl] = useState("");
-  const [obsWebsocketPassword, setObsWebsocketPassword] = useState("");
   const [obsApplyStatus, setObsApplyStatus] = useState<ObsApplyStatus>("idle");
   const [obsApplyError, setObsApplyError] = useState<string | null>(null);
   useEffect(() => {
     setTitle(room.title);
   }, [room.title]);
+  useEffect(() => {
+    if (copiedTarget === null) {
+      return;
+    }
+    const timeoutId = window.setTimeout(() => {
+      setCopiedTarget(null);
+    }, 3200);
+    return () => window.clearTimeout(timeoutId);
+  }, [copiedTarget]);
+  useEffect(() => {
+    if (obsApplyStatus !== "applied") {
+      return;
+    }
+    const timeoutId = window.setTimeout(() => {
+      setObsApplyStatus("idle");
+    }, 3200);
+    return () => window.clearTimeout(timeoutId);
+  }, [obsApplyStatus]);
 
   const trimmedTitle = normalizeAdminRoomTitle(title);
   const canSaveTitle = canSaveAdminRoomTitle(title, room.title);
@@ -75,6 +94,8 @@ export function AdminRoom({
 
   const applyObsSettings = async (): Promise<void> => {
     if (whipBearerToken === null) {
+      setObsApplyError("Bearer Tokenを再発行してからOBSへ反映してください。");
+      setObsApplyStatus("failed");
       return;
     }
     setObsApplyStatus("applying");
@@ -82,9 +103,8 @@ export function AdminRoom({
     try {
       await configureObsWhipStream({
         bearerToken: whipBearerToken,
+        obsWebsocketConnection,
         serverUrl,
-        websocketPassword: obsWebsocketPassword,
-        websocketUrl: obsWebsocketUrl,
       });
       setObsApplyStatus("applied");
     } catch (error) {
@@ -107,14 +127,10 @@ export function AdminRoom({
           copiedTarget={copiedTarget}
           obsApplyError={obsApplyError}
           obsApplyStatus={obsApplyStatus}
-          obsWebsocketPassword={obsWebsocketPassword}
-          obsWebsocketUrl={obsWebsocketUrl}
           serverUrl={serverUrl}
           whipBearerToken={whipBearerToken}
           onApplyObs={applyObsSettings}
           onCopy={copyIngestValue}
-          onObsWebsocketPasswordChange={setObsWebsocketPassword}
-          onObsWebsocketUrlChange={setObsWebsocketUrl}
         />
       </div>
       <AdminRoomActions

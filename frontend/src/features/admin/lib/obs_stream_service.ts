@@ -1,12 +1,14 @@
 import OBSWebSocket, { type OBSRequestTypes } from "obs-websocket-js";
-
-export const defaultObsWebsocketUrl = "ws://127.0.0.1:4455";
+import {
+  buildObsWebsocketUrl,
+  normalizeObsWebsocketPassword,
+  type ObsWebsocketConnectionSettings,
+} from "./obs_websocket_connection";
 
 type ConfigureObsWhipStreamInput = {
   bearerToken: string;
+  obsWebsocketConnection: ObsWebsocketConnectionSettings;
   serverUrl: string;
-  websocketPassword: string;
-  websocketUrl: string;
 };
 
 export function buildObsWhipStreamServiceSettings(
@@ -24,16 +26,15 @@ export function buildObsWhipStreamServiceSettings(
 
 export async function configureObsWhipStream({
   bearerToken,
+  obsWebsocketConnection,
   serverUrl,
-  websocketPassword,
-  websocketUrl,
 }: ConfigureObsWhipStreamInput): Promise<void> {
   const obs = new OBSWebSocket();
 
   try {
     await obs.connect(
-      normalizeObsWebsocketUrl(websocketUrl),
-      normalizeObsWebsocketPassword(websocketPassword),
+      buildObsWebsocketUrl(obsWebsocketConnection),
+      normalizeObsWebsocketPassword(obsWebsocketConnection.serverPassword),
     );
     await obs.call(
       "SetStreamServiceSettings",
@@ -53,16 +54,4 @@ export function formatObsConnectionError(error: unknown): string {
     return error.message;
   }
   return "OBS WebSocketに接続できませんでした。OBSのWebSocket設定、URL、パスワードを確認してください。";
-}
-
-function normalizeObsWebsocketUrl(websocketUrl: string): string {
-  const trimmedUrl = websocketUrl.trim();
-  return trimmedUrl === "" ? defaultObsWebsocketUrl : trimmedUrl;
-}
-
-function normalizeObsWebsocketPassword(
-  websocketPassword: string,
-): string | undefined {
-  const trimmedPassword = websocketPassword.trim();
-  return trimmedPassword === "" ? undefined : trimmedPassword;
 }
