@@ -42,6 +42,7 @@ export function useStreamPlayer(
   const [isManualPlaybackRequired, setIsManualPlaybackRequired] =
     useState(false);
   const [isMutedAutoplay, setIsMutedAutoplay] = useState(false);
+  const preferredMutedRef = useRef<boolean | null>(null);
   const dismissMutedAutoplayNotice = (): void => {
     setIsMutedAutoplay(false);
   };
@@ -67,6 +68,7 @@ export function useStreamPlayer(
       setStreamMessage("");
     };
     const hideMutedAutoplayNotice = (): void => {
+      preferredMutedRef.current = video.muted;
       if (!video.muted) {
         setIsMutedAutoplay(false);
       }
@@ -76,6 +78,29 @@ export function useStreamPlayer(
     return () => {
       video.removeEventListener("play", clearPlaybackMessage);
       video.removeEventListener("volumechange", hideMutedAutoplayNotice);
+    };
+  }, [videoRef]);
+
+  useEffect(() => {
+    const restorePlaybackAfterTabReturn = (): void => {
+      const video = videoRef.current;
+      if (document.visibilityState !== "visible" || video === null) {
+        return;
+      }
+      if (preferredMutedRef.current === false) {
+        video.muted = false;
+      }
+      if (!video.paused) {
+        return;
+      }
+      void startVideoPlayback(video, { sound: "preserve" }).catch(() => {});
+    };
+    document.addEventListener("visibilitychange", restorePlaybackAfterTabReturn);
+    return () => {
+      document.removeEventListener(
+        "visibilitychange",
+        restorePlaybackAfterTabReturn,
+      );
     };
   }, [videoRef]);
 
