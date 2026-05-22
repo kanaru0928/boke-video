@@ -14,6 +14,7 @@ import {
 import { NotFoundPage } from "../../notFound/page/NotFoundPage";
 import { startVideoPlayback } from "../../player/lib/oven_media_engine_player";
 import { useRooms } from "../../rooms/model/useRooms";
+import { mutedAutoplayNotice } from "../lib/autoplay_audio";
 import { isCommentSubmitShortcut } from "../lib/comment_shortcuts";
 import { autoQualityId } from "../lib/stream_quality";
 import { useCommentRenderer } from "../model/useCommentRenderer";
@@ -96,6 +97,7 @@ export function WatchPage({ config }: WatchPageProps) {
     selectedQualityId,
   );
   const { isFullscreen, toggleFullscreen } = useFullscreen(stageRef);
+  const autoplayAudioNotice = mutedAutoplayNotice(isMutedAutoplay);
 
   useEffect(() => {
     if (selectedRoomId !== "") {
@@ -197,7 +199,7 @@ export function WatchPage({ config }: WatchPageProps) {
         selectedRoom={visibleRoom}
         streamStatus={streamStatus}
       />
-      {isMutedAutoplay ? (
+      {autoplayAudioNotice !== null ? (
         <section
           className={cn(
             "mx-auto mb-2 grid w-[min(720px,100%)] grid-cols-[minmax(0,1fr)_auto] items-center gap-2",
@@ -207,7 +209,7 @@ export function WatchPage({ config }: WatchPageProps) {
           )}
         >
           <p className="m-0 min-w-0 text-xs leading-[1.45] font-extrabold [overflow-wrap:anywhere] [text-shadow:1px_1px_0_#000000]">
-            音声なしで再生中です。次回から音声ありで自動再生したい場合は、アドレスバー左のサイト設定で音声を許可してください。
+            {autoplayAudioNotice.message}
           </p>
           <button
             className={cn(
@@ -219,7 +221,7 @@ export function WatchPage({ config }: WatchPageProps) {
             onClick={toggleMuted}
           >
             <Volume2 aria-hidden="true" size={16} />
-            音声をオン
+            {autoplayAudioNotice.actionLabel}
           </button>
         </section>
       ) : null}
@@ -235,6 +237,7 @@ export function WatchPage({ config }: WatchPageProps) {
             commentsLayerRef={commentsLayerRef}
             elapsedSeconds={elapsedSeconds}
             isMuted={isMuted}
+            isMutedAutoplay={isMutedAutoplay}
             isPaused={isPaused}
             isFullscreen={isFullscreen}
             isManualPlaybackRequired={isManualPlaybackRequired}

@@ -11,6 +11,7 @@ import {
 import { Button } from "../../../shared/ui/Button";
 import { cn } from "../../../shared/ui/classNames";
 import type { RoomStreamStatus } from "../../rooms/api/room_api";
+import { audioToggleLabel } from "../lib/autoplay_audio";
 import { formatElapsedTime } from "../lib/room_activity";
 import type { PlaybackQualityOption } from "../lib/stream_quality";
 import { useSettingsPopover } from "../model/useSettingsPopover";
@@ -22,6 +23,7 @@ type PlayerControlsProps = {
   elapsedSeconds: number;
   isFullscreen: boolean;
   isMuted: boolean;
+  isMutedAutoplay: boolean;
   isPaused: boolean;
   onCommentsVisibleChange: (visible: boolean) => void;
   onQualityChange: (qualityId: string) => void;
@@ -49,6 +51,7 @@ export function PlayerControls({
   elapsedSeconds,
   isFullscreen,
   isMuted,
+  isMutedAutoplay,
   isPaused,
   onCommentsVisibleChange,
   onQualityChange,
@@ -82,8 +85,9 @@ export function PlayerControls({
           )}
         </Button>
         <Button
-          aria-label={isMuted ? "消音中" : "音声"}
+          aria-label={audioToggleLabel({ isMuted, isMutedAutoplay })}
           id="mute-toggle"
+          primary={isMutedAutoplay}
           square
           onClick={onToggleMuted}
         >

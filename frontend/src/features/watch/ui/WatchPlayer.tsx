@@ -18,6 +18,7 @@ type WatchPlayerProps = {
   isFullscreen: boolean;
   isManualPlaybackRequired: boolean;
   isMuted: boolean;
+  isMutedAutoplay: boolean;
   isPaused: boolean;
   isStreamLoading: boolean;
   onToggleFullscreen: () => void;
@@ -54,6 +55,7 @@ export function WatchPlayer({
   isFullscreen,
   isManualPlaybackRequired,
   isMuted,
+  isMutedAutoplay,
   isPaused,
   isStreamLoading,
   onToggleFullscreen,
@@ -171,6 +173,7 @@ export function WatchPlayer({
           elapsedSeconds={elapsedSeconds}
           isFullscreen={isFullscreen}
           isMuted={isMuted}
+          isMutedAutoplay={isMutedAutoplay}
           isPaused={isPaused}
           playbackQualities={playbackQualities}
           selectedQualityId={selectedQualityId}
