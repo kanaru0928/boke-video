@@ -150,7 +150,7 @@ export function useStreamPlayer(
         setIsStreamLoading(false);
         setIsManualPlaybackRequired(false);
         setStreamMessage("");
-        void startVideoPlayback(video)
+        void startVideoPlayback(video, { mutedFallback: true })
           .then((playbackStartResult) => {
             if (canceled) {
               return;

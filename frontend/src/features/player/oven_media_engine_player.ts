@@ -2,6 +2,10 @@ type ConnectionClosedHandler = () => void;
 
 export type PlaybackStartResult = "playing" | "manualPlaybackRequired";
 
+type PlaybackStartOptions = {
+  mutedFallback?: boolean;
+};
+
 type OmeSessionDescription = {
   sdp: string;
   type: RTCSdpType;
@@ -100,7 +104,26 @@ export class OvenMediaEnginePlayer {
 
 export async function startVideoPlayback(
   video: HTMLVideoElement,
+  options: PlaybackStartOptions = {},
 ): Promise<PlaybackStartResult> {
+  try {
+    await video.play();
+    return "playing";
+  } catch (error) {
+    if (requiresManualPlayback(error)) {
+      if (options.mutedFallback && !video.muted) {
+        return startMutedPlayback(video);
+      }
+      return "manualPlaybackRequired";
+    }
+    throw error;
+  }
+}
+
+async function startMutedPlayback(
+  video: HTMLVideoElement,
+): Promise<PlaybackStartResult> {
+  video.muted = true;
   try {
     await video.play();
     return "playing";
