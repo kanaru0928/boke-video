@@ -671,11 +671,15 @@ func TestServerProxiesRealThumbnailFromStreamMonitor(t *testing.T) {
 }
 
 func TestServerProxiesWhipOnlyWithRoomBearerToken(t *testing.T) {
-	upstreamCalled := false
+	upstreamRequests := 0
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		upstreamCalled = true
+		upstreamRequests++
 		if r.Header.Get("Authorization") != "" {
 			t.Fatalf("authorization header reached upstream")
+		}
+		if r.Method == http.MethodDelete {
+			w.WriteHeader(http.StatusNoContent)
+			return
 		}
 		w.WriteHeader(http.StatusCreated)
 	}))
@@ -712,8 +716,35 @@ func TestServerProxiesWhipOnlyWithRoomBearerToken(t *testing.T) {
 	if recorder.Code != http.StatusCreated {
 		t.Fatalf("proxy status = %d, body = %s", recorder.Code, recorder.Body.String())
 	}
-	if !upstreamCalled {
-		t.Fatal("upstream was not called")
+	if upstreamRequests != 1 {
+		t.Fatalf("upstream requests = %d", upstreamRequests)
+	}
+
+	unauthorizedDelete := httptest.NewRequest(http.MethodDelete, "/live/obs-room/whip-session", nil)
+	unauthorizedDeleteRecorder := httptest.NewRecorder()
+	server.ServeHTTP(unauthorizedDeleteRecorder, unauthorizedDelete)
+	if unauthorizedDeleteRecorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unauthorized delete status = %d, body = %s", unauthorizedDeleteRecorder.Code, unauthorizedDeleteRecorder.Body.String())
+	}
+	if _, err := server.repository.GetRoom(context.Background(), "obs-room"); err != nil {
+		t.Fatalf("GetRoom after unauthorized delete returned error: %v", err)
+	}
+	if upstreamRequests != 1 {
+		t.Fatalf("upstream requests after unauthorized delete = %d", upstreamRequests)
+	}
+
+	deleteRequest := httptest.NewRequest(http.MethodDelete, "/live/obs-room/whip-session", nil)
+	deleteRequest.Header.Set("Authorization", "Bearer "+created.WhipBearerToken)
+	deleteRecorder := httptest.NewRecorder()
+	server.ServeHTTP(deleteRecorder, deleteRequest)
+	if deleteRecorder.Code != http.StatusNoContent {
+		t.Fatalf("delete status = %d, body = %s", deleteRecorder.Code, deleteRecorder.Body.String())
+	}
+	if upstreamRequests != 2 {
+		t.Fatalf("upstream requests after delete = %d", upstreamRequests)
+	}
+	if _, err := server.repository.GetRoom(context.Background(), "obs-room"); !errors.Is(err, sql.ErrNoRows) {
+		t.Fatalf("GetRoom after delete error = %v", err)
 	}
 }
 

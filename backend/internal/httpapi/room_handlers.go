@@ -230,6 +230,16 @@ func (s *Server) handleWhipProxy(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
+	if r.Method == http.MethodDelete {
+		recorder := newStatusRecorder(w)
+		s.whipProxy.ServeHTTP(recorder, r)
+		if isSuccessfulStatus(recorder.Status()) {
+			if err := s.repository.DeleteRoomByID(r.Context(), roomID); err != nil {
+				s.logger.Warn("delete room after whip termination", "room_id", roomID, "error", err)
+			}
+		}
+		return
+	}
 	s.whipProxy.ServeHTTP(w, r)
 }
 
