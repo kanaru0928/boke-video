@@ -150,7 +150,10 @@ export function useStreamPlayer(
         setIsStreamLoading(false);
         setIsManualPlaybackRequired(false);
         setStreamMessage("");
-        void startVideoPlayback(video, { sound: "unmute" })
+        void startVideoPlayback(video, {
+          allowMutedAutoplay: true,
+          sound: "unmute",
+        })
           .then((playbackStartResult) => {
             if (canceled) {
               return;

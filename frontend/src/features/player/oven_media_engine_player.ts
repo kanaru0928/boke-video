@@ -1,8 +1,12 @@
 type ConnectionClosedHandler = () => void;
 
-export type PlaybackStartResult = "playing" | "manualPlaybackRequired";
+export type PlaybackStartResult =
+  | "playing"
+  | "mutedPlaying"
+  | "manualPlaybackRequired";
 
 type PlaybackStartOptions = {
+  allowMutedAutoplay?: boolean;
   sound?: "preserve" | "unmute";
 };
 
@@ -114,6 +118,24 @@ export async function startVideoPlayback(
   try {
     await video.play();
     return "playing";
+  } catch (error) {
+    if (requiresManualPlayback(error)) {
+      if (options.allowMutedAutoplay === true && !video.muted) {
+        return startMutedPlayback(video);
+      }
+      return "manualPlaybackRequired";
+    }
+    throw error;
+  }
+}
+
+async function startMutedPlayback(
+  video: PlayableMediaElement,
+): Promise<PlaybackStartResult> {
+  video.muted = true;
+  try {
+    await video.play();
+    return "mutedPlaying";
   } catch (error) {
     if (requiresManualPlayback(error)) {
       return "manualPlaybackRequired";
