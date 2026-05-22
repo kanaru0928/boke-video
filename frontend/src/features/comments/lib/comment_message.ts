@@ -4,6 +4,7 @@ import {
   type CommentMessage,
   commentColors,
   commentDirections,
+  type OwnerProfileMessage,
   type PresenceMessage,
 } from "../model/types";
 
@@ -37,6 +38,20 @@ export function isPresenceMessage(value: unknown): value is PresenceMessage {
     Number.isInteger(message.currentViewerCount) &&
     typeof message.maxConcurrentViewerCount === "number" &&
     Number.isInteger(message.maxConcurrentViewerCount)
+  );
+}
+
+export function isOwnerProfileMessage(
+  value: unknown,
+): value is OwnerProfileMessage {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const message = value as Record<string, unknown>;
+  return (
+    message.type === "ownerProfile" &&
+    typeof message.roomId === "string" &&
+    typeof message.ownerDisplayName === "string"
   );
 }
 

@@ -9,6 +9,7 @@ import {
   type CommentFontSize,
   type CommentMessage,
   commentColors,
+  type OwnerProfileMessage,
 } from "../../comments/model/types";
 import { NotFoundPage } from "../../notFound/page/NotFoundPage";
 import { startVideoPlayback } from "../../player/lib/oven_media_engine_player";
@@ -47,6 +48,9 @@ export function WatchPage({ config }: WatchPageProps) {
   const [selectedColor, setSelectedColor] = useState<string>(commentColors[0]);
   const [commentsVisible, setCommentsVisible] = useState(true);
   const [selectedQualityId, setSelectedQualityId] = useState(autoQualityId);
+  const [ownerDisplayNamesByRoomId, setOwnerDisplayNamesByRoomId] = useState<
+    Record<string, string>
+  >({});
   const { rooms } = useRooms(config);
   const { commentsLayerRef, renderComment } = useCommentRenderer();
   const {
@@ -69,6 +73,14 @@ export function WatchPage({ config }: WatchPageProps) {
     }
   }, [selectedRoom]);
   const visibleRoom = selectedRoom ?? lastSelectedRoom;
+  const ownerDisplayName =
+    visibleRoom === null
+      ? undefined
+      : ownerDisplayNamesByRoomId[visibleRoom.id];
+  const visibleRoomWithOwner =
+    visibleRoom === null || ownerDisplayName === undefined
+      ? visibleRoom
+      : { ...visibleRoom, ownerDisplayName };
   const streamStatus =
     stats?.streamStatus ?? visibleRoom?.streamStatus ?? "waiting";
   const commentsDisabled = streamEnded || streamStatus === "ended";
@@ -79,10 +91,17 @@ export function WatchPage({ config }: WatchPageProps) {
     }
     recordComment(message);
   };
+  const updateOwnerProfile = (message: OwnerProfileMessage): void => {
+    setOwnerDisplayNamesByRoomId((current) => ({
+      ...current,
+      [message.roomId]: message.ownerDisplayName,
+    }));
+  };
   const { sendComment } = useCommentSocket(
     config,
     activeRoomId,
     renderAndRecordComment,
+    updateOwnerProfile,
     updatePresence,
   );
   const {
@@ -211,7 +230,7 @@ export function WatchPage({ config }: WatchPageProps) {
         ]}
       />
       <WatchProgramHeader
-        selectedRoom={visibleRoom}
+        selectedRoom={visibleRoomWithOwner}
         streamStatus={streamStatus}
       />
       {autoplayAudioNotice !== null ? (

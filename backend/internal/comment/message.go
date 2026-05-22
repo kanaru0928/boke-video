@@ -45,6 +45,12 @@ type Author struct {
 	DisplayName string `json:"displayName"`
 }
 
+type OwnerProfileMessage struct {
+	Type             string `json:"type"`
+	RoomID           string `json:"roomId"`
+	OwnerDisplayName string `json:"ownerDisplayName"`
+}
+
 type StoredComment struct {
 	ID                string
 	RoomID            string
