@@ -29,11 +29,10 @@ docs/      仕様
 
 ```sh
 pnpm install
-pnpm demo:media
 pnpm dev
 ```
 
-`pnpm demo:media`はローカル開発用にOvenMediaEngineをDockerで起動し、`127.0.0.1:3333`でOBSのWHIP入力とブラウザのWebRTC視聴を受けます。OBSのサーバーには`http://127.0.0.1:3333/live/<roomId>?direction=whip`を入れ、Bearer Tokenは空にします。本番ではOvenMediaEngineをネイティブインストールしてsystemdで管理します。
+`pnpm dev`はローカル開発用にOvenMediaEngine、Goバックエンド、Viteフロントエンドを起動します。OvenMediaEngineは`127.0.0.1:3333`でOBSのWHIP入力とブラウザのWebRTC視聴を受けます。OBSのサーバーには管理画面で作成した動画枠のWHIP URLを入れます。本番ではOvenMediaEngineをネイティブインストールしてsystemdで管理します。
 
 ブラウザは`http://127.0.0.1:5173/watch?room=<roomId>`を開きます。再生URLはGoバックエンドが`ws://127.0.0.1:3333/live/<roomId>/master`として発行するため、手入力しません。
 

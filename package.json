@@ -6,11 +6,6 @@
     "backend:lint": "cd backend && go vet ./...",
     "check": "biome check . && knip && pnpm --dir frontend run typecheck && pnpm --dir frontend run test && pnpm --dir frontend run build && pnpm backend:lint && pnpm backend:check",
     "dev": "pnpm env:sync:local && scripts/local-dev.sh",
-    "demo:backend": "pnpm env:sync:local && scripts/local-backend.sh",
-    "demo:frontend": "pnpm env:sync:local && scripts/local-frontend.sh",
-    "demo:media": "pnpm env:sync:local && scripts/local-media.sh",
-    "demo:browser-smoke": "node scripts/local-browser-smoke-test.mjs",
-    "demo:smoke": "node scripts/local-smoke-test.mjs",
     "deploy:frontend": "pnpm env:sync:production && pnpm --dir frontend run deploy",
     "env:sync:local": "node scripts/env-sync.mjs local",
     "env:sync:production": "node scripts/env-sync.mjs production",
@@ -20,7 +15,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.14",
-    "@playwright/test": "^1.59.1",
     "knip": "^5.88.1",
     "lefthook": "^2.1.6"
   }

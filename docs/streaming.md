@@ -62,7 +62,6 @@ OBS WHIP Simulcast構成はOvenMediaEngine v0.20.5のネイティブ実行で動
 別シェルで起動します。
 
 ```sh
-pnpm demo:media
 pnpm dev
 ```
 
