@@ -2,7 +2,7 @@ import { Send } from "lucide-react";
 import type { KeyboardEvent } from "react";
 import { Button } from "../../shared/ui/Button";
 import { cn } from "../../shared/ui/classNames";
-import { textareaClassName } from "../../shared/ui/styles";
+import { Textarea } from "../../shared/ui/FormControl";
 import { directionLabel } from "../comments/comment_labels";
 import {
   type CommentDirection,
@@ -10,21 +10,6 @@ import {
   commentColors,
   commentDirections,
 } from "../comments/types";
-import {
-  choiceChipInputClassName,
-  choiceChipLabelClassName,
-  choiceChipTextClassName,
-  choiceFieldClassName,
-  colorButtonClassName,
-  colorRowClassName,
-  commentComposeClassName,
-  commentFormClassName,
-  commentOptionsClassName,
-  commentSubmitButtonClassName,
-  directionChoiceGridClassName,
-  selectedColorButtonClassName,
-  sizeChoiceGridClassName,
-} from "./watchStyles";
 
 type CommentFormProps = {
   body: string;
@@ -46,6 +31,15 @@ const commentSizeOptions: { label: string; value: CommentFontSize }[] = [
   { label: "大", value: "large" },
 ];
 
+const choiceChipTextClassName = cn(
+  "grid min-h-[26px] min-w-0 cursor-pointer select-none place-items-center overflow-hidden whitespace-nowrap rounded-sm border border-[#8c8c8c]",
+  "bg-[linear-gradient(#ffffff,#d9d9d9)] px-1.5 py-1 text-center text-xs",
+  "peer-checked:border-[#006bd6] peer-checked:bg-[linear-gradient(#e4f5ff,#79bcff)] peer-checked:font-extrabold peer-checked:text-[#001b37]",
+  "peer-disabled:cursor-not-allowed peer-disabled:border-[#aaaaaa] peer-disabled:bg-[linear-gradient(#eeeeee,#dddddd)] peer-disabled:text-[#777777] peer-disabled:opacity-65",
+  "peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-[#006bd6]",
+  "max-[520px]:min-h-6 max-[520px]:px-[5px] max-[520px]:py-[3px]",
+);
+
 export function CommentForm({
   body,
   disabled,
@@ -61,7 +55,7 @@ export function CommentForm({
 }: CommentFormProps) {
   return (
     <form
-      className={commentFormClassName}
+      className="grid gap-[5px] pt-1.5"
       onSubmit={(event) => {
         event.preventDefault();
         if (disabled) {
@@ -70,9 +64,8 @@ export function CommentForm({
         onSubmit();
       }}
     >
-      <div className={commentComposeClassName}>
-        <textarea
-          className={textareaClassName}
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_118px] gap-[5px] max-[520px]:grid-cols-1">
+        <Textarea
           disabled={disabled}
           maxLength={100}
           onChange={(event) => onBodyChange(event.currentTarget.value)}
@@ -82,7 +75,7 @@ export function CommentForm({
           value={body}
         />
         <Button
-          className={commentSubmitButtonClassName}
+          className="min-h-[42px] min-w-0 max-w-full px-2 text-[15px] max-[520px]:min-h-[38px] max-[520px]:gap-[4px] max-[520px]:px-2 max-[520px]:text-sm"
           disabled={disabled}
           primary
           type="submit"
@@ -91,10 +84,15 @@ export function CommentForm({
           コメント
         </Button>
       </div>
-      <div className={commentOptionsClassName}>
-        <fieldset className={choiceFieldClassName}>
+      <div
+        className={cn(
+          "grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(150px,0.8fr)_minmax(150px,auto)] items-start gap-2",
+          "max-[640px]:grid-cols-1 max-[640px]:gap-[5px]",
+        )}
+      >
+        <fieldset className="m-0 min-w-0 border border-[#b0b0b0] bg-[#f8f8f8] p-[5px] max-[520px]:p-1 [&_legend]:px-1 [&_legend]:text-xs [&_legend]:font-extrabold">
           <legend>方向</legend>
-          <div className={directionChoiceGridClassName}>
+          <div className="grid grid-cols-3 gap-1 max-[520px]:grid-cols-2">
             {commentDirections.map((direction) => (
               <ChoiceChip
                 checked={direction === selectedDirection}
@@ -108,9 +106,9 @@ export function CommentForm({
             ))}
           </div>
         </fieldset>
-        <fieldset className={choiceFieldClassName}>
+        <fieldset className="m-0 min-w-0 border border-[#b0b0b0] bg-[#f8f8f8] p-[5px] max-[520px]:p-1 [&_legend]:px-1 [&_legend]:text-xs [&_legend]:font-extrabold">
           <legend>大きさ</legend>
-          <div className={sizeChoiceGridClassName}>
+          <div className="grid grid-cols-3 gap-1">
             {commentSizeOptions.map((size) => (
               <ChoiceChip
                 checked={size.value === selectedSize}
@@ -124,13 +122,14 @@ export function CommentForm({
             ))}
           </div>
         </fieldset>
-        <div className={colorRowClassName}>
+        <div className="flex min-w-0 flex-wrap gap-[5px] border border-[#b0b0b0] bg-[#f8f8f8] p-1.5 max-[640px]:p-1">
           {commentColors.map((color) => (
             <Button
               aria-label={color}
               className={cn(
-                colorButtonClassName,
-                color === selectedColor && selectedColorButtonClassName,
+                "h-[25px] min-h-[25px] w-[25px] border-[#777777] bg-none p-0 shadow-[inset_1px_1px_0_rgb(255_255_255_/_70%),inset_-1px_-1px_0_rgb(0_0_0_/_35%)] max-[520px]:h-[22px] max-[520px]:min-h-[22px] max-[520px]:w-[22px]",
+                color === selectedColor &&
+                  "outline-2 outline-offset-2 outline-[#006bd6]",
               )}
               disabled={disabled}
               key={color}
@@ -162,10 +161,10 @@ function ChoiceChip<T extends string>({
   value,
 }: ChoiceChipProps<T>) {
   return (
-    <label className={choiceChipLabelClassName}>
+    <label className="relative block min-w-0">
       <input
         checked={checked}
-        className={choiceChipInputClassName}
+        className="peer pointer-events-none absolute m-0 h-px w-px opacity-0"
         disabled={disabled}
         name={name}
         onChange={onChange}

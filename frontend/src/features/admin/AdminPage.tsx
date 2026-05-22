@@ -2,12 +2,10 @@ import { MonitorPlay, Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import { AppHeader } from "../../shared/ui/AppHeader";
+import { AppShell } from "../../shared/ui/AppShell";
 import { Board } from "../../shared/ui/Board";
 import { Button } from "../../shared/ui/Button";
-import {
-  appShellClassName,
-  formControlClassName,
-} from "../../shared/ui/styles";
+import { TextInput } from "../../shared/ui/FormControl";
 import type { CommentMessage } from "../comments/types";
 import { deleteComment, fetchCommentPage } from "../rooms/room_api";
 import { useAdminRooms } from "../rooms/useAdminRooms";
@@ -161,7 +159,7 @@ export function AdminPage({ config }: AdminPageProps) {
   const hasRoom = rooms.length > 0;
 
   return (
-    <section className={appShellClassName}>
+    <AppShell>
       <AppHeader
         section="ADMIN"
         links={[
@@ -175,8 +173,7 @@ export function AdminPage({ config }: AdminPageProps) {
           className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] gap-[5px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2"
           onSubmit={submitRoom}
         >
-          <input
-            className={formControlClassName}
+          <TextInput
             disabled={hasRoom}
             maxLength={80}
             onChange={(event) => setTitle(event.currentTarget.value)}
@@ -212,6 +209,6 @@ export function AdminPage({ config }: AdminPageProps) {
           ))}
         </section>
       </Board>
-    </section>
+    </AppShell>
   );
 }

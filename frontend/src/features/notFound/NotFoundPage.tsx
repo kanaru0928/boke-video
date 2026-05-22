@@ -1,12 +1,13 @@
 import { SearchX } from "lucide-react";
 import { AppHeader } from "../../shared/ui/AppHeader";
+import { AppShell } from "../../shared/ui/AppShell";
 import { Board } from "../../shared/ui/Board";
+import { ButtonLink } from "../../shared/ui/Button";
 import { Mascot } from "../../shared/ui/Mascot";
-import { appShellClassName, buttonClassName } from "../../shared/ui/styles";
 
 export function NotFoundPage() {
   return (
-    <section className={appShellClassName}>
+    <AppShell>
       <AppHeader section="404" links={[{ href: "/", label: "枠一覧" }]} />
       <Board
         className="grid min-h-[calc(100vh-96px)] grid-rows-[auto_minmax(0,1fr)]"
@@ -18,9 +19,9 @@ export function NotFoundPage() {
             <p className="m-0 text-base font-extrabold">
               ページが見つかりません
             </p>
-            <a className={buttonClassName({ className: "w-fit" })} href="/">
+            <ButtonLink className="w-fit" href="/">
               枠一覧へ戻る
-            </a>
+            </ButtonLink>
           </div>
           <Mascot
             className="justify-self-center"
@@ -29,6 +30,6 @@ export function NotFoundPage() {
           />
         </div>
       </Board>
-    </section>
+    </AppShell>
   );
 }

@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { playerControlsIdleDelayMs } from "./usePlayerControlsVisibility";
-import { preventPlayerContextMenu } from "./WatchPlayer";
 import {
   playerControlsClassName,
   playerControlsVisibleClassName,
-  settingsChipClassName,
+} from "./PlayerControls";
+import { settingsChipClassName } from "./PlayerSettingsPopover";
+import { playerControlsIdleDelayMs } from "./usePlayerControlsVisibility";
+import {
+  preventPlayerContextMenu,
   stageClassName,
   videoElementClassName,
-} from "./watchStyles";
+} from "./WatchPlayer";
 
 describe("WatchPlayer", () => {
   it("動画領域を16:9にする", () => {

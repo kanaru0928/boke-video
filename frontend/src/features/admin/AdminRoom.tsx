@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { formControlClassName } from "../../shared/ui/styles";
+import { TextInput } from "../../shared/ui/FormControl";
 import type { CommentMessage } from "../comments/types";
 import type { Room } from "../rooms/room_api";
 import { AdminCommentList } from "./AdminCommentList";
@@ -64,9 +64,8 @@ export function AdminRoom({
   return (
     <article className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 border border-[#a7a7a7] bg-white p-[7px] max-[860px]:grid-cols-1">
       <div className="grid min-w-0 gap-[5px]">
-        <input
+        <TextInput
           aria-label="ルーム名"
-          className={formControlClassName}
           maxLength={80}
           onChange={(event) => setTitle(event.currentTarget.value)}
           type="text"

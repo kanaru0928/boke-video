@@ -15,12 +15,6 @@ import { PlayerSettingsPopover } from "./PlayerSettingsPopover";
 import { formatElapsedTime } from "./room_activity";
 import type { PlaybackQualityOption } from "./stream_quality";
 import { useSettingsPopover } from "./useSettingsPopover";
-import {
-  liveBadgeClassName,
-  playerControlsClassName,
-  playerControlsVisibleClassName,
-  playTimeClassName,
-} from "./watchStyles";
 
 type PlayerControlsProps = {
   commentsVisible: boolean;
@@ -38,6 +32,16 @@ type PlayerControlsProps = {
   selectedQualityId: string;
   streamStatus: RoomStreamStatus;
 };
+
+export const playerControlsClassName = cn(
+  "pointer-events-none absolute inset-x-0 bottom-0 z-20 flex min-h-[45px] items-center justify-between gap-2 opacity-0",
+  "border-t border-t-[rgb(255_255_255_/_28%)] bg-[linear-gradient(rgb(0_0_0_/_10%),rgb(0_0_0_/_72%))] px-[10px] py-[6px] text-white",
+  "transition-opacity duration-150 group-focus-within:pointer-events-auto group-focus-within:opacity-100",
+  "[@media(pointer:coarse)]:pointer-events-auto [@media(pointer:coarse)]:opacity-100",
+  "max-[520px]:min-h-[39px] max-[520px]:gap-[3px] max-[520px]:px-[5px] max-[520px]:py-[5px]",
+);
+
+export const playerControlsVisibleClassName = "pointer-events-auto opacity-100";
 
 export function PlayerControls({
   commentsVisible,
@@ -89,11 +93,18 @@ export function PlayerControls({
             <Volume2 aria-hidden="true" size={18} />
           )}
         </Button>
-        <span className={playTimeClassName}>
+        <span
+          className={cn(
+            "min-w-[104px] rounded-xl border border-[#898989] px-[10px] py-1 text-center font-extrabold text-white",
+            "bg-[linear-gradient(#464646,#111111_52%,#565656)] shadow-[inset_1px_1px_0_#8c8c8c] max-[520px]:hidden",
+          )}
+        >
           経過時間　{formatElapsedTime(elapsedSeconds)}
         </span>
         {streamStatus === "live" ? (
-          <span className={liveBadgeClassName}>●LIVE</span>
+          <span className="font-[Arial,sans-serif] text-[13px] font-extrabold tracking-normal text-[#ff134f] [text-shadow:1px_1px_0_#000000]">
+            ●LIVE
+          </span>
         ) : null}
       </div>
       <div className="flex items-center gap-1">

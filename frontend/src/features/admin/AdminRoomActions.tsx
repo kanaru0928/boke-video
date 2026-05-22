@@ -5,8 +5,7 @@ import {
   Save,
   Trash2,
 } from "lucide-react";
-import { Button } from "../../shared/ui/Button";
-import { buttonClassName } from "../../shared/ui/styles";
+import { Button, ButtonLink } from "../../shared/ui/Button";
 
 type AdminRoomActionsProps = {
   canSaveTitle: boolean;
@@ -29,15 +28,14 @@ export function AdminRoomActions({
 }: AdminRoomActionsProps) {
   return (
     <div className="flex flex-wrap justify-end gap-[5px] max-[860px]:justify-start">
-      <a
-        className={buttonClassName()}
+      <ButtonLink
         href={`/watch?room=${encodeURIComponent(roomId)}`}
         rel="noreferrer"
         target="_blank"
       >
         <ExternalLink aria-hidden="true" size={17} />
         開く
-      </a>
+      </ButtonLink>
       <Button
         disabled={!canSaveTitle}
         onClick={() => {

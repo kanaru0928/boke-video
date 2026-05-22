@@ -2,12 +2,10 @@ import { Save, UserRound } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import { AppHeader } from "../../shared/ui/AppHeader";
+import { AppShell } from "../../shared/ui/AppShell";
 import { Board } from "../../shared/ui/Board";
 import { Button } from "../../shared/ui/Button";
-import {
-  appShellClassName,
-  formControlClassName,
-} from "../../shared/ui/styles";
+import { TextInput } from "../../shared/ui/FormControl";
 import { fetchUserProfile, updateUserProfile } from "./user_api";
 
 type UserPageProps = {
@@ -59,7 +57,7 @@ export function UserPage({ config }: UserPageProps) {
   const valid = displayName.trim() !== "" && displayName.trim().length <= 40;
 
   return (
-    <section className={appShellClassName}>
+    <AppShell>
       <AppHeader
         section="USER"
         links={[
@@ -72,10 +70,10 @@ export function UserPage({ config }: UserPageProps) {
           className="grid gap-2 border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2"
           onSubmit={submit}
         >
-          <label className="grid gap-1 font-extrabold">
+          <label className="grid gap-1 font-extrabold" htmlFor="display-name">
             表示名
-            <input
-              className={formControlClassName}
+            <TextInput
+              id="display-name"
               maxLength={40}
               onChange={(event) => setDisplayName(event.currentTarget.value)}
               required
@@ -103,6 +101,6 @@ export function UserPage({ config }: UserPageProps) {
           </div>
         </form>
       </Board>
-    </section>
+    </AppShell>
   );
 }

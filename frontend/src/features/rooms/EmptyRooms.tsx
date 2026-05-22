@@ -1,6 +1,6 @@
 import { Settings } from "lucide-react";
+import { ButtonLink } from "../../shared/ui/Button";
 import { Mascot } from "../../shared/ui/Mascot";
-import { buttonClassName } from "../../shared/ui/styles";
 
 export function EmptyRooms() {
   return (
@@ -9,10 +9,10 @@ export function EmptyRooms() {
         <p className="m-0 text-base font-extrabold">
           現在表示できる枠はありません
         </p>
-        <a className={buttonClassName({ className: "w-fit" })} href="/admin">
+        <ButtonLink className="w-fit" href="/admin">
           <Settings aria-hidden="true" size={17} />
           管理
-        </a>
+        </ButtonLink>
       </div>
       <Mascot
         className="justify-self-center"

@@ -2,9 +2,9 @@ import { Bot, MonitorPlay, Newspaper } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import { AppHeader } from "../../shared/ui/AppHeader";
+import { AppShell } from "../../shared/ui/AppShell";
 import { Board } from "../../shared/ui/Board";
 import { cn } from "../../shared/ui/classNames";
-import { appShellClassName } from "../../shared/ui/styles";
 import { EmptyRooms } from "./EmptyRooms";
 import type { Room } from "./room_api";
 import {
@@ -32,7 +32,7 @@ export function RoomListPage({ config }: RoomListPageProps) {
   }, [refreshRooms, rooms]);
 
   return (
-    <section className={appShellClassName}>
+    <AppShell>
       <AppHeader
         section="ROOMS"
         links={[
@@ -62,7 +62,7 @@ export function RoomListPage({ config }: RoomListPageProps) {
           </p>
         </div>
       </Board>
-    </section>
+    </AppShell>
   );
 }
 

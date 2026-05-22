@@ -2,7 +2,8 @@ import { Volume2 } from "lucide-react";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import { AppHeader } from "../../shared/ui/AppHeader";
-import { appShellClassName } from "../../shared/ui/styles";
+import { AppShell } from "../../shared/ui/AppShell";
+import { cn } from "../../shared/ui/classNames";
 import {
   type CommentCreateRequest,
   type CommentDirection,
@@ -24,13 +25,6 @@ import { useRoomActivity } from "./useRoomActivity";
 import { useStreamPlayer } from "./useStreamPlayer";
 import { WatchPlayer } from "./WatchPlayer";
 import { WatchProgramHeader } from "./WatchProgramHeader";
-import {
-  mutedAutoplayButtonClassName,
-  mutedAutoplayNoticeClassName,
-  mutedAutoplayNoticeTextClassName,
-  playerColumnClassName,
-  watchGridClassName,
-} from "./watchStyles";
 
 type WatchPageProps = {
   config: AppConfig;
@@ -189,7 +183,7 @@ export function WatchPage({ config }: WatchPageProps) {
   }
 
   return (
-    <section className={appShellClassName}>
+    <AppShell>
       <AppHeader
         section="LIVE"
         links={[
@@ -203,12 +197,23 @@ export function WatchPage({ config }: WatchPageProps) {
         streamStatus={streamStatus}
       />
       {isMutedAutoplay ? (
-        <section className={mutedAutoplayNoticeClassName}>
-          <p className={mutedAutoplayNoticeTextClassName}>
+        <section
+          className={cn(
+            "mx-auto mb-2 grid w-[min(720px,100%)] grid-cols-[minmax(0,1fr)_auto] items-center gap-2",
+            "border border-[#777777] bg-[#111111] px-3 py-2 text-white",
+            "shadow-[2px_2px_0_rgb(0_0_0_/_25%),inset_1px_1px_0_rgb(255_255_255_/_16%)]",
+            "max-[640px]:grid-cols-1 max-[640px]:gap-1.5 max-[640px]:px-2 max-[640px]:py-1.5",
+          )}
+        >
+          <p className="m-0 min-w-0 text-xs leading-[1.45] font-extrabold [overflow-wrap:anywhere] [text-shadow:1px_1px_0_#000000]">
             音声なしで再生中です。次回から音声ありで自動再生したい場合は、アドレスバー左のサイト設定で音声を許可してください。
           </p>
           <button
-            className={mutedAutoplayButtonClassName}
+            className={cn(
+              "inline-flex min-h-7 items-center justify-center gap-1 whitespace-nowrap rounded-sm border border-[#7fbdff]",
+              "bg-[linear-gradient(#4dc7ff,#006fd8)] px-2 py-1 text-xs font-extrabold text-white [text-shadow:1px_1px_0_#003064]",
+              "shadow-[inset_1px_1px_0_rgb(255_255_255_/_38%),inset_-1px_-1px_0_rgb(0_0_0_/_32%)]",
+            )}
             type="button"
             onClick={toggleMuted}
           >
@@ -217,8 +222,13 @@ export function WatchPage({ config }: WatchPageProps) {
           </button>
         </section>
       ) : null}
-      <section className={watchGridClassName}>
-        <main className={playerColumnClassName}>
+      <section className="grid grid-cols-[minmax(0,1fr)_360px] gap-2 max-[1040px]:grid-cols-1">
+        <main
+          className={cn(
+            "relative min-w-0 border border-[#8c8c8c] bg-[#eeeeee] p-[5px]",
+            "shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#b8b8b8]",
+          )}
+        >
           <WatchPlayer
             commentsVisible={commentsVisible}
             commentsLayerRef={commentsLayerRef}
@@ -263,6 +273,6 @@ export function WatchPage({ config }: WatchPageProps) {
           stats={stats}
         />
       </section>
-    </section>
+    </AppShell>
   );
 }
