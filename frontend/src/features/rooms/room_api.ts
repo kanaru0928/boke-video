@@ -3,7 +3,11 @@ import {
   adminRoomPath,
   apiRoomPath,
 } from "../../shared/api/endpoints";
-import { requestJSON, requestOK } from "../../shared/api/http_client";
+import {
+  requestJSON,
+  requestJSONWithStatus,
+  requestOK,
+} from "../../shared/api/http_client";
 import type { AppConfig } from "../../shared/config/config";
 import { isCommentMessage } from "../comments/comment_message";
 import type { CommentMessage } from "../comments/types";
@@ -35,6 +39,10 @@ export type RoomStats = {
   startedAt: string | null;
   elapsedSeconds: number;
 };
+
+type RoomStatsResult =
+  | { status: "ok"; stats: RoomStats }
+  | { status: "notFound" };
 
 export type CreatedRoom = Room & {
   whipBearerToken: string;
@@ -132,28 +140,30 @@ export async function fetchCommentPage(
   };
 }
 
-export async function fetchRoomStats(
+export async function fetchRoomStatsResult(
   config: AppConfig,
   roomId: string,
-): Promise<RoomStats | null> {
-  const parsed = await requestJSON(
-    config,
-    "GET",
-    apiRoomPath(roomId, "/stats"),
-  );
-  return parseRoomStats(parsed);
+): Promise<RoomStatsResult> {
+  return requestRoomStats(config, "GET", apiRoomPath(roomId, "/stats"));
 }
 
-export async function createRoomVisit(
+export async function createRoomVisitResult(
   config: AppConfig,
   roomId: string,
-): Promise<RoomStats | null> {
-  const parsed = await requestJSON(
-    config,
-    "POST",
-    apiRoomPath(roomId, "/visits"),
-  );
-  return parseRoomStats(parsed);
+): Promise<RoomStatsResult> {
+  return requestRoomStats(config, "POST", apiRoomPath(roomId, "/visits"));
+}
+
+async function requestRoomStats(
+  config: AppConfig,
+  method: "GET" | "POST",
+  path: string,
+): Promise<RoomStatsResult> {
+  const response = await requestJSONWithStatus(config, method, path);
+  if (response.status === 404) {
+    return { status: "notFound" };
+  }
+  return { status: "ok", stats: requireRoomStats(response.value) };
 }
 
 export function isRoom(value: unknown): value is Room {
@@ -253,6 +263,14 @@ function parseRoomStats(value: unknown): RoomStats | null {
     return null;
   }
   return value;
+}
+
+function requireRoomStats(value: unknown): RoomStats {
+  const stats = parseRoomStats(value);
+  if (stats === null) {
+    throw new Error("room stats response was invalid");
+  }
+  return stats;
 }
 
 function parseIngestToken(value: unknown): IngestToken | null {

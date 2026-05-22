@@ -16,6 +16,19 @@ export async function requestJSON(
   return response.json();
 }
 
+export async function requestJSONWithStatus(
+  config: AppConfig,
+  method: HttpMethod,
+  path: string,
+  body?: unknown,
+): Promise<{ status: number; value: unknown | null }> {
+  const response = await request(config, method, path, body);
+  if (!response.ok) {
+    return { status: response.status, value: null };
+  }
+  return { status: response.status, value: await response.json() };
+}
+
 export async function requestOK(
   config: AppConfig,
   method: HttpMethod,

@@ -9,6 +9,7 @@ import {
   type CommentMessage,
   commentColors,
 } from "../comments/types";
+import { NotFoundPage } from "../notFound/NotFoundPage";
 import { startVideoPlayback } from "../player/oven_media_engine_player";
 import { useRooms } from "../rooms/useRooms";
 import { CommentForm } from "./CommentForm";
@@ -50,9 +51,11 @@ export function WatchPage({ config }: WatchPageProps) {
     isLoadingOlderComments,
     loadOlderComments,
     recordComment,
+    roomNotFound,
     stats,
     updatePresence,
   } = useRoomActivity(config, selectedRoomId);
+  const activeRoomId = roomNotFound ? "" : selectedRoomId;
   const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? null;
   const streamStatus =
     stats?.streamStatus ?? selectedRoom?.streamStatus ?? "waiting";
@@ -64,7 +67,7 @@ export function WatchPage({ config }: WatchPageProps) {
   };
   const { sendComment } = useCommentSocket(
     config,
-    selectedRoomId,
+    activeRoomId,
     renderAndRecordComment,
     updatePresence,
   );
@@ -75,7 +78,7 @@ export function WatchPage({ config }: WatchPageProps) {
     streamMessage,
   } = useStreamPlayer(
     config,
-    selectedRoomId,
+    activeRoomId,
     streamStatus,
     videoRef,
     selectedQualityId,
@@ -83,13 +86,20 @@ export function WatchPage({ config }: WatchPageProps) {
   const { isFullscreen, toggleFullscreen } = useFullscreen(stageRef);
 
   useEffect(() => {
-    if (rooms.length === 0 || selectedRoomId !== "") {
+    if (selectedRoomId !== "") {
       return;
     }
     const queryRoomId = new URLSearchParams(location.search).get("room");
+    if (queryRoomId !== null) {
+      setSelectedRoomId(queryRoomId);
+      return;
+    }
+    if (rooms.length === 0) {
+      return;
+    }
     const initialRoomId = queryRoomId ?? rooms[0]?.id ?? "";
     setSelectedRoomId(initialRoomId);
-    if (queryRoomId === null && initialRoomId !== "") {
+    if (initialRoomId !== "") {
       history.replaceState(
         null,
         "",
@@ -149,6 +159,10 @@ export function WatchPage({ config }: WatchPageProps) {
     video.muted = !video.muted;
     updatePlayerState();
   };
+
+  if (roomNotFound) {
+    return <NotFoundPage />;
+  }
 
   return (
     <section className={appShellClassName}>

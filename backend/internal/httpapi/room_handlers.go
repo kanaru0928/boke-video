@@ -73,7 +73,11 @@ func (s *Server) handleGetRoom(w http.ResponseWriter, r *http.Request) {
 	}
 	room, err = s.reconcileRoom(r.Context(), room)
 	if err != nil {
-		s.writeServerError(w, err)
+		writeRepositoryError(w, err)
+		return
+	}
+	if room.StreamStatus == "ended" {
+		writeError(w, http.StatusNotFound, "not found")
 		return
 	}
 	writeJSON(w, http.StatusOK, room)

@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import type { CommentMessage, PresenceMessage } from "../comments/types";
 import {
-  createRoomVisit,
+  createRoomVisitResult,
   fetchCommentPage,
-  fetchRoomStats,
+  fetchRoomStatsResult,
   type RoomStats,
 } from "../rooms/room_api";
 
@@ -15,6 +15,7 @@ type UseRoomActivityResult = {
   isLoadingOlderComments: boolean;
   loadOlderComments: () => Promise<void>;
   recordComment: (comment: CommentMessage) => void;
+  roomNotFound: boolean;
   stats: RoomStats | null;
   updatePresence: (presence: PresenceMessage) => void;
 };
@@ -32,6 +33,19 @@ export function useRoomActivity(
   const [realtimeCommentCount, setRealtimeCommentCount] = useState(0);
   const [presence, setPresence] = useState<PresenceMessage | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [roomNotFound, setRoomNotFound] = useState(false);
+  const clearRoomActivity = useCallback((): void => {
+    setComments([]);
+    setLoadedStats(null);
+    setNextCommentCursor(null);
+    setRealtimeCommentCount(0);
+    setPresence(null);
+    setElapsedSeconds(0);
+  }, []);
+  const markRoomNotFound = useCallback((): void => {
+    clearRoomActivity();
+    setRoomNotFound(true);
+  }, [clearRoomActivity]);
   const stats = useMemo((): RoomStats | null => {
     if (loadedStats === null) {
       return null;
@@ -55,37 +69,37 @@ export function useRoomActivity(
 
     const loadRoomActivity = async (): Promise<void> => {
       if (roomId === "") {
-        setComments([]);
-        setLoadedStats(null);
-        setNextCommentCursor(null);
-        setRealtimeCommentCount(0);
-        setPresence(null);
-        setElapsedSeconds(0);
+        clearRoomActivity();
+        setRoomNotFound(false);
         return;
       }
 
       setPresence(null);
-      const [commentPage, visitedStats] = await Promise.all([
-        fetchCommentPage(config, roomId),
-        createRoomVisit(config, roomId),
-      ]);
-      const loadedStats =
-        visitedStats ?? (await fetchRoomStats(config, roomId));
+      setRoomNotFound(false);
+      const visitResult = await createRoomVisitResult(config, roomId);
+      if (canceled) {
+        return;
+      }
+      if (visitResult.status === "notFound") {
+        markRoomNotFound();
+        return;
+      }
+      const commentPage = await fetchCommentPage(config, roomId);
       if (canceled) {
         return;
       }
       setComments(commentPage.comments);
       setNextCommentCursor(commentPage.nextCursor);
-      setLoadedStats(loadedStats);
+      setLoadedStats(visitResult.stats);
       setRealtimeCommentCount(0);
-      setElapsedSeconds(loadedStats?.elapsedSeconds ?? 0);
+      setElapsedSeconds(visitResult.stats.elapsedSeconds);
     };
 
     void loadRoomActivity();
     return () => {
       canceled = true;
     };
-  }, [config, roomId]);
+  }, [clearRoomActivity, config, markRoomNotFound, roomId]);
 
   useEffect(() => {
     if (loadedStats === null) {
@@ -107,13 +121,17 @@ export function useRoomActivity(
     }
     let canceled = false;
     const refreshStats = async (): Promise<void> => {
-      const nextStats = await fetchRoomStats(config, roomId);
-      if (canceled || nextStats === null) {
+      const result = await fetchRoomStatsResult(config, roomId);
+      if (canceled) {
         return;
       }
-      setLoadedStats(nextStats);
+      if (result.status === "notFound") {
+        markRoomNotFound();
+        return;
+      }
+      setLoadedStats(result.stats);
       setRealtimeCommentCount(0);
-      setElapsedSeconds(nextStats.elapsedSeconds);
+      setElapsedSeconds(result.stats.elapsedSeconds);
     };
     const timerId = window.setInterval(() => {
       void refreshStats();
@@ -122,7 +140,7 @@ export function useRoomActivity(
       canceled = true;
       window.clearInterval(timerId);
     };
-  }, [config, roomId]);
+  }, [config, markRoomNotFound, roomId]);
 
   const recordComment = useCallback((comment: CommentMessage): void => {
     setComments((current) => [...current, comment]);
@@ -160,6 +178,7 @@ export function useRoomActivity(
     isLoadingOlderComments,
     loadOlderComments,
     recordComment,
+    roomNotFound,
     stats,
     updatePresence,
   };

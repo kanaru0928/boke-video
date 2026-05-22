@@ -505,6 +505,14 @@ func TestServerListsOnlyLiveRoomsAndEndsMissingStreamsAfterGrace(t *testing.T) {
 	if len(endedRooms) != 0 {
 		t.Fatalf("len(endedRooms) = %d", len(endedRooms))
 	}
+	endedRoomResponse := performRequest(server, http.MethodGet, "/api/rooms/"+roomID, "")
+	if endedRoomResponse.Code != http.StatusNotFound {
+		t.Fatalf("ended room status = %d, body = %s", endedRoomResponse.Code, endedRoomResponse.Body.String())
+	}
+	endedStatsResponse := performRequest(server, http.MethodGet, "/api/rooms/"+roomID+"/stats", "")
+	if endedStatsResponse.Code != http.StatusNotFound {
+		t.Fatalf("ended stats status = %d, body = %s", endedStatsResponse.Code, endedStatsResponse.Body.String())
+	}
 	if _, err := server.repository.GetRoom(context.Background(), roomID); !errors.Is(err, sql.ErrNoRows) {
 		t.Fatalf("GetRoom after stream ended error = %v", err)
 	}

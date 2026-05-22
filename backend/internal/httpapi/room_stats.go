@@ -19,7 +19,7 @@ func (s *Server) handleGetRoomStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, err := s.reconcileRoom(r.Context(), room); err != nil {
-		s.writeServerError(w, err)
+		writeRepositoryError(w, err)
 		return
 	}
 	stats, err := s.repository.GetRoomStats(r.Context(), roomID)
