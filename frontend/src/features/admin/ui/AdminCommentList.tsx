@@ -1,9 +1,9 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Trash2 } from "lucide-react";
 import { useRef } from "react";
-import { Button } from "../../shared/ui/Button";
-import { commentAuthorLabel } from "../comments/comment_author";
-import type { CommentMessage } from "../comments/types";
+import { Button } from "../../../shared/ui/Button";
+import { commentAuthorLabel } from "../../comments/comment_author";
+import type { CommentMessage } from "../../comments/types";
 
 type AdminCommentState = {
   comments: CommentMessage[];

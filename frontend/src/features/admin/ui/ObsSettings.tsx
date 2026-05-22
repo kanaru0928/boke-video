@@ -1,5 +1,5 @@
 import { RadioTower } from "lucide-react";
-import { Board } from "../../shared/ui/Board";
+import { Board } from "../../../shared/ui/Board";
 
 export function ObsSettings() {
   return (

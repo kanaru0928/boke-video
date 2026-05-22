@@ -5,7 +5,7 @@ import {
   Save,
   Trash2,
 } from "lucide-react";
-import { Button, ButtonLink } from "../../shared/ui/Button";
+import { Button, ButtonLink } from "../../../shared/ui/Button";
 
 type AdminRoomActionsProps = {
   canSaveTitle: boolean;

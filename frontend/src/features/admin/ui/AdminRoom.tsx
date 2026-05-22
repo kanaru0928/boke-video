@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { TextInput } from "../../shared/ui/FormControl";
-import type { CommentMessage } from "../comments/types";
-import type { Room } from "../rooms/api/room_api";
+import { TextInput } from "../../../shared/ui/FormControl";
+import type { CommentMessage } from "../../comments/types";
+import type { Room } from "../../rooms/api/room_api";
 import { AdminCommentList } from "./AdminCommentList";
 import { AdminRoomActions } from "./AdminRoomActions";
 import {
   canSaveAdminRoomTitle,
   normalizeAdminRoomTitle,
-} from "./admin_room_title";
-import { normalizeIngestClipboardValue } from "./copy_ingest_value";
+} from "../lib/admin_room_title";
+import { normalizeIngestClipboardValue } from "../lib/copy_ingest_value";
 import { type IngestCopyTarget, IngestSettings } from "./IngestSettings";
 
 type AdminRoomProps = {

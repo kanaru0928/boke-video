@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { AppConfig } from "../../shared/config/config";
+import type { AppConfig } from "../../../shared/config/config";
 import { buildWhipIngestUrl } from "./ingest_url";
 
 describe("buildWhipIngestUrl", () => {

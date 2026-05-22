@@ -1,17 +1,17 @@
 import { MonitorPlay, Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
-import type { AppConfig } from "../../shared/config/config";
-import { AppHeader } from "../../shared/ui/AppHeader";
-import { AppShell } from "../../shared/ui/AppShell";
-import { Board } from "../../shared/ui/Board";
-import { Button } from "../../shared/ui/Button";
-import { TextInput } from "../../shared/ui/FormControl";
-import type { CommentMessage } from "../comments/types";
-import { deleteComment, fetchCommentPage } from "../rooms/api/room_api";
-import { useAdminRooms } from "../rooms/model/useAdminRooms";
-import { AdminRoom } from "./AdminRoom";
-import { buildWhipIngestUrl } from "./ingest_url";
-import { ObsSettings } from "./ObsSettings";
+import type { AppConfig } from "../../../shared/config/config";
+import { AppHeader } from "../../../shared/ui/AppHeader";
+import { AppShell } from "../../../shared/ui/AppShell";
+import { Board } from "../../../shared/ui/Board";
+import { Button } from "../../../shared/ui/Button";
+import { TextInput } from "../../../shared/ui/FormControl";
+import type { CommentMessage } from "../../comments/types";
+import { deleteComment, fetchCommentPage } from "../../rooms/api/room_api";
+import { useAdminRooms } from "../../rooms/model/useAdminRooms";
+import { buildWhipIngestUrl } from "../lib/ingest_url";
+import { AdminRoom } from "../ui/AdminRoom";
+import { ObsSettings } from "../ui/ObsSettings";
 
 type AdminPageProps = {
   config: AppConfig;

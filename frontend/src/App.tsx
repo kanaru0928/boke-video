@@ -1,4 +1,4 @@
-import { AdminPage } from "./features/admin/AdminPage";
+import { AdminPage } from "./features/admin/page/AdminPage";
 import { NotFoundPage } from "./features/notFound/NotFoundPage";
 import { RoomListPage } from "./features/rooms/page/RoomListPage";
 import { UserPage } from "./features/user/UserPage";
