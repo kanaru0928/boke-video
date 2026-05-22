@@ -155,6 +155,7 @@ export function PlayerControls({
         </Button>
         <div className="relative" ref={settingsRef}>
           <PlayerSettingsPopover
+            anchorRef={settingsRef}
             commentsVisible={commentsVisible}
             isOpen={settingsOpen}
             playbackQualities={playbackQualities}

@@ -50,8 +50,8 @@ describe("WatchPlayer", () => {
   });
 
   it("設定チップはプレイヤー内に重ねて表示する", () => {
-    expect(settingsChipClassName).toContain("absolute");
-    expect(settingsChipClassName).toContain("bottom-[46px]");
+    expect(settingsChipClassName).toContain("fixed");
+    expect(settingsChipClassName).toContain("z-[80]");
     expect(settingsChipClassName).toContain("border-[#666666]");
     expect(settingsChipClassName).not.toContain("border-[#e00000]");
   });
