@@ -8,7 +8,6 @@ import (
 
 	"boke-video/backend/internal/access"
 	"boke-video/backend/internal/comment"
-	"boke-video/backend/internal/repository"
 	"boke-video/backend/internal/streamaccess"
 	"boke-video/backend/internal/whipproxy"
 )
@@ -17,7 +16,7 @@ const defaultStreamEndGrace = 90 * time.Second
 
 type ServerConfig struct {
 	Logger         *slog.Logger
-	Repository     *repository.SQLite
+	Repository     repositoryStore
 	Verifier       *access.Verifier
 	CommentHub     *comment.Hub
 	AllowedOrigins []string
@@ -30,7 +29,7 @@ type ServerConfig struct {
 
 type Server struct {
 	logger         *slog.Logger
-	repository     *repository.SQLite
+	repository     repositoryStore
 	verifier       *access.Verifier
 	commentHub     *comment.Hub
 	allowedOrigins []string

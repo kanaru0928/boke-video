@@ -10,12 +10,6 @@ import (
 	"boke-video/backend/internal/streammonitor"
 )
 
-type streamMonitor interface {
-	ListStreams(ctx context.Context) (map[string]streammonitor.StreamSnapshot, error)
-	PlaybackPlaylists(ctx context.Context, streamName string) ([]streammonitor.PlaybackPlaylist, error)
-	FetchThumbnail(ctx context.Context, streamName string) (streammonitor.Thumbnail, error)
-}
-
 func (s *Server) reconcileRooms(ctx context.Context, rooms []repository.Room) ([]repository.Room, error) {
 	if s.streamMonitor == nil {
 		return rooms, nil
