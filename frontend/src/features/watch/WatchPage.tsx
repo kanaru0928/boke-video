@@ -68,7 +68,12 @@ export function WatchPage({ config }: WatchPageProps) {
     renderAndRecordComment,
     updatePresence,
   );
-  const { isStreamLoading, playbackQualities, streamMessage } = useStreamPlayer(
+  const {
+    isManualPlaybackRequired,
+    isStreamLoading,
+    playbackQualities,
+    streamMessage,
+  } = useStreamPlayer(
     config,
     selectedRoomId,
     streamStatus,
@@ -165,6 +170,7 @@ export function WatchPage({ config }: WatchPageProps) {
             isMuted={isMuted}
             isPaused={isPaused}
             isFullscreen={isFullscreen}
+            isManualPlaybackRequired={isManualPlaybackRequired}
             isStreamLoading={isStreamLoading}
             playbackQualities={playbackQualities}
             selectedQualityId={selectedQualityId}

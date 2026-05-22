@@ -25,6 +25,7 @@ type WatchPlayerProps = {
   commentsVisible: boolean;
   elapsedSeconds: number;
   isFullscreen: boolean;
+  isManualPlaybackRequired: boolean;
   isMuted: boolean;
   isPaused: boolean;
   isStreamLoading: boolean;
@@ -51,6 +52,7 @@ export function WatchPlayer({
   commentsVisible,
   elapsedSeconds,
   isFullscreen,
+  isManualPlaybackRequired,
   isMuted,
   isPaused,
   isStreamLoading,
@@ -77,6 +79,7 @@ export function WatchPlayer({
       onContextMenu={preventPlayerContextMenu}
       onPointerEnter={revealControlsUntilIdle}
       onPointerLeave={hideControls}
+      onPointerDown={isManualPlaybackRequired ? onTogglePlayback : undefined}
       onPointerMove={revealControlsUntilIdle}
       role="application"
     >

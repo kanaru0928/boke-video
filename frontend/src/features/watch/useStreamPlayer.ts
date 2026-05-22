@@ -16,6 +16,7 @@ import { streamStatusMessage } from "./watch_stream";
 
 type UseStreamPlayerResult = {
   isStreamLoading: boolean;
+  isManualPlaybackRequired: boolean;
   playbackQualities: PlaybackQualityOption[];
   streamMessage: string;
 };
@@ -34,6 +35,8 @@ export function useStreamPlayer(
     PlaybackQualityOption[]
   >([]);
   const [isStreamLoading, setIsStreamLoading] = useState(false);
+  const [isManualPlaybackRequired, setIsManualPlaybackRequired] =
+    useState(false);
   const [streamMessage, setStreamMessage] = useState(
     streamStatusMessage(streamStatus),
   );
@@ -52,6 +55,7 @@ export function useStreamPlayer(
       return;
     }
     const clearPlaybackMessage = (): void => {
+      setIsManualPlaybackRequired(false);
       setStreamMessage("");
     };
     video.addEventListener("play", clearPlaybackMessage);
@@ -86,6 +90,7 @@ export function useStreamPlayer(
       if (roomId === "") {
         setPlaybackQualities([]);
         setIsStreamLoading(false);
+        setIsManualPlaybackRequired(false);
         setStreamMessage(streamStatusMessage(streamStatus));
         return;
       }
@@ -93,6 +98,7 @@ export function useStreamPlayer(
         detachStream();
         setPlaybackQualities([]);
         setIsStreamLoading(false);
+        setIsManualPlaybackRequired(false);
         setStreamMessage(streamStatusMessage(streamStatus));
         return;
       }
@@ -106,9 +112,11 @@ export function useStreamPlayer(
       try {
         if (videoRef.current === null) {
           setIsStreamLoading(false);
+          setIsManualPlaybackRequired(false);
           return;
         }
         setIsStreamLoading(true);
+        setIsManualPlaybackRequired(false);
         const streamAccess = await fetchStreamAccess(config, roomId);
         if (streamAccess === null) {
           throw new Error("stream access was not issued");
@@ -140,12 +148,16 @@ export function useStreamPlayer(
         attachedRoomIdRef.current = roomId;
         attachedQualityIdRef.current = quality.id;
         setIsStreamLoading(false);
+        setIsManualPlaybackRequired(false);
         setStreamMessage("");
         void startVideoPlayback(video)
           .then((playbackStartResult) => {
             if (canceled) {
               return;
             }
+            setIsManualPlaybackRequired(
+              playbackStartResult === "manualPlaybackRequired",
+            );
             setStreamMessage(playbackStartMessage(playbackStartResult));
           })
           .catch(() => {
@@ -153,6 +165,7 @@ export function useStreamPlayer(
               return;
             }
             detachStream();
+            setIsManualPlaybackRequired(false);
             setStreamMessage(streamStatusMessage(streamStatus));
             scheduleReconnect();
           });
@@ -164,6 +177,7 @@ export function useStreamPlayer(
         detachStream();
         setPlaybackQualities([]);
         setIsStreamLoading(false);
+        setIsManualPlaybackRequired(false);
         setStreamMessage(streamStatusMessage(streamStatus));
         scheduleReconnect();
       }
@@ -177,14 +191,19 @@ export function useStreamPlayer(
     };
   }, [config, roomId, selectedQualityId, streamStatus, videoRef]);
 
-  return { isStreamLoading, playbackQualities, streamMessage };
+  return {
+    isManualPlaybackRequired,
+    isStreamLoading,
+    playbackQualities,
+    streamMessage,
+  };
 }
 
 function playbackStartMessage(
   playbackStartResult: PlaybackStartResult | undefined,
 ): string {
   if (playbackStartResult === "manualPlaybackRequired") {
-    return "再生ボタンを押してください";
+    return "画面に触れてください";
   }
   return "";
 }
