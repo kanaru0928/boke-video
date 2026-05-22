@@ -1,18 +1,18 @@
 import { type RefObject, useEffect, useRef, useState } from "react";
-import type { AppConfig } from "../../shared/config/config";
+import type { AppConfig } from "../../../shared/config/config";
 import {
   OvenMediaEnginePlayer,
   type PlaybackStartResult,
   startVideoPlayback,
-} from "../player/oven_media_engine_player";
-import type { RoomStreamStatus } from "../rooms/room_api";
-import { fetchStreamAccess } from "./stream_access_api";
+} from "../../player/oven_media_engine_player";
+import type { RoomStreamStatus } from "../../rooms/room_api";
+import { fetchStreamAccess } from "../api/stream_access_api";
 import {
   type PlaybackQualityOption,
   playbackQualityOptions,
   selectedPlaybackQuality,
-} from "./stream_quality";
-import { streamStatusMessage } from "./watch_stream";
+} from "../lib/stream_quality";
+import { streamStatusMessage } from "../lib/watch_stream";
 
 type UseStreamPlayerResult = {
   dismissMutedAutoplayNotice: () => void;

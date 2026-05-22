@@ -1,15 +1,15 @@
 import { Send } from "lucide-react";
 import type { KeyboardEvent } from "react";
-import { Button } from "../../shared/ui/Button";
-import { cn } from "../../shared/ui/classNames";
-import { Textarea } from "../../shared/ui/FormControl";
-import { directionLabel } from "../comments/comment_labels";
+import { Button } from "../../../shared/ui/Button";
+import { cn } from "../../../shared/ui/classNames";
+import { Textarea } from "../../../shared/ui/FormControl";
+import { directionLabel } from "../../comments/comment_labels";
 import {
   type CommentDirection,
   type CommentFontSize,
   commentColors,
   commentDirections,
-} from "../comments/types";
+} from "../../comments/types";
 
 type CommentFormProps = {
   body: string;

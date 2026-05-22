@@ -1,30 +1,30 @@
 import { Volume2 } from "lucide-react";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
-import type { AppConfig } from "../../shared/config/config";
-import { AppHeader } from "../../shared/ui/AppHeader";
-import { AppShell } from "../../shared/ui/AppShell";
-import { cn } from "../../shared/ui/classNames";
+import type { AppConfig } from "../../../shared/config/config";
+import { AppHeader } from "../../../shared/ui/AppHeader";
+import { AppShell } from "../../../shared/ui/AppShell";
+import { cn } from "../../../shared/ui/classNames";
 import {
   type CommentCreateRequest,
   type CommentDirection,
   type CommentFontSize,
   type CommentMessage,
   commentColors,
-} from "../comments/types";
-import { NotFoundPage } from "../notFound/NotFoundPage";
-import { startVideoPlayback } from "../player/oven_media_engine_player";
-import { useRooms } from "../rooms/useRooms";
-import { CommentForm } from "./CommentForm";
-import { CommentSidebar } from "./CommentSidebar";
-import { isCommentSubmitShortcut } from "./comment_shortcuts";
-import { autoQualityId } from "./stream_quality";
-import { useCommentRenderer } from "./useCommentRenderer";
-import { useCommentSocket } from "./useCommentSocket";
-import { useFullscreen } from "./useFullscreen";
-import { useRoomActivity } from "./useRoomActivity";
-import { useStreamPlayer } from "./useStreamPlayer";
-import { WatchPlayer } from "./WatchPlayer";
-import { WatchProgramHeader } from "./WatchProgramHeader";
+} from "../../comments/types";
+import { NotFoundPage } from "../../notFound/NotFoundPage";
+import { startVideoPlayback } from "../../player/oven_media_engine_player";
+import { useRooms } from "../../rooms/useRooms";
+import { isCommentSubmitShortcut } from "../lib/comment_shortcuts";
+import { autoQualityId } from "../lib/stream_quality";
+import { useCommentRenderer } from "../model/useCommentRenderer";
+import { useCommentSocket } from "../model/useCommentSocket";
+import { useFullscreen } from "../model/useFullscreen";
+import { useRoomActivity } from "../model/useRoomActivity";
+import { useStreamPlayer } from "../model/useStreamPlayer";
+import { CommentForm } from "../ui/CommentForm";
+import { CommentSidebar } from "../ui/CommentSidebar";
+import { WatchPlayer } from "../ui/WatchPlayer";
+import { WatchProgramHeader } from "../ui/WatchProgramHeader";
 
 type WatchPageProps = {
   config: AppConfig;

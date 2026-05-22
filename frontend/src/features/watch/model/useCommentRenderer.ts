@@ -1,6 +1,6 @@
 import { type RefObject, useCallback, useEffect, useRef } from "react";
-import { CommentRenderer } from "../comments/comment_renderer";
-import type { CommentMessage } from "../comments/types";
+import { CommentRenderer } from "../../comments/comment_renderer";
+import type { CommentMessage } from "../../comments/types";
 
 type UseCommentRendererResult = {
   clearComments: () => void;

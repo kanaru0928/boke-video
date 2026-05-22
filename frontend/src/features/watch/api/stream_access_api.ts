@@ -1,6 +1,6 @@
-import { apiRoomPath } from "../../shared/api/endpoints";
-import { requestJSON } from "../../shared/api/http_client";
-import type { AppConfig } from "../../shared/config/config";
+import { apiRoomPath } from "../../../shared/api/endpoints";
+import { requestJSON } from "../../../shared/api/http_client";
+import type { AppConfig } from "../../../shared/config/config";
 
 type StreamAccess = {
   playbackUrl: string;

@@ -1,15 +1,15 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLayoutEffect, useRef } from "react";
-import { Button } from "../../shared/ui/Button";
-import { cn } from "../../shared/ui/classNames";
-import { commentAuthorLabel } from "../comments/comment_author";
-import type { CommentMessage } from "../comments/types";
-import type { RoomStats } from "../rooms/room_api";
+import { Button } from "../../../shared/ui/Button";
+import { cn } from "../../../shared/ui/classNames";
+import { commentAuthorLabel } from "../../comments/comment_author";
+import type { CommentMessage } from "../../comments/types";
+import type { RoomStats } from "../../rooms/room_api";
 import {
   commentLogNumber,
   formatCommentSentAt,
   isCommentLogScrolledToBottom,
-} from "./room_activity";
+} from "../lib/room_activity";
 
 type CommentSidebarProps = {
   comments: CommentMessage[];

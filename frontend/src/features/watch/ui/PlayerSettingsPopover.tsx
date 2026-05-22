@@ -1,6 +1,9 @@
 import { MessageSquare } from "lucide-react";
-import { cn } from "../../shared/ui/classNames";
-import { autoQualityId, type PlaybackQualityOption } from "./stream_quality";
+import { cn } from "../../../shared/ui/classNames";
+import {
+  autoQualityId,
+  type PlaybackQualityOption,
+} from "../lib/stream_quality";
 
 type PlayerSettingsPopoverProps = {
   commentsVisible: boolean;

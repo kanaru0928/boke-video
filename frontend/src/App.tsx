@@ -2,7 +2,7 @@ import { AdminPage } from "./features/admin/AdminPage";
 import { NotFoundPage } from "./features/notFound/NotFoundPage";
 import { RoomListPage } from "./features/rooms/RoomListPage";
 import { UserPage } from "./features/user/UserPage";
-import { WatchPage } from "./features/watch/WatchPage";
+import { WatchPage } from "./features/watch/page/WatchPage";
 import type { AppConfig } from "./shared/config/config";
 
 type AppProps = {

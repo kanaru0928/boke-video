@@ -1,5 +1,5 @@
 import { type RefObject, useCallback, useEffect, useState } from "react";
-import { isFullscreenShortcut } from "./fullscreen_shortcuts";
+import { isFullscreenShortcut } from "../lib/fullscreen_shortcuts";
 
 type UseFullscreenResult = {
   isFullscreen: boolean;

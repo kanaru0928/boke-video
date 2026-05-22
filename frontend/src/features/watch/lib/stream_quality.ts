@@ -1,4 +1,4 @@
-import type { StreamPlaybackVariant } from "./stream_access_api";
+import type { StreamPlaybackVariant } from "../api/stream_access_api";
 
 export type PlaybackQualityOption = {
   id: string;

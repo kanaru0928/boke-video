@@ -1,11 +1,11 @@
 import { LoaderCircle, Play } from "lucide-react";
 import type { RefObject } from "react";
-import { cn } from "../../shared/ui/classNames";
-import type { RoomStreamStatus } from "../rooms/room_api";
+import { cn } from "../../../shared/ui/classNames";
+import type { RoomStreamStatus } from "../../rooms/room_api";
+import type { PlaybackQualityOption } from "../lib/stream_quality";
+import { playerStatusMessage } from "../lib/watch_stream";
+import { usePlayerControlsVisibility } from "../model/usePlayerControlsVisibility";
 import { PlayerControls } from "./PlayerControls";
-import type { PlaybackQualityOption } from "./stream_quality";
-import { usePlayerControlsVisibility } from "./usePlayerControlsVisibility";
-import { playerStatusMessage } from "./watch_stream";
 
 type PreventableEvent = {
   preventDefault: () => void;

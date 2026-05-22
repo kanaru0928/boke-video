@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { AppConfig } from "../../shared/config/config";
-import type { CommentMessage, PresenceMessage } from "../comments/types";
+import type { AppConfig } from "../../../shared/config/config";
+import type { CommentMessage, PresenceMessage } from "../../comments/types";
 import {
   createRoomVisitResult,
   fetchCommentPage,
   fetchRoomStatsResult,
   type RoomStats,
-} from "../rooms/room_api";
+} from "../../rooms/room_api";
 
 type UseRoomActivityResult = {
   comments: CommentMessage[];

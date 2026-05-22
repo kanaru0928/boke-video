@@ -8,13 +8,13 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { Button } from "../../shared/ui/Button";
-import { cn } from "../../shared/ui/classNames";
-import type { RoomStreamStatus } from "../rooms/room_api";
+import { Button } from "../../../shared/ui/Button";
+import { cn } from "../../../shared/ui/classNames";
+import type { RoomStreamStatus } from "../../rooms/room_api";
+import { formatElapsedTime } from "../lib/room_activity";
+import type { PlaybackQualityOption } from "../lib/stream_quality";
+import { useSettingsPopover } from "../model/useSettingsPopover";
 import { PlayerSettingsPopover } from "./PlayerSettingsPopover";
-import { formatElapsedTime } from "./room_activity";
-import type { PlaybackQualityOption } from "./stream_quality";
-import { useSettingsPopover } from "./useSettingsPopover";
 
 type PlayerControlsProps = {
   commentsVisible: boolean;

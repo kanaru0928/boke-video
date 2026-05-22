@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { playerControlsIdleDelayMs } from "../model/usePlayerControlsVisibility";
 import {
   playerControlsClassName,
   playerControlsVisibleClassName,
 } from "./PlayerControls";
 import { settingsChipClassName } from "./PlayerSettingsPopover";
-import { playerControlsIdleDelayMs } from "./usePlayerControlsVisibility";
 import {
   preventPlayerContextMenu,
   stageClassName,

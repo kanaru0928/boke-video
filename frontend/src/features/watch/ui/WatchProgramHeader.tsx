@@ -1,6 +1,6 @@
-import { cn } from "../../shared/ui/classNames";
-import type { Room, RoomStreamStatus } from "../rooms/room_api";
-import { streamStatusLabel } from "./watch_stream";
+import { cn } from "../../../shared/ui/classNames";
+import type { Room, RoomStreamStatus } from "../../rooms/room_api";
+import { streamStatusLabel } from "../lib/watch_stream";
 
 type WatchProgramHeaderProps = {
   selectedRoom: Room | null;
