@@ -35,7 +35,12 @@ func (s *Server) handleListRooms(w http.ResponseWriter, r *http.Request) {
 		s.writeServerError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, rooms)
+	responses, err := s.publicRoomResponses(r.Context(), rooms)
+	if err != nil {
+		s.writeServerError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, responses)
 }
 
 func (s *Server) handleListOwnedRooms(w http.ResponseWriter, r *http.Request) {

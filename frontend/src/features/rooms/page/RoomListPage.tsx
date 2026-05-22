@@ -1,11 +1,20 @@
-import { Bot, MonitorPlay, Newspaper } from "lucide-react";
+import {
+  Bot,
+  Clock3,
+  type LucideIcon,
+  MonitorPlay,
+  Newspaper,
+  UserRound,
+  Users,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import type { AppConfig } from "../../../shared/config/config";
 import { AppHeader } from "../../../shared/ui/AppHeader";
 import { AppShell } from "../../../shared/ui/AppShell";
 import { Board } from "../../../shared/ui/Board";
 import { cn } from "../../../shared/ui/classNames";
-import type { Room } from "../api/room_api";
+import type { PublicRoom } from "../api/room_api";
+import { formatStartedAgo } from "../lib/public_room_activity";
 import {
   roomThumbnail,
   roomThumbnailRefreshMilliseconds,
@@ -69,7 +78,7 @@ export function RoomListPage({ config }: RoomListPageProps) {
 
 type RoomCardProps = {
   config: AppConfig;
-  room: Room;
+  room: PublicRoom;
 };
 
 function RoomCard({ config, room }: RoomCardProps) {
@@ -118,10 +127,56 @@ function RoomCard({ config, room }: RoomCardProps) {
         >
           {room.title}
         </a>
-        <p className="m-0 [overflow-wrap:anywhere] font-[Arial,sans-serif] text-xs text-[#666666]">
-          {room.id}
-        </p>
+        <dl className="m-0 grid grid-cols-[1fr_auto_auto] items-center gap-[5px] font-[Arial,sans-serif] text-[12px] leading-none text-white max-[520px]:grid-cols-2">
+          <RoomCardMetric
+            className="min-w-0 max-[520px]:col-span-2"
+            icon={UserRound}
+            label="ユーザー名"
+            value={room.ownerDisplayName}
+          />
+          <RoomCardMetric
+            icon={Clock3}
+            label="経過時間"
+            value={formatStartedAgo(room.elapsedSeconds)}
+          />
+          <RoomCardMetric
+            icon={Users}
+            label="接続中人数"
+            value={`${room.currentViewerCount}人`}
+          />
+        </dl>
       </div>
     </article>
+  );
+}
+
+type RoomCardMetricProps = {
+  className?: string;
+  icon: LucideIcon;
+  label: string;
+  value: string;
+};
+
+function RoomCardMetric({
+  className,
+  icon: Icon,
+  label,
+  value,
+}: RoomCardMetricProps) {
+  return (
+    <div
+      className={cn(
+        "grid min-h-[28px] min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-[5px]",
+        "rounded-[3px] border border-[#777777] bg-[linear-gradient(#464646,#111111_52%,#565656)] px-[7px] py-[5px]",
+        "shadow-[inset_1px_1px_0_#8c8c8c,inset_-1px_-1px_0_#050505] [text-shadow:1px_1px_0_#000000]",
+        className,
+      )}
+    >
+      <Icon aria-hidden="true" className="shrink-0 text-[#dcdcdc]" size={14} />
+      <div className="min-w-0">
+        <dt className="sr-only">{label}</dt>
+        <dd className="m-0 truncate font-extrabold tracking-normal">{value}</dd>
+      </div>
+    </div>
   );
 }

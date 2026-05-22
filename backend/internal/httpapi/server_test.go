@@ -522,6 +522,64 @@ func TestServerListsOnlyLiveRoomsAndEndsMissingStreamsAfterGrace(t *testing.T) {
 	}
 }
 
+func TestServerListsPublicRoomsWithOwnerAndActivity(t *testing.T) {
+	server := newTestServer(t)
+	now := time.Unix(2000, 0).UTC()
+	server.now = func() time.Time {
+		return now
+	}
+	setTestDisplayName(t, server, "local-dev", "配信者")
+	startedAt := now.Add(-125 * time.Second)
+	server.streamMonitor = &fakeStreamMonitor{
+		snapshots: map[string]streammonitor.StreamSnapshot{},
+		snapshot: streammonitor.StreamSnapshot{
+			Active:    true,
+			StartedAt: &startedAt,
+		},
+	}
+	roomID := createTestRoom(t, server, "配信")
+	server.streamMonitor.(*fakeStreamMonitor).snapshots = map[string]streammonitor.StreamSnapshot{
+		roomID: {
+			Active:    true,
+			StartedAt: &startedAt,
+		},
+	}
+
+	listResponse := performRequest(server, http.MethodGet, "/api/rooms", "")
+	if listResponse.Code != http.StatusOK {
+		t.Fatalf("list rooms status = %d, body = %s", listResponse.Code, listResponse.Body.String())
+	}
+
+	var rooms []struct {
+		ID                       string `json:"id"`
+		OwnerDisplayName         string `json:"ownerDisplayName"`
+		CurrentViewerCount       int    `json:"currentViewerCount"`
+		MaxConcurrentViewerCount int    `json:"maxConcurrentViewerCount"`
+		ElapsedSeconds           int    `json:"elapsedSeconds"`
+	}
+	if err := json.NewDecoder(listResponse.Body).Decode(&rooms); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if len(rooms) != 1 {
+		t.Fatalf("len(rooms) = %d", len(rooms))
+	}
+	if rooms[0].ID != roomID {
+		t.Fatalf("rooms[0].ID = %q", rooms[0].ID)
+	}
+	if rooms[0].OwnerDisplayName != "配信者" {
+		t.Fatalf("rooms[0].OwnerDisplayName = %q", rooms[0].OwnerDisplayName)
+	}
+	if rooms[0].CurrentViewerCount != 0 {
+		t.Fatalf("rooms[0].CurrentViewerCount = %d", rooms[0].CurrentViewerCount)
+	}
+	if rooms[0].MaxConcurrentViewerCount != 0 {
+		t.Fatalf("rooms[0].MaxConcurrentViewerCount = %d", rooms[0].MaxConcurrentViewerCount)
+	}
+	if rooms[0].ElapsedSeconds != 125 {
+		t.Fatalf("rooms[0].ElapsedSeconds = %d", rooms[0].ElapsedSeconds)
+	}
+}
+
 func TestServerDeletesOwnedRoomAfterStreamEndGrace(t *testing.T) {
 	server := newTestServer(t)
 	now := time.Unix(2000, 0).UTC()
