@@ -1,5 +1,5 @@
 import { MonitorPlay, Plus } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import type { AppConfig } from "../../../shared/config/config";
 import { AppHeader } from "../../../shared/ui/AppHeader";
 import { AppShell } from "../../../shared/ui/AppShell";
@@ -10,6 +10,12 @@ import type { CommentMessage } from "../../comments/model/types";
 import { deleteComment, fetchCommentPage } from "../../rooms/api/room_api";
 import { useAdminRooms } from "../../rooms/model/useAdminRooms";
 import { buildWhipIngestUrl } from "../lib/ingest_url";
+import {
+  defaultObsWebsocketConnectionSettings,
+  type ObsWebsocketConnectionSettings,
+  readObsWebsocketConnectionSettings,
+  saveObsWebsocketConnectionSettings,
+} from "../lib/obs_websocket_connection";
 import { AdminRoom } from "../ui/AdminRoom";
 import { ObsSettings } from "../ui/ObsSettings";
 import { ObsWebsocketSettings } from "../ui/ObsWebsocketSettings";
@@ -29,8 +35,12 @@ type CommentMap = Record<string, AdminCommentState>;
 export function AdminPage({ config }: AdminPageProps) {
   const [title, setTitle] = useState("");
   const [commentsByRoomId, setCommentsByRoomId] = useState<CommentMap>({});
-  const [obsWebsocketUrl, setObsWebsocketUrl] = useState("");
-  const [obsWebsocketPassword, setObsWebsocketPassword] = useState("");
+  const [obsWebsocketConnection, setObsWebsocketConnection] =
+    useState<ObsWebsocketConnectionSettings>(
+      defaultObsWebsocketConnectionSettings,
+    );
+  const [isObsWebsocketConnectionSaved, setIsObsWebsocketConnectionSaved] =
+    useState(false);
   const [whipTokensByRoomId, setWhipTokensByRoomId] = useState<
     Record<string, string>
   >({});
@@ -41,6 +51,12 @@ export function AdminPage({ config }: AdminPageProps) {
     rotateIngestTokenByRoomId,
     updateRoomTitleById,
   } = useAdminRooms(config);
+
+  useEffect(() => {
+    setObsWebsocketConnection(
+      readObsWebsocketConnectionSettings(window.localStorage),
+    );
+  }, []);
 
   const submitRoom = async (
     event: FormEvent<HTMLFormElement>,
@@ -159,6 +175,21 @@ export function AdminPage({ config }: AdminPageProps) {
       [roomId]: token,
     }));
   };
+  const updateObsWebsocketConnection = (
+    settings: ObsWebsocketConnectionSettings,
+  ): void => {
+    setObsWebsocketConnection(settings);
+    setIsObsWebsocketConnectionSaved(false);
+  };
+
+  const saveObsWebsocketConnection = (): void => {
+    saveObsWebsocketConnectionSettings(
+      window.localStorage,
+      obsWebsocketConnection,
+    );
+    setIsObsWebsocketConnectionSaved(true);
+  };
+
   const hasRoom = rooms.length > 0;
 
   return (
@@ -173,10 +204,10 @@ export function AdminPage({ config }: AdminPageProps) {
       />
       <ObsSettings />
       <ObsWebsocketSettings
-        obsWebsocketPassword={obsWebsocketPassword}
-        obsWebsocketUrl={obsWebsocketUrl}
-        onObsWebsocketPasswordChange={setObsWebsocketPassword}
-        onObsWebsocketUrlChange={setObsWebsocketUrl}
+        obsWebsocketConnection={obsWebsocketConnection}
+        saved={isObsWebsocketConnectionSaved}
+        onObsWebsocketConnectionChange={updateObsWebsocketConnection}
+        onSaveObsWebsocketConnection={saveObsWebsocketConnection}
       />
       <Board icon={MonitorPlay} title="番組管理">
         <form
@@ -212,8 +243,7 @@ export function AdminPage({ config }: AdminPageProps) {
               onRemoveRoom={removeRoom}
               onRotateIngestToken={rotateIngestToken}
               onUpdateTitle={updateRoomTitleById}
-              obsWebsocketPassword={obsWebsocketPassword}
-              obsWebsocketUrl={obsWebsocketUrl}
+              obsWebsocketConnection={obsWebsocketConnection}
               room={room}
               serverUrl={buildWhipIngestUrl(config, room.id)}
               whipBearerToken={whipTokensByRoomId[room.id] ?? null}

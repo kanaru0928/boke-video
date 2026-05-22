@@ -1,42 +1,93 @@
-import { Cable } from "lucide-react";
+import { Cable, Save } from "lucide-react";
 import { Board } from "../../../shared/ui/Board";
+import { Button } from "../../../shared/ui/Button";
 import { TextInput } from "../../../shared/ui/FormControl";
-import { defaultObsWebsocketUrl } from "../lib/obs_stream_service";
+import type { ObsWebsocketConnectionSettings } from "../lib/obs_websocket_connection";
 
 type ObsWebsocketSettingsProps = {
-  obsWebsocketPassword: string;
-  obsWebsocketUrl: string;
-  onObsWebsocketPasswordChange: (value: string) => void;
-  onObsWebsocketUrlChange: (value: string) => void;
+  obsWebsocketConnection: ObsWebsocketConnectionSettings;
+  onObsWebsocketConnectionChange: (
+    settings: ObsWebsocketConnectionSettings,
+  ) => void;
+  onSaveObsWebsocketConnection: () => void;
+  saved: boolean;
 };
 
 export function ObsWebsocketSettings({
-  obsWebsocketPassword,
-  obsWebsocketUrl,
-  onObsWebsocketPasswordChange,
-  onObsWebsocketUrlChange,
+  obsWebsocketConnection,
+  onObsWebsocketConnectionChange,
+  onSaveObsWebsocketConnection,
+  saved,
 }: ObsWebsocketSettingsProps) {
+  const updateConnection = (
+    value: string,
+    field: keyof ObsWebsocketConnectionSettings,
+  ): void => {
+    onObsWebsocketConnectionChange({
+      ...obsWebsocketConnection,
+      [field]: value,
+    });
+  };
+
   return (
     <Board icon={Cable} title="OBS WebSocket接続">
-      <section className="grid grid-cols-[minmax(0,1fr)_minmax(0,220px)] gap-[6px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2 max-[760px]:grid-cols-1">
+      <section className="grid grid-cols-[auto_minmax(130px,1fr)_auto_80px_auto_minmax(150px,1fr)_auto] items-center gap-[7px] border border-t-0 border-[#c2c2c2] bg-[#f7f7f7] p-2 max-[700px]:grid-cols-[auto_minmax(0,1fr)] max-[700px]:items-start">
+        <label className="font-extrabold" htmlFor="obs-websocket-server-ip">
+          サーバーIP
+        </label>
         <TextInput
-          aria-label="OBS WebSocket URL"
+          aria-label="OBS WebSocketサーバーIP"
+          id="obs-websocket-server-ip"
           onChange={(event) =>
-            onObsWebsocketUrlChange(event.currentTarget.value)
+            updateConnection(event.currentTarget.value, "serverIp")
           }
-          placeholder={defaultObsWebsocketUrl}
+          placeholder="192.168.1.19"
           type="text"
-          value={obsWebsocketUrl}
+          value={obsWebsocketConnection.serverIp}
         />
+        <label className="font-extrabold" htmlFor="obs-websocket-server-port">
+          ポート
+        </label>
         <TextInput
-          aria-label="OBS WebSocketパスワード"
+          aria-label="OBS WebSocketサーバーポート"
+          id="obs-websocket-server-port"
+          inputMode="numeric"
           onChange={(event) =>
-            onObsWebsocketPasswordChange(event.currentTarget.value)
+            updateConnection(event.currentTarget.value, "serverPort")
           }
-          placeholder="OBS側のパスワード"
-          type="password"
-          value={obsWebsocketPassword}
+          placeholder="4455"
+          type="text"
+          value={obsWebsocketConnection.serverPort}
         />
+        <label
+          className="font-extrabold"
+          htmlFor="obs-websocket-server-password"
+        >
+          パスワード
+        </label>
+        <TextInput
+          aria-label="OBS WebSocketサーバーパスワード"
+          id="obs-websocket-server-password"
+          onChange={(event) =>
+            updateConnection(event.currentTarget.value, "serverPassword")
+          }
+          placeholder="サーバーパスワード"
+          type="password"
+          value={obsWebsocketConnection.serverPassword}
+        />
+        <div className="flex items-center gap-[7px] max-[700px]:col-span-2">
+          <Button
+            aria-label="OBS WebSocket接続情報を保存"
+            onClick={onSaveObsWebsocketConnection}
+            type="button"
+          >
+            <Save aria-hidden="true" size={18} />
+            保存
+          </Button>
+          {saved ? (
+            <span className="text-xs text-[#0b5f24]">保存済み</span>
+          ) : null}
+        </div>
       </section>
     </Board>
   );

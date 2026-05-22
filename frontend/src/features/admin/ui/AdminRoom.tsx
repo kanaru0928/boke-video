@@ -11,6 +11,7 @@ import {
   configureObsWhipStream,
   formatObsConnectionError,
 } from "../lib/obs_stream_service";
+import type { ObsWebsocketConnectionSettings } from "../lib/obs_websocket_connection";
 import { AdminCommentList } from "./AdminCommentList";
 import { AdminRoomActions } from "./AdminRoomActions";
 import {
@@ -27,8 +28,7 @@ type AdminRoomProps = {
   onRemoveRoom: (roomId: string) => Promise<void>;
   onRotateIngestToken: (roomId: string) => Promise<void>;
   onUpdateTitle: (roomId: string, title: string) => Promise<void>;
-  obsWebsocketPassword: string;
-  obsWebsocketUrl: string;
+  obsWebsocketConnection: ObsWebsocketConnectionSettings;
   room: Room;
   serverUrl: string;
   whipBearerToken: string | null;
@@ -48,8 +48,7 @@ export function AdminRoom({
   onRemoveRoom,
   onRotateIngestToken,
   onUpdateTitle,
-  obsWebsocketPassword,
-  obsWebsocketUrl,
+  obsWebsocketConnection,
   room,
   serverUrl,
   whipBearerToken,
@@ -86,9 +85,8 @@ export function AdminRoom({
     try {
       await configureObsWhipStream({
         bearerToken: whipBearerToken,
+        obsWebsocketConnection,
         serverUrl,
-        websocketPassword: obsWebsocketPassword,
-        websocketUrl: obsWebsocketUrl,
       });
       setObsApplyStatus("applied");
     } catch (error) {
