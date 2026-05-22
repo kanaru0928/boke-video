@@ -47,6 +47,20 @@ export function useStreamPlayer(
   }, []);
 
   useEffect(() => {
+    const video = videoRef.current;
+    if (video === null) {
+      return;
+    }
+    const clearPlaybackMessage = (): void => {
+      setStreamMessage("");
+    };
+    video.addEventListener("play", clearPlaybackMessage);
+    return () => {
+      video.removeEventListener("play", clearPlaybackMessage);
+    };
+  }, [videoRef]);
+
+  useEffect(() => {
     let canceled = false;
     let timerId = 0;
 
