@@ -44,6 +44,11 @@ type InboundVideoNetworkSample = {
   timestamp: number;
 };
 
+type TrackRecoveryEventTarget = Pick<
+  MediaStreamTrack,
+  "addEventListener" | "removeEventListener"
+>;
+
 const closedConnectionStates: RTCPeerConnectionState[] = [
   "disconnected",
   "failed",
@@ -52,12 +57,14 @@ const closedConnectionStates: RTCPeerConnectionState[] = [
 const networkMonitorIntervalMs = 5000;
 const minimumPacketsForQualityDowngrade = 120;
 const networkLossRatioForQualityDowngrade = 0.12;
+export const videoTrackRecoveryDelayMs = 3000;
 
 export class OvenMediaEnginePlayer {
   private connection: RTCPeerConnection | null = null;
   private networkMonitorTimerId: ReturnType<typeof window.setInterval> | null =
     null;
   private socket: WebSocket | null = null;
+  private videoTrackRecoveryCleanups: (() => void)[] = [];
 
   async attach(
     video: HTMLVideoElement,
@@ -75,6 +82,11 @@ export class OvenMediaEnginePlayer {
     this.connection = connection;
 
     connection.addEventListener("track", (event) => {
+      if (isRecoverableVideoTrack(event.track)) {
+        this.videoTrackRecoveryCleanups.push(
+          monitorVideoTrackRecovery(event.track, onConnectionClosed),
+        );
+      }
       const tracks = event.streams[0]?.getTracks() ?? [event.track];
       for (const track of tracks) {
         if (
@@ -127,6 +139,10 @@ export class OvenMediaEnginePlayer {
       window.clearInterval(this.networkMonitorTimerId);
       this.networkMonitorTimerId = null;
     }
+    for (const cleanup of this.videoTrackRecoveryCleanups) {
+      cleanup();
+    }
+    this.videoTrackRecoveryCleanups = [];
     this.socket?.close();
     this.socket = null;
     this.connection?.close();
@@ -160,6 +176,42 @@ export class OvenMediaEnginePlayer {
         });
     }, networkMonitorIntervalMs);
   }
+}
+
+export function isRecoverableVideoTrack(
+  track: Pick<MediaStreamTrack, "kind">,
+): boolean {
+  return track.kind === "video";
+}
+
+export function monitorVideoTrackRecovery(
+  track: TrackRecoveryEventTarget,
+  onConnectionClosed: ConnectionClosedHandler,
+): () => void {
+  let recoveryTimerId: ReturnType<typeof globalThis.setTimeout> | null = null;
+  const clearRecoveryTimer = (): void => {
+    if (recoveryTimerId === null) {
+      return;
+    }
+    globalThis.clearTimeout(recoveryTimerId);
+    recoveryTimerId = null;
+  };
+  const scheduleRecovery = (): void => {
+    clearRecoveryTimer();
+    recoveryTimerId = globalThis.setTimeout(() => {
+      recoveryTimerId = null;
+      onConnectionClosed();
+    }, videoTrackRecoveryDelayMs);
+  };
+  track.addEventListener("mute", scheduleRecovery);
+  track.addEventListener("unmute", clearRecoveryTimer);
+  track.addEventListener("ended", onConnectionClosed, { once: true });
+  return () => {
+    clearRecoveryTimer();
+    track.removeEventListener("mute", scheduleRecovery);
+    track.removeEventListener("unmute", clearRecoveryTimer);
+    track.removeEventListener("ended", onConnectionClosed);
+  };
 }
 
 export function isNetworkInsufficientForPlayback(

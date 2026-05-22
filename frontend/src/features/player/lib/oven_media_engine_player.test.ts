@@ -1,8 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   isNetworkInsufficientForPlayback,
+  isRecoverableVideoTrack,
+  monitorVideoTrackRecovery,
   startVideoPlayback,
+  videoTrackRecoveryDelayMs,
 } from "./oven_media_engine_player";
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("startVideoPlayback", () => {
   it("音ありで再生を開始する", async () => {
@@ -74,6 +81,57 @@ describe("startVideoPlayback", () => {
   });
 });
 
+describe("isRecoverableVideoTrack", () => {
+  it("映像トラックだけを復旧監視対象にする", () => {
+    expect(isRecoverableVideoTrack({ kind: "video" })).toBe(true);
+    expect(isRecoverableVideoTrack({ kind: "audio" })).toBe(false);
+  });
+});
+
+describe("monitorVideoTrackRecovery", () => {
+  it("映像トラックのmuteが続いたら接続終了として扱う", () => {
+    vi.useFakeTimers();
+    const track = createMediaStreamTrackEventTarget();
+    const onConnectionClosed = vi.fn();
+
+    monitorVideoTrackRecovery(track, onConnectionClosed);
+    track.dispatchEvent(new Event("mute"));
+
+    vi.advanceTimersByTime(videoTrackRecoveryDelayMs - 1);
+    expect(onConnectionClosed).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(1);
+    expect(onConnectionClosed).toHaveBeenCalledTimes(1);
+  });
+
+  it("映像トラックがunmuteしたら復旧待ちを取り消す", () => {
+    vi.useFakeTimers();
+    const track = createMediaStreamTrackEventTarget();
+    const onConnectionClosed = vi.fn();
+
+    monitorVideoTrackRecovery(track, onConnectionClosed);
+    track.dispatchEvent(new Event("mute"));
+    track.dispatchEvent(new Event("unmute"));
+    vi.advanceTimersByTime(videoTrackRecoveryDelayMs);
+
+    expect(onConnectionClosed).not.toHaveBeenCalled();
+  });
+
+  it("映像トラックがendedになったらすぐ接続終了として扱う", () => {
+    const track = createMediaStreamTrackEventTarget();
+    const onConnectionClosed = vi.fn();
+
+    monitorVideoTrackRecovery(track, onConnectionClosed);
+    track.dispatchEvent(new Event("ended"));
+
+    expect(onConnectionClosed).toHaveBeenCalledTimes(1);
+  });
+
+  it("映像トラック復旧待ち時間を持つ", () => {
+    expect(videoTrackRecoveryDelayMs).toBeGreaterThan(0);
+  });
+});
+
 describe("isNetworkInsufficientForPlayback", () => {
   it("受信パケットに対するロスが大きい場合はネットワーク不足にする", () => {
     expect(
@@ -108,4 +166,17 @@ function createPlayableVideo(
   play: () => Promise<void>,
 ): Pick<HTMLVideoElement, "muted" | "play"> {
   return { muted, play };
+}
+
+function createMediaStreamTrackEventTarget(): Pick<
+  MediaStreamTrack,
+  "addEventListener" | "dispatchEvent" | "kind" | "removeEventListener"
+> {
+  const target = new EventTarget();
+  return {
+    addEventListener: target.addEventListener.bind(target),
+    dispatchEvent: target.dispatchEvent.bind(target),
+    kind: "video",
+    removeEventListener: target.removeEventListener.bind(target),
+  };
 }
