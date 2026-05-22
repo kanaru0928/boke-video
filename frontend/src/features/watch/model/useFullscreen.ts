@@ -1,4 +1,10 @@
-import { type RefObject, useCallback, useEffect, useState } from "react";
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { isFullscreenShortcut } from "../lib/fullscreen_shortcuts";
 import {
   canEnterElementFullscreen,
@@ -19,6 +25,7 @@ export function useFullscreen(
 ): UseFullscreenResult {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [canToggle, setCanToggle] = useState(false);
+  const shouldResumeAfterVideoFullscreenRef = useRef(false);
 
   const toggleFullscreen = useCallback((): void => {
     if (document.fullscreenElement === null) {
@@ -27,6 +34,8 @@ export function useFullscreen(
         void stage.requestFullscreen();
         return;
       }
+      shouldResumeAfterVideoFullscreenRef.current =
+        videoRef.current?.paused === false;
       enterVideoFullscreen(videoRef.current);
       return;
     }
@@ -50,6 +59,29 @@ export function useFullscreen(
       );
     };
   }, [stageRef, videoRef]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video === null) {
+      return;
+    }
+    const resumeAfterVideoFullscreen = (): void => {
+      setIsFullscreen(false);
+      if (!shouldResumeAfterVideoFullscreenRef.current) {
+        return;
+      }
+      window.setTimeout(() => {
+        void video.play().catch(() => {});
+      }, 500);
+    };
+    video.addEventListener("webkitendfullscreen", resumeAfterVideoFullscreen);
+    return () => {
+      video.removeEventListener(
+        "webkitendfullscreen",
+        resumeAfterVideoFullscreen,
+      );
+    };
+  }, [videoRef]);
 
   useEffect(() => {
     setCanToggle(canToggleFullscreen(stageRef.current, videoRef.current));
