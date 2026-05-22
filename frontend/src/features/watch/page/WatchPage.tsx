@@ -18,6 +18,7 @@ import { isCommentSubmitShortcut } from "../lib/comment_shortcuts";
 import { autoQualityId } from "../lib/stream_quality";
 import { useCommentRenderer } from "../model/useCommentRenderer";
 import { useCommentSocket } from "../model/useCommentSocket";
+import { useDocumentScrollLock } from "../model/useDocumentScrollLock";
 import { useFullscreen } from "../model/useFullscreen";
 import { useRoomActivity } from "../model/useRoomActivity";
 import { useStreamPlayer } from "../model/useStreamPlayer";
@@ -31,6 +32,7 @@ type WatchPageProps = {
 };
 
 export function WatchPage({ config }: WatchPageProps) {
+  useDocumentScrollLock();
   const stageRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [body, setBody] = useState("");
