@@ -184,6 +184,7 @@ export const choiceChipTextClassName = cn(
   "grid min-h-[26px] min-w-0 cursor-pointer select-none place-items-center overflow-hidden whitespace-nowrap rounded-sm border border-[#8c8c8c]",
   "bg-[linear-gradient(#ffffff,#d9d9d9)] px-1.5 py-1 text-center text-xs",
   "peer-checked:border-[#006bd6] peer-checked:bg-[linear-gradient(#e4f5ff,#79bcff)] peer-checked:font-extrabold peer-checked:text-[#001b37]",
+  "peer-disabled:cursor-not-allowed peer-disabled:border-[#aaaaaa] peer-disabled:bg-[linear-gradient(#eeeeee,#dddddd)] peer-disabled:text-[#777777] peer-disabled:opacity-65",
   "peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-[#006bd6]",
   "max-[520px]:min-h-6 max-[520px]:px-[5px] max-[520px]:py-[3px]",
 );

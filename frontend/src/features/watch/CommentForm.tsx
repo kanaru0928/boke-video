@@ -28,6 +28,7 @@ import {
 
 type CommentFormProps = {
   body: string;
+  disabled: boolean;
   selectedColor: string;
   selectedDirection: CommentDirection;
   selectedSize: CommentFontSize;
@@ -47,6 +48,7 @@ const commentSizeOptions: { label: string; value: CommentFontSize }[] = [
 
 export function CommentForm({
   body,
+  disabled,
   selectedColor,
   selectedDirection,
   selectedSize,
@@ -62,20 +64,29 @@ export function CommentForm({
       className={commentFormClassName}
       onSubmit={(event) => {
         event.preventDefault();
+        if (disabled) {
+          return;
+        }
         onSubmit();
       }}
     >
       <div className={commentComposeClassName}>
         <textarea
           className={textareaClassName}
+          disabled={disabled}
           maxLength={100}
           onChange={(event) => onBodyChange(event.currentTarget.value)}
           onKeyDown={onShortcut}
-          placeholder="コメント"
+          placeholder={disabled ? "配信は終了しました" : "コメント"}
           required
           value={body}
         />
-        <Button className={commentSubmitButtonClassName} primary type="submit">
+        <Button
+          className={commentSubmitButtonClassName}
+          disabled={disabled}
+          primary
+          type="submit"
+        >
           <Send aria-hidden="true" size={18} />
           コメント
         </Button>
@@ -87,6 +98,7 @@ export function CommentForm({
             {commentDirections.map((direction) => (
               <ChoiceChip
                 checked={direction === selectedDirection}
+                disabled={disabled}
                 key={direction}
                 name="comment-direction"
                 onChange={() => onDirectionChange(direction)}
@@ -102,6 +114,7 @@ export function CommentForm({
             {commentSizeOptions.map((size) => (
               <ChoiceChip
                 checked={size.value === selectedSize}
+                disabled={disabled}
                 key={size.value}
                 name="comment-size"
                 onChange={() => onSizeChange(size.value)}
@@ -119,6 +132,7 @@ export function CommentForm({
                 colorButtonClassName,
                 color === selectedColor && selectedColorButtonClassName,
               )}
+              disabled={disabled}
               key={color}
               onClick={() => onColorChange(color)}
               style={{ backgroundColor: color }}
@@ -132,6 +146,7 @@ export function CommentForm({
 
 type ChoiceChipProps<T extends string> = {
   checked: boolean;
+  disabled: boolean;
   name: string;
   onChange: () => void;
   text: string;
@@ -140,6 +155,7 @@ type ChoiceChipProps<T extends string> = {
 
 function ChoiceChip<T extends string>({
   checked,
+  disabled,
   name,
   onChange,
   text,
@@ -150,6 +166,7 @@ function ChoiceChip<T extends string>({
       <input
         checked={checked}
         className={choiceChipInputClassName}
+        disabled={disabled}
         name={name}
         onChange={onChange}
         type="radio"

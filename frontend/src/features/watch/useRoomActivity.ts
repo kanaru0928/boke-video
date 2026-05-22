@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AppConfig } from "../../shared/config/config";
 import type { CommentMessage, PresenceMessage } from "../comments/types";
 import {
@@ -16,6 +16,7 @@ type UseRoomActivityResult = {
   loadOlderComments: () => Promise<void>;
   recordComment: (comment: CommentMessage) => void;
   roomNotFound: boolean;
+  streamEnded: boolean;
   stats: RoomStats | null;
   updatePresence: (presence: PresenceMessage) => void;
 };
@@ -33,19 +34,40 @@ export function useRoomActivity(
   const [realtimeCommentCount, setRealtimeCommentCount] = useState(0);
   const [presence, setPresence] = useState<PresenceMessage | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const elapsedSecondsRef = useRef(0);
   const [roomNotFound, setRoomNotFound] = useState(false);
+  const [streamEnded, setStreamEnded] = useState(false);
+  const setCurrentElapsedSeconds = useCallback((seconds: number): void => {
+    elapsedSecondsRef.current = seconds;
+    setElapsedSeconds(seconds);
+  }, []);
   const clearRoomActivity = useCallback((): void => {
     setComments([]);
     setLoadedStats(null);
     setNextCommentCursor(null);
     setRealtimeCommentCount(0);
     setPresence(null);
-    setElapsedSeconds(0);
-  }, []);
+    setCurrentElapsedSeconds(0);
+    setStreamEnded(false);
+  }, [setCurrentElapsedSeconds]);
   const markRoomNotFound = useCallback((): void => {
     clearRoomActivity();
     setRoomNotFound(true);
   }, [clearRoomActivity]);
+  const markStreamEnded = useCallback((): void => {
+    setStreamEnded(true);
+    setPresence(null);
+    setLoadedStats((current) =>
+      current === null
+        ? current
+        : {
+            ...current,
+            currentViewerCount: 0,
+            elapsedSeconds: elapsedSecondsRef.current,
+            streamStatus: "ended",
+          },
+    );
+  }, []);
   const stats = useMemo((): RoomStats | null => {
     if (loadedStats === null) {
       return null;
@@ -76,6 +98,7 @@ export function useRoomActivity(
 
       setPresence(null);
       setRoomNotFound(false);
+      setStreamEnded(false);
       const visitResult = await createRoomVisitResult(config, roomId);
       if (canceled) {
         return;
@@ -92,31 +115,41 @@ export function useRoomActivity(
       setNextCommentCursor(commentPage.nextCursor);
       setLoadedStats(visitResult.stats);
       setRealtimeCommentCount(0);
-      setElapsedSeconds(visitResult.stats.elapsedSeconds);
+      setCurrentElapsedSeconds(visitResult.stats.elapsedSeconds);
     };
 
     void loadRoomActivity();
     return () => {
       canceled = true;
     };
-  }, [clearRoomActivity, config, markRoomNotFound, roomId]);
+  }, [
+    clearRoomActivity,
+    config,
+    markRoomNotFound,
+    roomId,
+    setCurrentElapsedSeconds,
+  ]);
 
   useEffect(() => {
     if (loadedStats === null) {
       return;
     }
-    setElapsedSeconds(loadedStats.elapsedSeconds);
+    setCurrentElapsedSeconds(loadedStats.elapsedSeconds);
     if (loadedStats.streamStatus !== "live") {
       return;
     }
     const timerId = window.setInterval(() => {
-      setElapsedSeconds((current) => current + 1);
+      setElapsedSeconds((current) => {
+        const next = current + 1;
+        elapsedSecondsRef.current = next;
+        return next;
+      });
     }, 1000);
     return () => window.clearInterval(timerId);
-  }, [loadedStats]);
+  }, [loadedStats, setCurrentElapsedSeconds]);
 
   useEffect(() => {
-    if (roomId === "") {
+    if (roomId === "" || streamEnded) {
       return;
     }
     let canceled = false;
@@ -126,12 +159,13 @@ export function useRoomActivity(
         return;
       }
       if (result.status === "notFound") {
-        markRoomNotFound();
+        markStreamEnded();
         return;
       }
+      setStreamEnded(false);
       setLoadedStats(result.stats);
       setRealtimeCommentCount(0);
-      setElapsedSeconds(result.stats.elapsedSeconds);
+      setCurrentElapsedSeconds(result.stats.elapsedSeconds);
     };
     const timerId = window.setInterval(() => {
       void refreshStats();
@@ -140,7 +174,7 @@ export function useRoomActivity(
       canceled = true;
       window.clearInterval(timerId);
     };
-  }, [config, markRoomNotFound, roomId]);
+  }, [config, markStreamEnded, roomId, setCurrentElapsedSeconds, streamEnded]);
 
   const recordComment = useCallback((comment: CommentMessage): void => {
     setComments((current) => [...current, comment]);
@@ -179,6 +213,7 @@ export function useRoomActivity(
     loadOlderComments,
     recordComment,
     roomNotFound,
+    streamEnded,
     stats,
     updatePresence,
   };

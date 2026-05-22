@@ -53,12 +53,21 @@ export function WatchPage({ config }: WatchPageProps) {
     recordComment,
     roomNotFound,
     stats,
+    streamEnded,
     updatePresence,
   } = useRoomActivity(config, selectedRoomId);
-  const activeRoomId = roomNotFound ? "" : selectedRoomId;
   const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? null;
+  const [lastSelectedRoom, setLastSelectedRoom] = useState(selectedRoom);
+  useEffect(() => {
+    if (selectedRoom !== null) {
+      setLastSelectedRoom(selectedRoom);
+    }
+  }, [selectedRoom]);
+  const visibleRoom = selectedRoom ?? lastSelectedRoom;
   const streamStatus =
-    stats?.streamStatus ?? selectedRoom?.streamStatus ?? "waiting";
+    stats?.streamStatus ?? visibleRoom?.streamStatus ?? "waiting";
+  const commentsDisabled = streamEnded || streamStatus === "ended";
+  const activeRoomId = roomNotFound || commentsDisabled ? "" : selectedRoomId;
   const renderAndRecordComment = (message: CommentMessage): void => {
     if (commentsVisible) {
       renderComment(message);
@@ -118,6 +127,9 @@ export function WatchPage({ config }: WatchPageProps) {
   };
 
   const submitComment = (): void => {
+    if (commentsDisabled) {
+      return;
+    }
     const request: CommentCreateRequest = {
       body,
       direction: selectedDirection,
@@ -174,7 +186,10 @@ export function WatchPage({ config }: WatchPageProps) {
           { href: "/user", label: "ユーザー" },
         ]}
       />
-      <WatchProgramHeader selectedRoom={selectedRoom} />
+      <WatchProgramHeader
+        selectedRoom={visibleRoom}
+        streamStatus={streamStatus}
+      />
       <section className={watchGridClassName}>
         <main className={playerColumnClassName}>
           <WatchPlayer
@@ -201,6 +216,7 @@ export function WatchPage({ config }: WatchPageProps) {
           />
           <CommentForm
             body={body}
+            disabled={commentsDisabled}
             selectedColor={selectedColor}
             selectedDirection={selectedDirection}
             selectedSize={selectedSize}

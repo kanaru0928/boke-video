@@ -54,6 +54,7 @@ export const formControlClassName = cn(
 export const textareaClassName = cn(
   formControlClassName,
   "min-h-[42px] max-h-[130px] resize-y max-[520px]:min-h-[38px]",
+  "disabled:cursor-not-allowed disabled:bg-[#eeeeee] disabled:text-[#777777]",
 );
 
 const buttonBaseClassName = cn(
