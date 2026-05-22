@@ -1,4 +1,4 @@
-import type { CommentDirection } from "./types";
+import type { CommentDirection } from "../model/types";
 
 export function directionLabel(direction: CommentDirection): string {
   switch (direction) {

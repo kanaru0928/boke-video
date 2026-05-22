@@ -6,7 +6,7 @@ import { AppShell } from "../../../shared/ui/AppShell";
 import { Board } from "../../../shared/ui/Board";
 import { Button } from "../../../shared/ui/Button";
 import { TextInput } from "../../../shared/ui/FormControl";
-import type { CommentMessage } from "../../comments/types";
+import type { CommentMessage } from "../../comments/model/types";
 import { deleteComment, fetchCommentPage } from "../../rooms/api/room_api";
 import { useAdminRooms } from "../../rooms/model/useAdminRooms";
 import { buildWhipIngestUrl } from "../lib/ingest_url";

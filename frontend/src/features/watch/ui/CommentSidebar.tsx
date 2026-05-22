@@ -2,8 +2,8 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLayoutEffect, useRef } from "react";
 import { Button } from "../../../shared/ui/Button";
 import { cn } from "../../../shared/ui/classNames";
-import { commentAuthorLabel } from "../../comments/comment_author";
-import type { CommentMessage } from "../../comments/types";
+import { commentAuthorLabel } from "../../comments/lib/comment_author";
+import type { CommentMessage } from "../../comments/model/types";
 import type { RoomStats } from "../../rooms/api/room_api";
 import {
   commentLogNumber,

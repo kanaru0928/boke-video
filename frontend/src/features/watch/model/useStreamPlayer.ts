@@ -4,7 +4,7 @@ import {
   OvenMediaEnginePlayer,
   type PlaybackStartResult,
   startVideoPlayback,
-} from "../../player/oven_media_engine_player";
+} from "../../player/lib/oven_media_engine_player";
 import type { RoomStreamStatus } from "../../rooms/api/room_api";
 import { fetchStreamAccess } from "../api/stream_access_api";
 import {

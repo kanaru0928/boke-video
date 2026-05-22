@@ -1,5 +1,5 @@
-import { cn } from "../../shared/ui/classNames";
-import type { CommentDirection, CommentFontSize } from "./types";
+import { cn } from "../../../shared/ui/classNames";
+import type { CommentDirection, CommentFontSize } from "../model/types";
 
 const commentBaseClassName = cn(
   "absolute max-w-[70%] whitespace-nowrap font-extrabold leading-[1.2] will-change-transform",

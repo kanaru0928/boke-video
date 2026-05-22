@@ -7,9 +7,9 @@ import {
   horizontalLaneTop,
   verticalLaneCount,
   verticalLaneLeft,
-} from "./comment_layout";
+} from "../lib/comment_layout";
+import type { CommentMessage } from "../model/types";
 import { commentClassName } from "./comment_styles";
-import type { CommentMessage } from "./types";
 
 export class CommentRenderer {
   private readonly active = new Set<HTMLElement>();

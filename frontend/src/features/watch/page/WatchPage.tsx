@@ -10,9 +10,9 @@ import {
   type CommentFontSize,
   type CommentMessage,
   commentColors,
-} from "../../comments/types";
+} from "../../comments/model/types";
 import { NotFoundPage } from "../../notFound/page/NotFoundPage";
-import { startVideoPlayback } from "../../player/oven_media_engine_player";
+import { startVideoPlayback } from "../../player/lib/oven_media_engine_player";
 import { useRooms } from "../../rooms/model/useRooms";
 import { isCommentSubmitShortcut } from "../lib/comment_shortcuts";
 import { autoQualityId } from "../lib/stream_quality";

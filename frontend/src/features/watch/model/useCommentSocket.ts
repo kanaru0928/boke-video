@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { AppConfig } from "../../../shared/config/config";
-import { CommentClient } from "../../comments/comment_client";
+import { CommentClient } from "../../comments/api/comment_client";
 import type {
   CommentCreateRequest,
   CommentMessage,
   PresenceMessage,
-} from "../../comments/types";
+} from "../../comments/model/types";
 
 type UseCommentSocketResult = {
   sendComment: (request: CommentCreateRequest) => void;

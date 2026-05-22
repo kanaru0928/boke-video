@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AppConfig } from "../../../shared/config/config";
-import type { CommentMessage, PresenceMessage } from "../../comments/types";
+import type {
+  CommentMessage,
+  PresenceMessage,
+} from "../../comments/model/types";
 import {
   createRoomVisitResult,
   fetchCommentPage,

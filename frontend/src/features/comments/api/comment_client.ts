@@ -1,11 +1,11 @@
-import { commentWebSocketEndpoint } from "../../shared/api/endpoints";
-import type { AppConfig } from "../../shared/config/config";
-import { isCommentMessage, isPresenceMessage } from "./comment_message";
+import { commentWebSocketEndpoint } from "../../../shared/api/endpoints";
+import type { AppConfig } from "../../../shared/config/config";
+import { isCommentMessage, isPresenceMessage } from "../lib/comment_message";
 import type {
   CommentCreateRequest,
   CommentMessage,
   PresenceMessage,
-} from "./types";
+} from "../model/types";
 
 type MessageHandler = (message: CommentMessage | PresenceMessage) => void;
 

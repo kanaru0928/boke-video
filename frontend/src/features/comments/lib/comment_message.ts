@@ -5,7 +5,7 @@ import {
   commentColors,
   commentDirections,
   type PresenceMessage,
-} from "./types";
+} from "../model/types";
 
 export function isCommentMessage(value: unknown): value is CommentMessage {
   if (typeof value !== "object" || value === null) {

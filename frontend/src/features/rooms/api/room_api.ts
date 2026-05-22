@@ -9,10 +9,10 @@ import {
   requestOK,
 } from "../../../shared/api/http_client";
 import type { AppConfig } from "../../../shared/config/config";
-import { isCommentMessage } from "../../comments/comment_message";
-import type { CommentMessage } from "../../comments/types";
+import { isCommentMessage } from "../../comments/lib/comment_message";
+import type { CommentMessage } from "../../comments/model/types";
 
-export { isCommentMessage } from "../../comments/comment_message";
+export { isCommentMessage } from "../../comments/lib/comment_message";
 
 export type Room = {
   id: string;
