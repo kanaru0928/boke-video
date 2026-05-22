@@ -28,6 +28,8 @@ GoバックエンドはWHIPシグナリングを認証して転送します。We
 
 初期設定はH.264、Opus、30fps、キーフレーム間隔1秒、Bフレーム0、CBR、Simulcast3レイヤーです。
 
+OBSのサイマルキャストに対応しています。サイマルキャストは、同じ映像を複数の画質で同時に送る設定です。OBSでは`設定` > `配信` > `サイマルキャスト` > `合計レイヤー数`を`3`にします。
+
 ## OvenMediaEngine
 
 OvenMediaEngineはコーデック変換を行いません。OBSのSimulcast3レイヤーを`video_bypass`として受け、`master` Playlistで自動ABR配信します。個別画質は`layer-1`、`layer-2`、`layer-3`のPlaylistで配信し、GoバックエンドはOvenMediaEngineのStream APIで実在するPlaylistだけを署名して返します。
