@@ -13,7 +13,10 @@ import {
 import { NotFoundPage } from "../../notFound/page/NotFoundPage";
 import { startVideoPlayback } from "../../player/lib/oven_media_engine_player";
 import { useRooms } from "../../rooms/model/useRooms";
-import { mutedAutoplayNotice } from "../lib/autoplay_audio";
+import {
+  autoplayNoticeDevice,
+  mutedAutoplayNotice,
+} from "../lib/autoplay_audio";
 import { isCommentSubmitShortcut } from "../lib/comment_shortcuts";
 import { autoQualityId } from "../lib/stream_quality";
 import { useCommentRenderer } from "../model/useCommentRenderer";
@@ -96,7 +99,10 @@ export function WatchPage({ config }: WatchPageProps) {
     selectedQualityId,
   );
   const { isFullscreen, toggleFullscreen } = useFullscreen(stageRef);
-  const autoplayAudioNotice = mutedAutoplayNotice(isMutedAutoplay);
+  const autoplayAudioNotice = mutedAutoplayNotice(
+    isMutedAutoplay,
+    autoplayNoticeDevice(navigator),
+  );
 
   useEffect(() => {
     if (selectedRoomId !== "") {
@@ -204,7 +210,6 @@ export function WatchPage({ config }: WatchPageProps) {
             "mx-auto mb-2 w-[min(720px,100%)]",
             "border border-[#777777] bg-[#111111] px-3 py-2 text-white",
             "shadow-[2px_2px_0_rgb(0_0_0_/_25%),inset_1px_1px_0_rgb(255_255_255_/_16%)]",
-            "max-[640px]:hidden",
           )}
         >
           <p className="m-0 min-w-0 text-xs leading-[1.45] font-extrabold [overflow-wrap:anywhere] [text-shadow:1px_1px_0_#000000]">
