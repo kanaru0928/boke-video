@@ -40,7 +40,7 @@ pnpm env:sync:production
 
 `.env.production`に実値を書きます。`CLOUDFLARE_ACCESS_TEAM_NAME`は`https://<team_name>.cloudflareaccess.com`の`<team_name>`だけを書きます。
 
-`CLOUDFLARE_ACCESS_POLICY_ID`には既存のCloudflare Access Policy IDを書きます。フロントエンドとバックエンドのAccess Applicationに同じPolicy IDを紐づけます。
+`CLOUDFLARE_ACCESS_POLICY_ID`には既存のCloudflare Access Policy IDを書きます。`bokevideo.example.com`と`stream.example.com`を保護する1つのAccess ApplicationにPolicy IDを紐づけます。
 
 IPv6を使う場合は`ORACLE_IPV6`を追加します。Worker名、Worker environment、Tunnel名を既定値から変える場合は`WORKER_SERVICE_NAME`、`WORKER_ENVIRONMENT`、`TUNNEL_NAME`を追加します。
 
@@ -57,7 +57,7 @@ terraform -chdir=infra/cloudflare plan
 terraform -chdir=infra/cloudflare apply
 ```
 
-既存のAccess ApplicationやTunnelをTerraform管理へ移す場合は、先に`terraform import`を実行します。importせずに`apply`すると、同名または同じdomainの新規リソース作成として扱われます。
+既存のAccess ApplicationやTunnelをTerraform管理へ移す場合は、先に`terraform import`を実行します。importせずに`apply`すると、同名または同じdomainの新規リソース作成として扱われます。frontend/backendを別々のAccess Applicationで管理している状態から移行する場合は、`stream.example.com`側のApplicationを`cloudflare_zero_trust_access_application.backend`へimportしてから適用します。Terraformはそのstateを`cloudflare_zero_trust_access_application.boke_video`へ移動し、`bokevideo.example.com`を同じApplicationのdestinationへ追加します。
 
 ## Oracleへ反映する値
 

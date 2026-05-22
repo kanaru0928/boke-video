@@ -5,6 +5,11 @@ locals {
   rtc_hostname      = "rtc.${var.zone_name}"
 }
 
+moved {
+  from = cloudflare_zero_trust_access_application.backend
+  to   = cloudflare_zero_trust_access_application.boke_video
+}
+
 resource "random_id" "tunnel_secret" {
   byte_length = 32
 }
@@ -16,22 +21,22 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "boke_video" {
   tunnel_secret = random_id.tunnel_secret.b64_std
 }
 
-resource "cloudflare_zero_trust_access_application" "frontend" {
+resource "cloudflare_zero_trust_access_application" "boke_video" {
   account_id = var.cloudflare_account_id
-  name       = "boke-video frontend"
-  domain     = local.frontend_hostname
-  type       = "self_hosted"
-
-  policies = [{
-    id = var.access_policy_id
-  }]
-}
-
-resource "cloudflare_zero_trust_access_application" "backend" {
-  account_id = var.cloudflare_account_id
-  name       = "boke-video backend"
+  name       = "boke-video"
   domain     = local.stream_hostname
   type       = "self_hosted"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = local.frontend_hostname
+    },
+    {
+      type = "public"
+      uri  = local.stream_hostname
+    },
+  ]
 
   cors_headers = {
     allow_credentials = true
@@ -58,7 +63,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "boke_video" {
         service  = "http://127.0.0.1:8080"
         origin_request = {
           access = {
-            aud_tag   = [cloudflare_zero_trust_access_application.backend.aud]
+            aud_tag   = [cloudflare_zero_trust_access_application.boke_video.aud]
             required  = true
             team_name = var.cloudflare_access_team_name
           }
