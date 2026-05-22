@@ -1,11 +1,20 @@
 import { MessageSquare } from "lucide-react";
+import {
+  type CSSProperties,
+  type RefObject,
+  useLayoutEffect,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
 import { cn } from "../../../shared/ui/classNames";
+import { settingsPopoverPosition } from "../lib/settings_popover_position";
 import {
   autoQualityId,
   type PlaybackQualityOption,
 } from "../lib/stream_quality";
 
 type PlayerSettingsPopoverProps = {
+  anchorRef: RefObject<HTMLElement | null>;
   commentsVisible: boolean;
   isOpen: boolean;
   playbackQualities: PlaybackQualityOption[];
@@ -15,7 +24,7 @@ type PlayerSettingsPopoverProps = {
 };
 
 export const settingsChipClassName = cn(
-  "absolute right-0 bottom-[46px] z-30 w-[312px] max-w-[calc(100vw-24px)] border border-[#666666] bg-[#050505] p-[7px] text-xs text-white",
+  "fixed z-[80] max-h-[calc(100dvh-16px)] w-[312px] max-w-[calc(100vw-12px)] overflow-auto border border-[#666666] bg-[#050505] p-[7px] text-xs text-white",
   "shadow-[2px_2px_0_rgb(0_0_0_/_65%),inset_1px_1px_0_rgb(255_255_255_/_18%)] max-[520px]:right-0 max-[520px]:w-[292px] max-[380px]:w-[262px]",
 );
 
@@ -37,6 +46,7 @@ const settingsChipSegmentTextClassName = cn(
 );
 
 export function PlayerSettingsPopover({
+  anchorRef,
   commentsVisible,
   isOpen,
   playbackQualities,
@@ -44,6 +54,34 @@ export function PlayerSettingsPopover({
   onCommentsVisibleChange,
   onQualityChange,
 }: PlayerSettingsPopoverProps) {
+  const [position, setPosition] = useState<CSSProperties | null>(null);
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const updatePosition = (): void => {
+      const anchor = anchorRef.current;
+      if (anchor === null) {
+        return;
+      }
+      const nextPosition = settingsPopoverPosition(
+        anchor.getBoundingClientRect(),
+        {
+          height: window.innerHeight,
+          width: window.innerWidth,
+        },
+      );
+      setPosition(nextPosition);
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [anchorRef, isOpen]);
+
   if (!isOpen) {
     return null;
   }
@@ -52,8 +90,17 @@ export function PlayerSettingsPopover({
   )
     ? selectedQualityId
     : autoQualityId;
-  return (
-    <div className={settingsChipClassName} role="menu" aria-label="設定">
+  if (position === null) {
+    return null;
+  }
+  return createPortal(
+    <div
+      className={settingsChipClassName}
+      role="menu"
+      aria-label="設定"
+      style={position}
+      onPointerDown={(event) => event.stopPropagation()}
+    >
       <p className="m-0 border-b border-[#666666] pb-[6px] text-sm font-extrabold [text-shadow:1px_1px_0_#000000]">
         設定
       </p>
@@ -111,6 +158,7 @@ export function PlayerSettingsPopover({
           </label>
         </div>
       </fieldset>
-    </div>
+    </div>,
+    document.body,
   );
 }
