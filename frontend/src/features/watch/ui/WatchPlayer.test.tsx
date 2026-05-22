@@ -31,7 +31,7 @@ describe("WatchPlayer", () => {
     expect(playerControlsClassName).toContain("group-focus-within:opacity-100");
     expect(playerControlsVisibleClassName).toContain("opacity-100");
     expect(playerControlsIdleDelayMs).toBeGreaterThan(0);
-    expect(playerControlsClassName).toContain(
+    expect(playerControlsClassName).not.toContain(
       "[@media(pointer:coarse)]:opacity-100",
     );
     expect(playerControlsClassName).not.toContain("max-[520px]:hidden");
