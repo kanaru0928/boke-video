@@ -105,6 +105,9 @@ export function WatchPlayer({
       onPointerMove={
         shouldEnablePointerControls ? revealControlsUntilIdle : undefined
       }
+      onPointerDown={
+        shouldEnablePointerControls ? revealControlsUntilIdle : undefined
+      }
       role="application"
     >
       <video
