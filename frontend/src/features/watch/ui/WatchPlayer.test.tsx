@@ -7,6 +7,7 @@ import {
 import { settingsChipClassName } from "./PlayerSettingsPopover";
 import {
   preventPlayerContextMenu,
+  shouldHideControlsOnPointerLeave,
   stageClassName,
   videoElementClassName,
 } from "./WatchPlayer";
@@ -47,6 +48,12 @@ describe("WatchPlayer", () => {
     });
 
     expect(prevented).toBe(true);
+  });
+
+  it("タッチのpointerleaveではコントロールを即時非表示にしない", () => {
+    expect(shouldHideControlsOnPointerLeave("mouse")).toBe(true);
+    expect(shouldHideControlsOnPointerLeave("touch")).toBe(false);
+    expect(shouldHideControlsOnPointerLeave("pen")).toBe(false);
   });
 
   it("設定チップはプレイヤー内に重ねて表示する", () => {

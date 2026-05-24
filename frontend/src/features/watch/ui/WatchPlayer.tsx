@@ -1,5 +1,5 @@
 import { LoaderCircle, Play, Volume2 } from "lucide-react";
-import type { RefObject } from "react";
+import type { PointerEvent, RefObject } from "react";
 import { Button } from "../../../shared/ui/Button";
 import { cn } from "../../../shared/ui/classNames";
 import type { RoomStreamStatus } from "../../rooms/api/room_api";
@@ -54,6 +54,10 @@ export function preventPlayerContextMenu(event: PreventableEvent): void {
   event.preventDefault();
 }
 
+export function shouldHideControlsOnPointerLeave(pointerType: string): boolean {
+  return pointerType === "mouse";
+}
+
 export function WatchPlayer({
   canToggleFullscreen,
   canTogglePictureInPicture,
@@ -92,6 +96,13 @@ export function WatchPlayer({
   const shouldShowPlayerControls = !isPlaybackEnded;
   const shouldEnablePointerControls =
     shouldShowPlayerControls && !shouldHideVideoFrame;
+  const hideControlsOnPointerLeave = (
+    event: PointerEvent<HTMLElement>,
+  ): void => {
+    if (shouldHideControlsOnPointerLeave(event.pointerType)) {
+      hideControls();
+    }
+  };
 
   return (
     <section
@@ -101,7 +112,9 @@ export function WatchPlayer({
       onPointerEnter={
         shouldEnablePointerControls ? revealControlsUntilIdle : undefined
       }
-      onPointerLeave={shouldEnablePointerControls ? hideControls : undefined}
+      onPointerLeave={
+        shouldEnablePointerControls ? hideControlsOnPointerLeave : undefined
+      }
       onPointerMove={
         shouldEnablePointerControls ? revealControlsUntilIdle : undefined
       }
