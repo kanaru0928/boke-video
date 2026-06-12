@@ -4,6 +4,7 @@ frontend/dist/
 boke-video-server
 .env.local
 .env.production
+.env.docker
 *.env
 *.env.production
 !*.env.example

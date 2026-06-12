@@ -1,0 +1,23 @@
+services:
+  backend:
+    image: boke-video-backend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    env_file: deploy/backend/backend.env
+    volumes:
+      - boke_video_data:/var/lib/boke-video
+
+  ome:
+    image: airensoft/ovenmediaengine:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3333:3333"
+      - "10000-10005:10000-10005/udp"
+    volumes:
+      - ./deploy/ovenmediaengine/Server.xml:/opt/ovenmediaengine/bin/origin_conf/Server.xml:ro
+      - ome_logs:/var/log/ovenmediaengine
+
+volumes:
+  boke_video_data:
+  ome_logs:

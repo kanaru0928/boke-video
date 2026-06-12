@@ -8,18 +8,23 @@ const rootDir = path.resolve(
 );
 const mode = process.argv[2];
 
-if (mode !== "local" && mode !== "production") {
-  throw new Error("usage: node scripts/env-sync.mjs local|production");
+if (mode !== "local" && mode !== "production" && mode !== "docker") {
+  throw new Error("usage: node scripts/env-sync.mjs local|production|docker");
 }
 
-const sourcePath = path.join(
-  rootDir,
-  mode === "local" ? ".env.local" : ".env.production",
-);
+const sourceFile =
+  mode === "local"
+    ? ".env.local"
+    : mode === "docker"
+      ? ".env.docker"
+      : ".env.production";
+const sourcePath = path.join(rootDir, sourceFile);
 const source = readEnvFile(sourcePath);
 
 if (mode === "local") {
   syncLocal(source);
+} else if (mode === "docker") {
+  syncDocker(source);
 } else {
   syncProduction(source);
 }
@@ -147,6 +152,53 @@ function syncProduction(env) {
   });
 
   console.log("synced production env");
+}
+
+function syncDocker(env) {
+  const appDomain = required(env, "APP_DOMAIN");
+  const streamSigningSecret = required(env, "STREAM_SIGNING_SECRET");
+  const omeApiAccessToken = required(env, "OME_API_ACCESS_TOKEN");
+  const frontendHost = `bokevideo.${appDomain}`;
+  const streamHost = `stream.${appDomain}`;
+  const ingestHost = `ingest.${appDomain}`;
+  const rtcHost = `rtc.${appDomain}`;
+
+  writeEnv("deploy/backend/backend.env", {
+    LISTEN_ADDR: "0.0.0.0:8080",
+    DATABASE_PATH: "/var/lib/boke-video/boke-video.sqlite3",
+    ALLOWED_ORIGINS: `https://${frontendHost}`,
+    ACCESS_ENABLED: "false",
+    STREAM_PUBLIC_BASE_URL: `https://${rtcHost}`,
+    STREAM_SIGNING_BASE_URL: `http://${rtcHost}:3333`,
+    STREAM_SIGNING_SECRET: streamSigningSecret,
+    WHIP_UPSTREAM_BASE_URL: "http://ome:3333",
+    OME_API_BASE_URL: "http://ome:8081",
+    OME_API_ACCESS_TOKEN: omeApiAccessToken,
+    OME_VHOST_NAME: "default",
+    OME_APP_NAME: "live",
+    OME_THUMBNAIL_BASE_URL: "http://ome:20080",
+    OME_THUMBNAIL_CODEC: "jpg",
+    STREAM_END_GRACE_SECONDS: "90",
+  });
+
+  writeEnv("deploy/caddy/caddy.env", {
+    INGEST_HOST: ingestHost,
+    RTC_HOST: rtcHost,
+    STREAM_HOST: streamHost,
+  });
+
+  writeText(
+    "deploy/ovenmediaengine/Server.xml",
+    productionOvenMediaEngineConfig({
+      ingestHost,
+      omeApiAccessToken,
+      oracleIPv4: required(env, "ORACLE_IPV4"),
+      rtcHost,
+      streamSigningSecret,
+    }),
+  );
+
+  console.log("synced docker env");
 }
 
 function readEnvFile(filePath) {
