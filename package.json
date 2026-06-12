@@ -11,6 +11,7 @@
     "dev:whip": "pnpm env:sync:local && scripts/local-whip.sh",
     "env:sync:local": "node scripts/env-sync.mjs local",
     "env:sync:production": "node scripts/env-sync.mjs production",
+    "env:sync:docker": "node scripts/env-sync.mjs docker",
     "knip": "knip",
     "postinstall": "lefthook install"
   },

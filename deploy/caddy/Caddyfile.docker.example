@@ -1,0 +1,11 @@
+{$INGEST_HOST:ingest.example.com} {
+	reverse_proxy 127.0.0.1:8080
+}
+
+{$RTC_HOST:rtc.example.com} {
+	reverse_proxy 127.0.0.1:3333
+}
+
+{$STREAM_HOST:stream.example.com} {
+	reverse_proxy 127.0.0.1:8080
+}
