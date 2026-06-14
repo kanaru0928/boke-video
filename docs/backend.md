@@ -19,6 +19,7 @@ Goバックエンドは次を担当します。
 - Cloudflare Access JWTを検証する
 - OvenMediaEngine視聴用の短寿命トークンを発行する
 - OBS WHIP入力のBearer Tokenを検証してOvenMediaEngineへ転送する
+- 枠の合言葉（パスワード）を管理し、視聴アクセスを制限する
 
 WebRTC mediaの受信と視聴者への配信はOvenMediaEngineが担当します。
 
@@ -36,9 +37,13 @@ GET /api/rooms/:roomId/comments
 GET /ws/rooms/:roomId/comments
 POST /api/rooms/:roomId/visits
 POST /api/rooms/:roomId/comments
+POST /api/rooms/:roomId/stream-access
 GET /api/admin/rooms
 POST /api/admin/rooms
 POST /api/admin/rooms/:roomId/ingest-token
+POST /api/admin/rooms/:roomId/password
+DELETE /api/admin/rooms/:roomId/password
+POST /api/admin/rooms/:roomId/bypass-token
 PATCH /api/admin/rooms/:roomId
 DELETE /api/admin/rooms/:roomId
 DELETE /api/admin/comments/:commentId
@@ -59,7 +64,9 @@ CREATE TABLE rooms (
   stream_started_at TEXT,
   stream_last_seen_at TEXT,
   stream_ended_at TEXT,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  password_salt_and_hash TEXT NOT NULL DEFAULT '',
+  bypass_token_hash TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE comments (
@@ -101,6 +108,8 @@ CREATE INDEX room_visits_room_id_last_visited_at_index
 SQLiteはWALを有効にします。初期規模100人では外部DBを追加しません。
 
 保存するユーザー識別子はCloudflare Access JWTの`sub`だけです。配信ルーム所有者は`owner_sub`、コメント投稿者は`author_sub`、来場者は`visitor_sub`として保存します。表示名とToken保存の仕様は`docs/auth-and-security.md`を参照します。
+
+`password_salt_and_hash`は合言葉のハッシュです。フォーマットは`<16バイトhexソルト>$<SHA-256hexハッシュ>`で、ソルトとパスワードを`:`で連結した値をハッシュします。未設定時は空文字です。`bypass_token_hash`はパスワード入力を省略できるバイパストークンのSHA-256ハッシュです。未発行時は空文字です。平文トークンはDBに保存しません。合言葉とバイパストークンの仕様は`docs/auth-and-security.md`を参照します。
 
 `stream_status`は`waiting`、`live`、`ended`のいずれかです。公開枠一覧は`live`だけを返します。OvenMediaEngineでストリームが見えなくなっても`stream_last_seen_at`から`STREAM_END_GRACE_SECONDS`秒以内は`live`を維持し、短い通信断で枠を消しません。猶予を超えた枠は`ended`にして公開枠一覧から外します。
 

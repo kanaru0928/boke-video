@@ -8,8 +8,17 @@ LOG_DIR="${OME_DIR}/logs"
 CONTAINER_NAME="boke-video-ome"
 IMAGE_NAME="airensoft/ovenmediaengine:latest"
 
+if command -v docker >/dev/null 2>&1; then
+  CONTAINER_CMD="docker"
+elif command -v podman >/dev/null 2>&1; then
+  CONTAINER_CMD="podman"
+else
+  echo "docker or podman is required" >&2
+  exit 1
+fi
+
 cleanup() {
-  docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
+  ${CONTAINER_CMD} rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
 }
 
 stop() {
@@ -17,13 +26,11 @@ stop() {
   exit "$1"
 }
 
-command -v docker >/dev/null
-
 trap cleanup EXIT
 trap 'stop 130' INT
 trap 'stop 143' TERM
 
-docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
+${CONTAINER_CMD} rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
 
 for port in 3333 8081 20080; do
   if lsof -tiTCP:"${port}" -sTCP:LISTEN >/dev/null; then
@@ -53,13 +60,13 @@ perl -0pi -e 's/replace-with-api-token/local-api-token/g' "${CONF_DIR}/Server.xm
 
 if [ ! -f "${CONF_DIR}/Logger.xml" ]; then
   TEMP_CONTAINER="${CONTAINER_NAME}-conf"
-  docker rm -f "${TEMP_CONTAINER}" >/dev/null 2>&1 || true
-  docker create --name "${TEMP_CONTAINER}" "${IMAGE_NAME}" >/dev/null
-  docker cp "${TEMP_CONTAINER}:/opt/ovenmediaengine/bin/origin_conf/Logger.xml" "${CONF_DIR}/Logger.xml"
-  docker rm -f "${TEMP_CONTAINER}" >/dev/null
+  ${CONTAINER_CMD} rm -f "${TEMP_CONTAINER}" >/dev/null 2>&1 || true
+  ${CONTAINER_CMD} create --name "${TEMP_CONTAINER}" "${IMAGE_NAME}" >/dev/null
+  ${CONTAINER_CMD} cp "${TEMP_CONTAINER}:/opt/ovenmediaengine/bin/origin_conf/Logger.xml" "${CONF_DIR}/Logger.xml"
+  ${CONTAINER_CMD} rm -f "${TEMP_CONTAINER}" >/dev/null
 fi
 
-docker run --name "${CONTAINER_NAME}" --rm \
+${CONTAINER_CMD} run --name "${CONTAINER_NAME}" --rm \
   -e OME_HOST_IP=127.0.0.1 \
   -v "${CONF_DIR}:/opt/ovenmediaengine/bin/origin_conf" \
   -v "${LOG_DIR}:/var/log/ovenmediaengine" \

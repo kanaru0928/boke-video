@@ -26,7 +26,11 @@ export async function requestJSONWithStatus(
   if (!response.ok) {
     return { status: response.status, value: null };
   }
-  return { status: response.status, value: await response.json() };
+  const contentType = response.headers.get("content-type");
+  const value = contentType?.includes("application/json")
+    ? await response.json()
+    : null;
+  return { status: response.status, value };
 }
 
 export async function requestOK(

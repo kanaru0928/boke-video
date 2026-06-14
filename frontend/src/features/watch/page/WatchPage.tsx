@@ -1,7 +1,15 @@
-import { type KeyboardEvent, useEffect, useRef, useState } from "react";
+import {
+  type FormEvent,
+  type KeyboardEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { AppConfig } from "../../../shared/config/config";
 import { AppHeader } from "../../../shared/ui/AppHeader";
 import { AppShell } from "../../../shared/ui/AppShell";
+import { Button } from "../../../shared/ui/Button";
 import { cn } from "../../../shared/ui/classNames";
 import {
   type CommentCreateRequest,
@@ -13,7 +21,9 @@ import {
 } from "../../comments/model/types";
 import { NotFoundPage } from "../../notFound/page/NotFoundPage";
 import { startVideoPlayback } from "../../player/lib/oven_media_engine_player";
+import { fetchRoom, type Room } from "../../rooms/api/room_api";
 import { useRooms } from "../../rooms/model/useRooms";
+import type { RoomCredential } from "../api/stream_access_api";
 import {
   autoplayNoticeDevice,
   mutedAutoplayNotice,
@@ -51,6 +61,12 @@ export function WatchPage({ config }: WatchPageProps) {
   const [ownerDisplayNamesByRoomId, setOwnerDisplayNamesByRoomId] = useState<
     Record<string, string>
   >({});
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordSubmitted, setPasswordSubmitted] = useState(false);
+  const [fetchedRoom, setFetchedRoom] = useState<Room | null>(null);
+  const [bypassToken] = useState<string | null>(() =>
+    new URLSearchParams(location.search).get("bypass"),
+  );
   const { rooms } = useRooms(config);
   const { commentsLayerRef, renderComment } = useCommentRenderer();
   const {
@@ -84,7 +100,25 @@ export function WatchPage({ config }: WatchPageProps) {
   const streamStatus =
     stats?.streamStatus ?? visibleRoom?.streamStatus ?? "waiting";
   const commentsDisabled = streamEnded || streamStatus === "ended";
-  const activeRoomId = roomNotFound || commentsDisabled ? "" : selectedRoomId;
+  const showPasswordForm =
+    (fetchedRoom?.hasPassword ?? selectedRoom?.hasPassword ?? false) &&
+    bypassToken === null &&
+    !passwordSubmitted;
+  const roomLoaded =
+    selectedRoomId === "" || selectedRoom !== null || fetchedRoom !== null;
+  const activeRoomId =
+    !roomLoaded || roomNotFound || commentsDisabled || showPasswordForm
+      ? ""
+      : selectedRoomId;
+  const roomCredential: RoomCredential | null = useMemo(() => {
+    if (bypassToken !== null) {
+      return { type: "bypass", value: bypassToken };
+    }
+    if (passwordSubmitted) {
+      return { type: "password", value: passwordInput };
+    }
+    return null;
+  }, [bypassToken, passwordSubmitted, passwordInput]);
   const renderAndRecordComment = (message: CommentMessage): void => {
     if (commentsVisible) {
       renderComment(message);
@@ -106,6 +140,7 @@ export function WatchPage({ config }: WatchPageProps) {
   );
   const {
     dismissMutedAutoplayNotice,
+    isCredentialDenied,
     isManualPlaybackRequired,
     isMutedAutoplay,
     isStreamLoading,
@@ -118,6 +153,7 @@ export function WatchPage({ config }: WatchPageProps) {
     videoRef,
     selectedQualityId,
     setSelectedQualityId,
+    roomCredential,
   );
   const { canToggleFullscreen, isFullscreen, toggleFullscreen } = useFullscreen(
     stageRef,
@@ -132,6 +168,36 @@ export function WatchPage({ config }: WatchPageProps) {
     isMutedAutoplay,
     autoplayNoticeDevice(navigator),
   );
+
+  useEffect(() => {
+    if (isCredentialDenied) {
+      setPasswordSubmitted(false);
+    }
+  }, [isCredentialDenied]);
+
+  useEffect(() => {
+    if (selectedRoomId === "") {
+      return;
+    }
+    setPasswordInput("");
+    setPasswordSubmitted(false);
+    setFetchedRoom(null);
+  }, [selectedRoomId]);
+
+  useEffect(() => {
+    if (selectedRoomId === "") {
+      return;
+    }
+    let canceled = false;
+    void fetchRoom(config, selectedRoomId).then((room) => {
+      if (!canceled) {
+        setFetchedRoom(room);
+      }
+    });
+    return () => {
+      canceled = true;
+    };
+  }, [config, selectedRoomId]);
 
   useEffect(() => {
     if (selectedRoomId !== "") {
@@ -253,6 +319,32 @@ export function WatchPage({ config }: WatchPageProps) {
             "shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#b8b8b8]",
           )}
         >
+          {showPasswordForm ? (
+            <form
+              className="flex flex-col gap-3 p-4"
+              onSubmit={(event: FormEvent<HTMLFormElement>) => {
+                event.preventDefault();
+                if (passwordInput.trim() === "") return;
+                setPasswordSubmitted(true);
+              }}
+            >
+              <p className="text-sm font-bold">
+                {isCredentialDenied
+                  ? "合言葉が違います。もう一度入力してください。"
+                  : "この枠は合言葉が設定されています。"}
+              </p>
+              <div className="flex gap-2">
+                <input
+                  className="min-w-0 flex-1 border border-[#a7a7a7] bg-white px-2 py-1 text-sm"
+                  onChange={(e) => setPasswordInput(e.currentTarget.value)}
+                  placeholder="合言葉"
+                  type="password"
+                  value={passwordInput}
+                />
+                <Button type="submit">入場</Button>
+              </div>
+            </form>
+          ) : null}
           <WatchPlayer
             commentsVisible={commentsVisible}
             commentsLayerRef={commentsLayerRef}

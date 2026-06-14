@@ -23,7 +23,9 @@ type repositoryStore interface {
 	ListRooms(ctx context.Context) ([]repository.Room, error)
 	ListRoomsByOwner(ctx context.Context, ownerSub string) ([]repository.Room, error)
 	RecordRoomVisit(ctx context.Context, roomID string, visitorSub string, visitedAt time.Time) error
+	UpdateRoomBypassToken(ctx context.Context, roomID string, ownerSub string, tokenHash string) error
 	UpdateRoomIngestTokenHash(ctx context.Context, roomID string, ownerSub string, tokenHash string) error
+	UpdateRoomPassword(ctx context.Context, roomID string, ownerSub string, saltAndHash string) error
 	UpdateRoomStreamState(ctx context.Context, roomID string, state repository.RoomStreamState) error
 	UpdateRoomTitle(ctx context.Context, roomID string, ownerSub string, title string) error
 	UpsertUserProfile(ctx context.Context, profile repository.UserProfile) error

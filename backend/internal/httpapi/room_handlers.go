@@ -10,6 +10,7 @@ import (
 
 	"boke-video/backend/internal/ingestauth"
 	"boke-video/backend/internal/repository"
+	"boke-video/backend/internal/roomauth"
 	"boke-video/backend/internal/streammonitor"
 )
 
@@ -204,6 +205,71 @@ func (s *Server) handleRotateRoomIngestToken(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusCreated, ingestTokenResponse{WhipBearerToken: ingestToken})
 }
 
+func (s *Server) handleSetRoomPassword(w http.ResponseWriter, r *http.Request) {
+	principal, ok := s.requirePrincipal(w, r)
+	if !ok {
+		return
+	}
+	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/admin/rooms/"), "/password")
+	var req struct {
+		Password string `json:"password"`
+	}
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	req.Password = strings.TrimSpace(req.Password)
+	if req.Password == "" {
+		writeError(w, http.StatusBadRequest, "password must not be empty")
+		return
+	}
+	saltAndHash, err := roomauth.HashPassword(req.Password)
+	if err != nil {
+		s.writeServerError(w, err)
+		return
+	}
+	if err := s.repository.UpdateRoomPassword(r.Context(), roomID, principal.Subject, saltAndHash); err != nil {
+		writeRepositoryError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) handleDeleteRoomPassword(w http.ResponseWriter, r *http.Request) {
+	principal, ok := s.requirePrincipal(w, r)
+	if !ok {
+		return
+	}
+	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/admin/rooms/"), "/password")
+	if err := s.repository.UpdateRoomPassword(r.Context(), roomID, principal.Subject, ""); err != nil {
+		writeRepositoryError(w, err)
+		return
+	}
+	if err := s.repository.UpdateRoomBypassToken(r.Context(), roomID, principal.Subject, ""); err != nil {
+		writeRepositoryError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) handleRotateRoomBypassToken(w http.ResponseWriter, r *http.Request) {
+	principal, ok := s.requirePrincipal(w, r)
+	if !ok {
+		return
+	}
+	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/admin/rooms/"), "/bypass-token")
+	token, err := roomauth.NewBypassToken()
+	if err != nil {
+		s.writeServerError(w, err)
+		return
+	}
+	if err := s.repository.UpdateRoomBypassToken(r.Context(), roomID, principal.Subject, roomauth.HashBypassToken(token)); err != nil {
+		writeRepositoryError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, bypassTokenResponse{BypassToken: token})
+}
+
 func (s *Server) handleDeleteComment(w http.ResponseWriter, r *http.Request) {
 	principal, ok := s.requirePrincipal(w, r)
 	if !ok {
@@ -296,6 +362,10 @@ type createRoomResponse struct {
 
 type ingestTokenResponse struct {
 	WhipBearerToken string `json:"whipBearerToken"`
+}
+
+type bypassTokenResponse struct {
+	BypassToken string `json:"bypassToken"`
 }
 
 func validRoomID(roomID string) bool {

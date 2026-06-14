@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Button } from "../../../shared/ui/Button";
 import { TextInput } from "../../../shared/ui/FormControl";
 import type { CommentMessage } from "../../comments/model/types";
 import type { Room } from "../../rooms/api/room_api";
@@ -22,11 +23,16 @@ import {
 
 type AdminRoomProps = {
   comments: AdminCommentState | null;
+  onClearPassword: (roomId: string) => Promise<boolean>;
   onLoadComments: (roomId: string) => Promise<void>;
   onLoadOlderComments: (roomId: string) => Promise<void>;
   onRemoveComment: (roomId: string, commentId: string) => Promise<void>;
   onRemoveRoom: (roomId: string) => Promise<void>;
+  onRotateBypassToken: (
+    roomId: string,
+  ) => Promise<{ bypassToken: string } | null>;
   onRotateIngestToken: (roomId: string) => Promise<void>;
+  onSetPassword: (roomId: string, password: string) => Promise<boolean>;
   onUpdateTitle: (roomId: string, title: string) => Promise<void>;
   obsWebsocketConnection: ObsWebsocketConnectionSettings;
   room: Room;
@@ -42,11 +48,14 @@ type AdminCommentState = {
 
 export function AdminRoom({
   comments,
+  onClearPassword,
   onLoadComments,
   onLoadOlderComments,
   onRemoveComment,
   onRemoveRoom,
+  onRotateBypassToken,
   onRotateIngestToken,
+  onSetPassword,
   onUpdateTitle,
   obsWebsocketConnection,
   room,
@@ -54,6 +63,8 @@ export function AdminRoom({
   whipBearerToken,
 }: AdminRoomProps) {
   const [title, setTitle] = useState(room.title);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [bypassUrl, setBypassUrl] = useState<string | null>(null);
   const [copiedTarget, setCopiedTarget] = useState<IngestCopyTarget | null>(
     null,
   );
@@ -90,6 +101,32 @@ export function AdminRoom({
   ): Promise<void> => {
     await navigator.clipboard.writeText(normalizeIngestClipboardValue(value));
     setCopiedTarget(target);
+  };
+
+  const savePassword = async (): Promise<void> => {
+    if (passwordInput.trim() === "") return;
+    await onSetPassword(room.id, passwordInput.trim());
+    setPasswordInput("");
+  };
+
+  const clearPassword = async (): Promise<void> => {
+    await onClearPassword(room.id);
+    setBypassUrl(null);
+  };
+
+  const generateBypassUrl = async (): Promise<void> => {
+    const result = await onRotateBypassToken(room.id);
+    if (result === null) return;
+    const watchBase = new URL(
+      `/watch?room=${encodeURIComponent(room.id)}&bypass=${result.bypassToken}`,
+      window.location.href,
+    ).toString();
+    setBypassUrl(watchBase);
+  };
+
+  const copyBypassUrl = async (): Promise<void> => {
+    if (bypassUrl === null) return;
+    await navigator.clipboard.writeText(bypassUrl);
   };
 
   const applyObsSettings = async (): Promise<void> => {
@@ -142,6 +179,53 @@ export function AdminRoom({
         onRotateIngestToken={onRotateIngestToken}
         onUpdateTitle={onUpdateTitle}
       />
+      <div className="col-span-full grid gap-[5px] border-t border-[#e0e0e0] pt-[5px]">
+        <p className="text-xs text-[#555]">
+          合言葉:{" "}
+          <span className="font-bold">
+            {room.hasPassword ? "設定済み" : "未設定"}
+          </span>
+        </p>
+        <div className="flex flex-wrap gap-[5px]">
+          <TextInput
+            aria-label="合言葉"
+            className="min-w-0 flex-1"
+            onChange={(e) => setPasswordInput(e.currentTarget.value)}
+            placeholder="新しい合言葉"
+            type="password"
+            value={passwordInput}
+          />
+          <Button
+            disabled={passwordInput.trim() === ""}
+            onClick={savePassword}
+            type="button"
+          >
+            設定
+          </Button>
+          {room.hasPassword ? (
+            <Button onClick={clearPassword} type="button">
+              解除
+            </Button>
+          ) : null}
+        </div>
+        {room.hasPassword ? (
+          <div className="flex flex-wrap items-center gap-[5px]">
+            <Button onClick={generateBypassUrl} type="button">
+              バイパスURL発行
+            </Button>
+            {bypassUrl !== null ? (
+              <>
+                <span className="min-w-0 flex-1 truncate text-xs text-[#333]">
+                  {bypassUrl}
+                </span>
+                <Button onClick={copyBypassUrl} type="button">
+                  コピー
+                </Button>
+              </>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
       {comments !== null ? (
         <AdminCommentList
           comments={comments}

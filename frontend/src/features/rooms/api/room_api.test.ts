@@ -20,6 +20,7 @@ describe("isRoom", () => {
         streamLastSeenAt: null,
         streamEndedAt: null,
         createdAt: "2026-05-09T00:00:00Z",
+        hasPassword: false,
       }),
     ).toBe(true);
     expect(isRoom({ id: "room-1", title: "配信" })).toBe(false);
@@ -40,6 +41,7 @@ describe("isPublicRoom", () => {
         streamLastSeenAt: "2026-05-09T00:00:00Z",
         streamEndedAt: null,
         createdAt: "2026-05-09T00:00:00Z",
+        hasPassword: false,
         ownerDisplayName: "配信者",
         currentViewerCount: 3,
         maxConcurrentViewerCount: 4,
@@ -58,6 +60,7 @@ describe("isPublicRoom", () => {
         streamLastSeenAt: "2026-05-09T00:00:00Z",
         streamEndedAt: null,
         createdAt: "2026-05-09T00:00:00Z",
+        hasPassword: false,
         ownerDisplayName: "配信者",
         currentViewerCount: "3",
         maxConcurrentViewerCount: 4,
