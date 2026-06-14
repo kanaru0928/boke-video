@@ -1,5 +1,5 @@
 import { apiRoomPath } from "../../../shared/api/endpoints";
-import { requestJSON } from "../../../shared/api/http_client";
+import { requestJSONWithStatus } from "../../../shared/api/http_client";
 import type { AppConfig } from "../../../shared/config/config";
 
 type StreamAccess = {
@@ -13,19 +13,39 @@ export type StreamPlaybackVariant = {
   playbackUrl: string;
 };
 
+export type RoomCredential =
+  | { type: "password"; value: string }
+  | { type: "bypass"; value: string };
+
+type StreamAccessResult =
+  | { status: "ok"; access: StreamAccess }
+  | { status: "forbidden" }
+  | { status: "error" };
+
 export async function fetchStreamAccess(
   config: AppConfig,
   roomId: string,
-): Promise<StreamAccess | null> {
-  const parsed = await requestJSON(
+  credential?: RoomCredential,
+): Promise<StreamAccessResult> {
+  const body: Record<string, string> = {};
+  if (credential?.type === "password") {
+    body.password = credential.value;
+  } else if (credential?.type === "bypass") {
+    body.bypassToken = credential.value;
+  }
+  const response = await requestJSONWithStatus(
     config,
     "POST",
     apiRoomPath(roomId, "/stream-access"),
+    Object.keys(body).length > 0 ? body : undefined,
   );
-  if (!isStreamAccess(parsed)) {
-    return null;
+  if (response.status === 401 || response.status === 403) {
+    return { status: "forbidden" };
   }
-  return parsed;
+  if (!isStreamAccess(response.value)) {
+    return { status: "error" };
+  }
+  return { status: "ok", access: response.value };
 }
 
 export function isStreamAccess(value: unknown): value is StreamAccess {

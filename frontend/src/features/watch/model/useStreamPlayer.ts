@@ -6,7 +6,10 @@ import {
   startVideoPlayback,
 } from "../../player/lib/oven_media_engine_player";
 import type { RoomStreamStatus } from "../../rooms/api/room_api";
-import { fetchStreamAccess } from "../api/stream_access_api";
+import {
+  fetchStreamAccess,
+  type RoomCredential,
+} from "../api/stream_access_api";
 import {
   downgradedPlaybackQuality,
   type PlaybackQualityOption,
@@ -17,6 +20,7 @@ import { streamStatusMessage } from "../lib/watch_stream";
 
 type UseStreamPlayerResult = {
   dismissMutedAutoplayNotice: () => void;
+  isCredentialDenied: boolean;
   isStreamLoading: boolean;
   isManualPlaybackRequired: boolean;
   isMutedAutoplay: boolean;
@@ -31,6 +35,7 @@ export function useStreamPlayer(
   videoRef: RefObject<HTMLVideoElement | null>,
   selectedQualityId: string,
   onQualityChange: (qualityId: string) => void,
+  credential: RoomCredential | null,
 ): UseStreamPlayerResult {
   const playerRef = useRef<OvenMediaEnginePlayer | null>(null);
   const attachedRoomIdRef = useRef("");
@@ -42,6 +47,7 @@ export function useStreamPlayer(
   const [isManualPlaybackRequired, setIsManualPlaybackRequired] =
     useState(false);
   const [isMutedAutoplay, setIsMutedAutoplay] = useState(false);
+  const [isCredentialDenied, setIsCredentialDenied] = useState(false);
   const preferredMutedRef = useRef<boolean | null>(null);
   const dismissMutedAutoplayNotice = (): void => {
     setIsMutedAutoplay(false);
@@ -164,10 +170,21 @@ export function useStreamPlayer(
         setIsStreamLoading(true);
         setIsManualPlaybackRequired(false);
         setIsMutedAutoplay(false);
-        const streamAccess = await fetchStreamAccess(config, roomId);
-        if (streamAccess === null) {
+        setIsCredentialDenied(false);
+        const streamAccessResult = await fetchStreamAccess(
+          config,
+          roomId,
+          credential ?? undefined,
+        );
+        if (streamAccessResult.status === "forbidden") {
+          setIsCredentialDenied(true);
+          setIsStreamLoading(false);
+          return;
+        }
+        if (streamAccessResult.status !== "ok") {
           throw new Error("stream access was not issued");
         }
+        const streamAccess = streamAccessResult.access;
         if (canceled) {
           return;
         }
@@ -262,6 +279,7 @@ export function useStreamPlayer(
     };
   }, [
     config,
+    credential,
     onQualityChange,
     roomId,
     selectedQualityId,
@@ -271,6 +289,7 @@ export function useStreamPlayer(
 
   return {
     dismissMutedAutoplayNotice,
+    isCredentialDenied,
     isManualPlaybackRequired,
     isMutedAutoplay,
     isStreamLoading,

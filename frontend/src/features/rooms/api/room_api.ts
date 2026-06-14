@@ -1,5 +1,7 @@
 import {
   adminCommentPath,
+  adminRoomBypassTokenPath,
+  adminRoomPasswordPath,
   adminRoomPath,
   apiRoomPath,
 } from "../../../shared/api/endpoints";
@@ -26,6 +28,7 @@ export type Room = {
   streamStartedAt: string | null;
   streamLastSeenAt: string | null;
   streamEndedAt: string | null;
+  hasPassword: boolean;
 };
 
 export type PublicRoom = Room & {
@@ -71,6 +74,21 @@ export async function fetchRooms(config: AppConfig): Promise<PublicRoom[]> {
     return [];
   }
   return parsed.filter(isPublicRoom);
+}
+
+export async function fetchRoom(
+  config: AppConfig,
+  roomId: string,
+): Promise<Room | null> {
+  const response = await requestJSONWithStatus(
+    config,
+    "GET",
+    apiRoomPath(roomId),
+  );
+  if (response.status === 404) {
+    return null;
+  }
+  return parseRoom(response.value);
 }
 
 export async function fetchAdminRooms(config: AppConfig): Promise<Room[]> {
@@ -119,6 +137,53 @@ export async function rotateRoomIngestToken(
     adminRoomPath(roomId, "/ingest-token"),
   );
   return parseIngestToken(parsed);
+}
+
+export async function setRoomPassword(
+  config: AppConfig,
+  roomId: string,
+  password: string,
+): Promise<boolean> {
+  const response = await requestJSONWithStatus(
+    config,
+    "POST",
+    adminRoomPasswordPath(roomId),
+    { password },
+  );
+  return response.status === 204;
+}
+
+export async function clearRoomPassword(
+  config: AppConfig,
+  roomId: string,
+): Promise<boolean> {
+  const response = await requestJSONWithStatus(
+    config,
+    "DELETE",
+    adminRoomPasswordPath(roomId),
+  );
+  return response.status === 204;
+}
+
+export async function rotateRoomBypassToken(
+  config: AppConfig,
+  roomId: string,
+): Promise<{ bypassToken: string } | null> {
+  const parsed = await requestJSON(
+    config,
+    "POST",
+    adminRoomBypassTokenPath(roomId),
+  );
+  if (
+    typeof parsed !== "object" ||
+    parsed === null ||
+    typeof (parsed as Record<string, unknown>).bypassToken !== "string"
+  ) {
+    return null;
+  }
+  return {
+    bypassToken: (parsed as Record<string, unknown>).bypassToken as string,
+  };
 }
 
 export async function deleteComment(
@@ -190,7 +255,8 @@ export function isRoom(value: unknown): value is Room {
     isRoomStreamStatus(room.streamStatus) &&
     isNullableString(room.streamStartedAt) &&
     isNullableString(room.streamLastSeenAt) &&
-    isNullableString(room.streamEndedAt)
+    isNullableString(room.streamEndedAt) &&
+    typeof room.hasPassword === "boolean"
   );
 }
 

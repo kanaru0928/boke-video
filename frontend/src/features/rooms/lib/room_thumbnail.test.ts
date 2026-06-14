@@ -83,6 +83,7 @@ function createRoom(room: Partial<Room> & Pick<Room, "id" | "title">): Room {
     streamLastSeenAt: null,
     streamEndedAt: null,
     createdAt: "2026-05-20T10:00:00Z",
+    hasPassword: false,
     ...room,
   };
 }

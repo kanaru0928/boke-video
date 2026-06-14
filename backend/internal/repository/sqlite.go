@@ -28,8 +28,11 @@ type Room struct {
 	StreamLastSeenAt        *time.Time `json:"streamLastSeenAt"`
 	StreamEndedAt           *time.Time `json:"streamEndedAt"`
 	CreatedAt               time.Time  `json:"createdAt"`
+	HasPassword             bool       `json:"hasPassword"`
 	OwnerSub                string     `json:"-"`
 	IngestTokenHash         string     `json:"-"`
+	PasswordSaltAndHash     string     `json:"-"`
+	BypassTokenHash         string     `json:"-"`
 }
 
 type RoomStats struct {
@@ -139,6 +142,8 @@ func (s *SQLite) Migrate(ctx context.Context) error {
 		)`,
 		`CREATE INDEX IF NOT EXISTS room_visits_room_id_last_visited_at_index
 			ON room_visits (room_id, last_visited_at)`,
+		`ALTER TABLE rooms ADD COLUMN password_salt_and_hash TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE rooms ADD COLUMN bypass_token_hash TEXT NOT NULL DEFAULT ''`,
 	}
 
 	for _, statement := range statements {
@@ -228,6 +233,22 @@ func (s *SQLite) UpdateRoomTitle(ctx context.Context, roomID string, ownerSub st
 
 func (s *SQLite) UpdateRoomIngestTokenHash(ctx context.Context, roomID string, ownerSub string, tokenHash string) error {
 	result, err := s.db.ExecContext(ctx, `UPDATE rooms SET ingest_token_hash = ? WHERE id = ? AND owner_sub = ?`, tokenHash, roomID, ownerSub)
+	if err != nil {
+		return err
+	}
+	return requireAffected(result)
+}
+
+func (s *SQLite) UpdateRoomPassword(ctx context.Context, roomID string, ownerSub string, saltAndHash string) error {
+	result, err := s.db.ExecContext(ctx, `UPDATE rooms SET password_salt_and_hash = ? WHERE id = ? AND owner_sub = ?`, saltAndHash, roomID, ownerSub)
+	if err != nil {
+		return err
+	}
+	return requireAffected(result)
+}
+
+func (s *SQLite) UpdateRoomBypassToken(ctx context.Context, roomID string, ownerSub string, tokenHash string) error {
+	result, err := s.db.ExecContext(ctx, `UPDATE rooms SET bypass_token_hash = ? WHERE id = ? AND owner_sub = ?`, tokenHash, roomID, ownerSub)
 	if err != nil {
 		return err
 	}
@@ -459,9 +480,10 @@ func scanRoom(scanner rowScanner) (Room, error) {
 	var streamStartedAt sql.NullString
 	var streamLastSeenAt sql.NullString
 	var streamEndedAt sql.NullString
-	if err := scanner.Scan(&room.ID, &room.Title, &room.ThumbnailURL, &thumbnailUpdatedAt, &room.ThumbnailRefreshSeconds, &room.StreamStatus, &streamStartedAt, &streamLastSeenAt, &streamEndedAt, &room.OwnerSub, &room.IngestTokenHash, &createdAt); err != nil {
+	if err := scanner.Scan(&room.ID, &room.Title, &room.ThumbnailURL, &thumbnailUpdatedAt, &room.ThumbnailRefreshSeconds, &room.StreamStatus, &streamStartedAt, &streamLastSeenAt, &streamEndedAt, &room.OwnerSub, &room.IngestTokenHash, &createdAt, &room.PasswordSaltAndHash, &room.BypassTokenHash); err != nil {
 		return Room{}, err
 	}
+	room.HasPassword = room.PasswordSaltAndHash != ""
 	parsedThumbnailUpdatedAt, err := time.Parse(time.RFC3339Nano, thumbnailUpdatedAt)
 	if err != nil {
 		return Room{}, err
@@ -503,7 +525,9 @@ func roomSelectSQL(suffix string) string {
 		stream_ended_at,
 		owner_sub,
 		ingest_token_hash,
-		created_at
+		created_at,
+		password_salt_and_hash,
+		bypass_token_hash
 	 FROM rooms ` + suffix
 }
 

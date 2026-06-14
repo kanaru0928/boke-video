@@ -45,10 +45,13 @@ export function AdminPage({ config }: AdminPageProps) {
     Record<string, string>
   >({});
   const {
+    clearPasswordByRoomId,
     createRoomFromTitle,
     deleteRoomById,
     rooms,
+    rotateBypassTokenByRoomId,
     rotateIngestTokenByRoomId,
+    setPasswordByRoomId,
     updateRoomTitleById,
   } = useAdminRooms(config);
 
@@ -247,11 +250,14 @@ export function AdminPage({ config }: AdminPageProps) {
             <AdminRoom
               comments={commentsByRoomId[room.id] ?? null}
               key={room.id}
+              onClearPassword={clearPasswordByRoomId}
               onLoadComments={loadComments}
               onLoadOlderComments={loadOlderComments}
               onRemoveComment={removeComment}
               onRemoveRoom={removeRoom}
+              onRotateBypassToken={rotateBypassTokenByRoomId}
               onRotateIngestToken={rotateIngestToken}
+              onSetPassword={setPasswordByRoomId}
               onUpdateTitle={updateRoomTitleById}
               obsWebsocketConnection={obsWebsocketConnection}
               room={room}

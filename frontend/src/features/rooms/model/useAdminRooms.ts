@@ -2,19 +2,27 @@ import { useCallback, useEffect, useState } from "react";
 import type { AppConfig } from "../../../shared/config/config";
 import {
   type CreatedRoom,
+  clearRoomPassword,
   createRoom,
   deleteRoom,
   fetchAdminRooms,
   type Room,
+  rotateRoomBypassToken,
   rotateRoomIngestToken,
+  setRoomPassword,
   updateRoomTitle,
 } from "../api/room_api";
 
 type UseAdminRoomsResult = {
+  clearPasswordByRoomId: (roomId: string) => Promise<boolean>;
   createRoomFromTitle: (title: string) => Promise<CreatedRoom | null>;
   deleteRoomById: (roomId: string) => Promise<boolean>;
+  rotateBypassTokenByRoomId: (
+    roomId: string,
+  ) => Promise<{ bypassToken: string } | null>;
   rotateIngestTokenByRoomId: (roomId: string) => Promise<string | null>;
   rooms: Room[];
+  setPasswordByRoomId: (roomId: string, password: string) => Promise<boolean>;
   updateRoomTitleById: (roomId: string, title: string) => Promise<void>;
 };
 
@@ -67,15 +75,47 @@ export function useAdminRooms(config: AppConfig): UseAdminRoomsResult {
     [config],
   );
 
+  const setPasswordByRoomId = useCallback(
+    async (roomId: string, password: string): Promise<boolean> => {
+      const ok = await setRoomPassword(config, roomId, password);
+      if (ok) {
+        await refreshRooms();
+      }
+      return ok;
+    },
+    [config, refreshRooms],
+  );
+
+  const clearPasswordByRoomId = useCallback(
+    async (roomId: string): Promise<boolean> => {
+      const ok = await clearRoomPassword(config, roomId);
+      if (ok) {
+        await refreshRooms();
+      }
+      return ok;
+    },
+    [config, refreshRooms],
+  );
+
+  const rotateBypassTokenByRoomId = useCallback(
+    async (roomId: string): Promise<{ bypassToken: string } | null> => {
+      return rotateRoomBypassToken(config, roomId);
+    },
+    [config],
+  );
+
   useEffect(() => {
     void refreshRooms();
   }, [refreshRooms]);
 
   return {
+    clearPasswordByRoomId,
     createRoomFromTitle,
     deleteRoomById,
+    rotateBypassTokenByRoomId,
     rotateIngestTokenByRoomId,
     rooms,
+    setPasswordByRoomId,
     updateRoomTitleById,
   };
 }

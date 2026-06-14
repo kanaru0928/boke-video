@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"boke-video/backend/internal/roomauth"
 	"boke-video/backend/internal/streamaccess"
 	"boke-video/backend/internal/streammonitor"
 )
@@ -14,9 +15,27 @@ func (s *Server) handleCreateStreamAccess(w http.ResponseWriter, r *http.Request
 		return
 	}
 	roomID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/rooms/"), "/stream-access")
-	if _, err := s.repository.GetRoom(r.Context(), roomID); err != nil {
+	room, err := s.repository.GetRoom(r.Context(), roomID)
+	if err != nil {
 		writeRepositoryError(w, err)
 		return
+	}
+	if room.HasPassword {
+		var req struct {
+			Password    string `json:"password"`
+			BypassToken string `json:"bypassToken"`
+		}
+		_ = decodeJSON(r, &req)
+		granted := false
+		if req.BypassToken != "" {
+			granted = roomauth.VerifyBypassToken(req.BypassToken, room.BypassTokenHash)
+		} else if req.Password != "" {
+			granted = roomauth.VerifyPassword(req.Password, room.PasswordSaltAndHash)
+		}
+		if !granted {
+			writeError(w, http.StatusForbidden, "forbidden")
+			return
+		}
 	}
 	playlists, err := s.playbackPlaylists(r, roomID)
 	if err != nil {

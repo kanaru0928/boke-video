@@ -105,6 +105,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.handleUpdateRoom(w, r)
 	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/admin/rooms/") && strings.HasSuffix(r.URL.Path, "/ingest-token"):
 		s.handleRotateRoomIngestToken(w, r)
+	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/admin/rooms/") && strings.HasSuffix(r.URL.Path, "/password"):
+		s.handleSetRoomPassword(w, r)
+	case r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/api/admin/rooms/") && strings.HasSuffix(r.URL.Path, "/password"):
+		s.handleDeleteRoomPassword(w, r)
+	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/admin/rooms/") && strings.HasSuffix(r.URL.Path, "/bypass-token"):
+		s.handleRotateRoomBypassToken(w, r)
 	case r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/api/admin/rooms/"):
 		s.handleDeleteRoom(w, r)
 	case r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/api/admin/comments/"):

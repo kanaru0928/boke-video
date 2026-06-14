@@ -12,6 +12,14 @@ export function adminRoomPath(roomId: string, suffix = ""): string {
   return `/api/admin/rooms/${encodeURIComponent(roomId)}${suffix}`;
 }
 
+export function adminRoomPasswordPath(roomId: string): string {
+  return `/api/admin/rooms/${encodeURIComponent(roomId)}/password`;
+}
+
+export function adminRoomBypassTokenPath(roomId: string): string {
+  return `/api/admin/rooms/${encodeURIComponent(roomId)}/bypass-token`;
+}
+
 export function adminCommentPath(commentId: string): string {
   return `/api/admin/comments/${encodeURIComponent(commentId)}`;
 }
