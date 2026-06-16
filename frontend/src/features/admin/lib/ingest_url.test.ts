@@ -8,6 +8,7 @@ describe("buildWhipIngestUrl", () => {
       apiBaseUrl: "http://127.0.0.1:8080",
       commentWsUrl: "ws://127.0.0.1:8080",
       ingestBaseUrl: "http://127.0.0.1:8080/",
+      accessEnabled: true,
     };
 
     expect(buildWhipIngestUrl(config, "room id")).toBe(

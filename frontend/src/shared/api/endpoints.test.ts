@@ -14,6 +14,7 @@ const config: AppConfig = {
   apiBaseUrl: "http://localhost:8080",
   commentWsUrl: "ws://localhost:8080",
   ingestBaseUrl: "http://localhost:8080/",
+  accessEnabled: true,
 };
 
 describe("endpoints", () => {

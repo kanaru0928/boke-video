@@ -40,6 +40,7 @@ function syncLocal(env) {
     "STREAM_SIGNING_SECRET",
     "local-stream-signing-secret",
   );
+  const sessionSecret = envValue(env, "SESSION_SECRET", "local-session-secret");
   const omeApiAccessToken = envValue(
     env,
     "OME_API_ACCESS_TOKEN",
@@ -53,6 +54,7 @@ function syncLocal(env) {
       : path.join(rootDir, databasePath),
     ALLOWED_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173",
     ACCESS_ENABLED: "false",
+    SESSION_SECRET: sessionSecret,
     STREAM_PUBLIC_BASE_URL: "http://127.0.0.1:3333",
     STREAM_SIGNING_BASE_URL: "http://127.0.0.1:3333",
     STREAM_SIGNING_SECRET: streamSigningSecret,
@@ -70,6 +72,7 @@ function syncLocal(env) {
     VITE_API_BASE_URL: "http://127.0.0.1:8080",
     VITE_COMMENT_WS_URL: "ws://127.0.0.1:8080",
     VITE_INGEST_BASE_URL: "http://127.0.0.1:8080",
+    VITE_ACCESS_ENABLED: "false",
   });
 
   console.log("synced local env");
@@ -89,6 +92,7 @@ function syncProduction(env) {
     VITE_API_BASE_URL: `https://${streamHost}`,
     VITE_COMMENT_WS_URL: `wss://${streamHost}`,
     VITE_INGEST_BASE_URL: `https://${ingestHost}`,
+    VITE_ACCESS_ENABLED: "true",
   });
 
   writeEnv("deploy/backend/backend.env", {
@@ -157,17 +161,26 @@ function syncProduction(env) {
 function syncDocker(env) {
   const appDomain = required(env, "APP_DOMAIN");
   const streamSigningSecret = required(env, "STREAM_SIGNING_SECRET");
+  const sessionSecret = required(env, "SESSION_SECRET");
   const omeApiAccessToken = required(env, "OME_API_ACCESS_TOKEN");
   const frontendHost = `bokevideo.${appDomain}`;
   const streamHost = `stream.${appDomain}`;
   const ingestHost = `ingest.${appDomain}`;
   const rtcHost = `rtc.${appDomain}`;
 
+  writeEnv("frontend/.env", {
+    VITE_API_BASE_URL: `https://${streamHost}`,
+    VITE_COMMENT_WS_URL: `wss://${streamHost}`,
+    VITE_INGEST_BASE_URL: `https://${ingestHost}`,
+    VITE_ACCESS_ENABLED: "false",
+  });
+
   writeEnv("deploy/backend/backend.env", {
     LISTEN_ADDR: "0.0.0.0:8080",
     DATABASE_PATH: "/var/lib/boke-video/boke-video.sqlite3",
     ALLOWED_ORIGINS: `https://${frontendHost}`,
     ACCESS_ENABLED: "false",
+    SESSION_SECRET: sessionSecret,
     STREAM_PUBLIC_BASE_URL: `https://${rtcHost}`,
     STREAM_SIGNING_BASE_URL: `http://${rtcHost}:3333`,
     STREAM_SIGNING_SECRET: streamSigningSecret,

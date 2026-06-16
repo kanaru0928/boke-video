@@ -902,6 +902,69 @@ func setTestDisplayName(t *testing.T, server *Server, subject string, displayNam
 	}
 }
 
+func TestServerCreateSessionReturns404WhenSessionSecretNotSet(t *testing.T) {
+	server := newTestServer(t)
+
+	response := performRequest(server, http.MethodPost, "/api/sessions", "")
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("create session status = %d, body = %s", response.Code, response.Body.String())
+	}
+}
+
+func TestServerCreateSessionIssuesNewCookie(t *testing.T) {
+	server := newTestServer(t)
+	server.sessionSecret = []byte("test-secret")
+
+	response := performRequest(server, http.MethodPost, "/api/sessions", "")
+	if response.Code != http.StatusCreated {
+		t.Fatalf("create session status = %d, body = %s", response.Code, response.Body.String())
+	}
+
+	var parsed map[string]string
+	if err := json.NewDecoder(response.Body).Decode(&parsed); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if !strings.HasPrefix(parsed["subject"], "anon:") {
+		t.Fatalf("subject = %q", parsed["subject"])
+	}
+
+	cookies := response.Result().Cookies()
+	if len(cookies) != 1 || cookies[0].Name != "boke_session" {
+		t.Fatalf("cookies = %v", cookies)
+	}
+}
+
+func TestServerCreateSessionIsIdempotentWithValidCookie(t *testing.T) {
+	server := newTestServer(t)
+	server.sessionSecret = []byte("test-secret")
+
+	first := performRequest(server, http.MethodPost, "/api/sessions", "")
+	if first.Code != http.StatusCreated {
+		t.Fatalf("first session status = %d", first.Code)
+	}
+	var firstParsed map[string]string
+	if err := json.NewDecoder(first.Body).Decode(&firstParsed); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+
+	sessionCookie := first.Result().Cookies()[0]
+	request := httptest.NewRequest(http.MethodPost, "/api/sessions", nil)
+	request.AddCookie(sessionCookie)
+	recorder := httptest.NewRecorder()
+	server.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("second session status = %d, body = %s", recorder.Code, recorder.Body.String())
+	}
+	var secondParsed map[string]string
+	if err := json.NewDecoder(recorder.Body).Decode(&secondParsed); err != nil {
+		t.Fatalf("Decode returned error: %v", err)
+	}
+	if secondParsed["subject"] != firstParsed["subject"] {
+		t.Fatalf("subject mismatch: first=%q second=%q", firstParsed["subject"], secondParsed["subject"])
+	}
+}
+
 func performRequest(server *Server, method string, path string, body string) *httptest.ResponseRecorder {
 	request := httptest.NewRequest(method, path, bytes.NewBufferString(body))
 	request.Header.Set("Content-Type", "application/json")

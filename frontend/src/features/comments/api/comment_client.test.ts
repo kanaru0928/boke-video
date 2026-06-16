@@ -7,6 +7,7 @@ const config: AppConfig = {
   apiBaseUrl: "http://localhost:3000",
   commentWsUrl: "ws://localhost:3000",
   ingestBaseUrl: "http://localhost:3333",
+  accessEnabled: true,
 };
 
 afterEach(() => {

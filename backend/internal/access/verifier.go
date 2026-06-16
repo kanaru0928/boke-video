@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"boke-video/backend/internal/sessionauth"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -20,17 +22,19 @@ type Principal struct {
 }
 
 type VerifierConfig struct {
-	Enabled  bool
-	Audience string
-	Issuer   string
-	CertsURL string
+	Enabled       bool
+	Audience      string
+	Issuer        string
+	CertsURL      string
+	SessionSecret []byte
 }
 
 type Verifier struct {
-	enabled  bool
-	audience string
-	issuer   string
-	certsURL string
+	enabled       bool
+	audience      string
+	issuer        string
+	certsURL      string
+	sessionSecret []byte
 
 	mu        sync.RWMutex
 	keys      map[string]*rsa.PublicKey
@@ -39,17 +43,29 @@ type Verifier struct {
 
 func NewVerifier(cfg VerifierConfig) *Verifier {
 	return &Verifier{
-		enabled:  cfg.Enabled,
-		audience: cfg.Audience,
-		issuer:   cfg.Issuer,
-		certsURL: cfg.CertsURL,
-		keys:     map[string]*rsa.PublicKey{},
+		enabled:       cfg.Enabled,
+		audience:      cfg.Audience,
+		issuer:        cfg.Issuer,
+		certsURL:      cfg.CertsURL,
+		sessionSecret: cfg.SessionSecret,
+		keys:          map[string]*rsa.PublicKey{},
 	}
 }
 
 func (v *Verifier) VerifyRequest(ctx context.Context, r *http.Request) (Principal, error) {
 	if !v.enabled {
-		return Principal{Subject: "local-dev"}, nil
+		if len(v.sessionSecret) == 0 {
+			return Principal{Subject: "local-dev"}, nil
+		}
+		cookie, err := r.Cookie(sessionauth.CookieName)
+		if err != nil {
+			return Principal{}, errors.New("missing session cookie")
+		}
+		subject, err := sessionauth.Verify(cookie.Value, v.sessionSecret)
+		if err != nil {
+			return Principal{}, err
+		}
+		return Principal{Subject: subject}, nil
 	}
 
 	tokenText := r.Header.Get("Cf-Access-Jwt-Assertion")

@@ -24,6 +24,7 @@ type ServerConfig struct {
 	StreamMonitor  streamMonitor
 	StreamEndGrace time.Duration
 	WhipProxy      *whipproxy.Proxy
+	SessionSecret  []byte
 	Now            func() time.Time
 }
 
@@ -37,6 +38,7 @@ type Server struct {
 	streamMonitor  streamMonitor
 	streamEndGrace time.Duration
 	whipProxy      *whipproxy.Proxy
+	sessionSecret  []byte
 	limiter        *rateLimiter
 	now            func() time.Time
 }
@@ -60,6 +62,7 @@ func NewServer(cfg ServerConfig) *Server {
 		streamMonitor:  cfg.StreamMonitor,
 		streamEndGrace: streamEndGrace,
 		whipProxy:      cfg.WhipProxy,
+		sessionSecret:  cfg.SessionSecret,
 		limiter:        newRateLimiter(time.Second),
 		now:            now,
 	}
@@ -75,6 +78,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet && r.URL.Path == "/healthz":
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	case r.Method == http.MethodPost && r.URL.Path == "/api/sessions":
+		s.handleCreateSession(w, r)
 	case r.Method == http.MethodGet && r.URL.Path == "/api/rooms":
 		s.handleListRooms(w, r)
 	case r.Method == http.MethodGet && r.URL.Path == "/api/me":

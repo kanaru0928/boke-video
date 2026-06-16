@@ -41,10 +41,11 @@ func main() {
 	}
 
 	verifier := access.NewVerifier(access.VerifierConfig{
-		Enabled:  cfg.AccessEnabled,
-		Audience: cfg.AccessAudience,
-		Issuer:   cfg.AccessIssuer,
-		CertsURL: cfg.AccessCertsURL,
+		Enabled:       cfg.AccessEnabled,
+		Audience:      cfg.AccessAudience,
+		Issuer:        cfg.AccessIssuer,
+		CertsURL:      cfg.AccessCertsURL,
+		SessionSecret: []byte(cfg.SessionSecret),
 	})
 
 	commentHub := comment.NewHub()
@@ -90,6 +91,7 @@ func main() {
 		StreamMonitor:  streamMonitor,
 		StreamEndGrace: time.Duration(cfg.StreamEndGraceSeconds) * time.Second,
 		WhipProxy:      whipProxy,
+		SessionSecret:  []byte(cfg.SessionSecret),
 	})
 
 	server := &http.Server{

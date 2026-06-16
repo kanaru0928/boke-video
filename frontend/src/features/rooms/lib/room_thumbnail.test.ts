@@ -71,6 +71,7 @@ const testConfig: AppConfig = {
   apiBaseUrl: "http://localhost:8080",
   commentWsUrl: "ws://localhost:8080",
   ingestBaseUrl: "http://localhost:8080",
+  accessEnabled: true,
 };
 
 function createRoom(room: Partial<Room> & Pick<Room, "id" | "title">): Room {

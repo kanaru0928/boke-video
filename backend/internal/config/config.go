@@ -15,6 +15,7 @@ type Config struct {
 	AccessAudience        string
 	AccessIssuer          string
 	AccessCertsURL        string
+	SessionSecret         string
 	StreamPublicBaseURL   string
 	StreamSigningBaseURL  string
 	StreamSigningSecret   string
@@ -41,6 +42,7 @@ func Load() (Config, error) {
 		AccessAudience:        os.Getenv("ACCESS_AUDIENCE"),
 		AccessIssuer:          os.Getenv("ACCESS_ISSUER"),
 		AccessCertsURL:        os.Getenv("ACCESS_CERTS_URL"),
+		SessionSecret:         os.Getenv("SESSION_SECRET"),
 		StreamPublicBaseURL:   strings.TrimSpace(os.Getenv("STREAM_PUBLIC_BASE_URL")),
 		StreamSigningBaseURL:  strings.TrimSpace(os.Getenv("STREAM_SIGNING_BASE_URL")),
 		StreamSigningSecret:   os.Getenv("STREAM_SIGNING_SECRET"),
@@ -63,6 +65,10 @@ func Load() (Config, error) {
 		}
 		if cfg.AccessCertsURL == "" {
 			return Config{}, errors.New("ACCESS_CERTS_URL is required")
+		}
+	} else {
+		if strings.TrimSpace(cfg.SessionSecret) == "" {
+			return Config{}, errors.New("SESSION_SECRET is required when ACCESS_ENABLED is false")
 		}
 	}
 	if cfg.StreamPublicBaseURL == "" {

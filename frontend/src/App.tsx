@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { AdminPage } from "./features/admin/page/AdminPage";
 import { NotFoundPage } from "./features/notFound/page/NotFoundPage";
 import { RoomListPage } from "./features/rooms/page/RoomListPage";
+import { establishSession } from "./features/session/api/session_api";
 import { SupportPage } from "./features/support/page/SupportPage";
 import { UserPage } from "./features/user/page/UserPage";
 import { WatchPage } from "./features/watch/page/WatchPage";
@@ -11,6 +13,32 @@ type AppProps = {
 };
 
 export function App({ config }: AppProps) {
+  const [sessionState, setSessionState] = useState<
+    "pending" | "ready" | "error"
+  >(config.accessEnabled ? "ready" : "pending");
+
+  useEffect(() => {
+    if (config.accessEnabled) return;
+    let cancelled = false;
+    void establishSession(config)
+      .then(() => {
+        if (!cancelled) setSessionState("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setSessionState("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [config]);
+
+  if (sessionState === "error") {
+    return <p>サーバーに接続できませんでした。</p>;
+  }
+  if (sessionState === "pending") {
+    return null;
+  }
+
   const pathname = location.pathname;
   if (pathname === "/") {
     return <RoomListPage config={config} />;
